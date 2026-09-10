@@ -7,6 +7,13 @@ import {
   ArrowRight,
   Sparkles,
   Delete,
+  Plus,
+  Minus,
+  X,
+  Divide,
+  Scale,
+  ChevronLeft,
+  Trophy,
 } from 'lucide-react';
 import { generateQuizQuestion } from '../../core/math/quizGenerator';
 import { parseBig, formatNumberSmart } from '../../core/math/precision';
@@ -16,6 +23,9 @@ import type { QuizDifficultyMode, QuizQuestion, QuizTrackSelector } from '../../
 
 export const QuizModule: React.FC = () => {
   const { quizProgress, recordQuizAnswer, settings } = useAppStore();
+
+  // Screen View: 'lobby' | 'playing' | 'game_over'
+  const [screen, setScreen] = useState<'lobby' | 'playing' | 'game_over'>('lobby');
 
   // Settings & Modes
   const [selectedTrack, setSelectedTrack] = useState<QuizTrackSelector>('sobrevivencia');
@@ -29,6 +39,8 @@ export const QuizModule: React.FC = () => {
   const [userInput, setUserInput] = useState<string>('');
   const [score, setScore] = useState<number>(0);
   const [streak, setStreak] = useState<number>(0);
+  const [maxStreakThisRun, setMaxStreakThisRun] = useState<number>(0);
+  const [isNewRecord, setIsNewRecord] = useState<boolean>(false);
 
   // Status & Feedback State
   const [isAnswered, setIsAnswered] = useState<boolean>(false);
@@ -52,8 +64,8 @@ export const QuizModule: React.FC = () => {
   // Compute total time based on difficulty and count number
   const computeTimeLimit = useCallback((mode: QuizDifficultyMode, count: number): number => {
     if (mode === 'tranquilo') return Infinity;
-    if (mode === 'velocidade') return 18;
-    // Brutal mode: starts at 8s, decreases progressively down to 5s
+    if (mode === 'velocidade') return 20; // 20s por conta como no MatSpeed
+    // Brutal mode: 8s base, reduz gradualmente até 5s
     const reduction = Math.min(3, Math.floor(count / 25) * 0.5);
     return Math.max(5, 8 - reduction);
   }, []);
@@ -78,33 +90,38 @@ export const QuizModule: React.FC = () => {
     [difficultyMode, computeTimeLimit]
   );
 
-  // Switch Track or Difficulty
-  const handleTrackChange = (newTrack: QuizTrackSelector) => {
-    setSelectedTrack(newTrack);
+  // Start game from Lobby
+  const handleStartTrack = (track: QuizTrackSelector) => {
+    setSelectedTrack(track);
     setCountNumber(1);
     setScore(0);
     setStreak(0);
-    loadQuestion(1, newTrack);
+    setMaxStreakThisRun(0);
+    setIsNewRecord(false);
+    loadQuestion(1, track);
+    setScreen('playing');
   };
 
-  const handleDifficultyChange = (newMode: QuizDifficultyMode) => {
-    setDifficultyMode(newMode);
-    const newTime = computeTimeLimit(newMode, countNumber);
-    setTotalTime(newTime);
-    setTimeLeft(newTime);
+  // Exit to Lobby
+  const handleExitToLobby = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    setScreen('lobby');
   };
 
-  // Restart / Reset current run
+  // Restart current run
   const handleRestart = () => {
     setCountNumber(1);
     setScore(0);
     setStreak(0);
+    setMaxStreakThisRun(0);
+    setIsNewRecord(false);
     loadQuestion(1, selectedTrack);
+    setScreen('playing');
   };
 
   // Timer Countdown Effect
   useEffect(() => {
-    if (difficultyMode === 'tranquilo' || isAnswered) {
+    if (screen !== 'playing' || difficultyMode === 'tranquilo' || isAnswered) {
       if (timerRef.current) clearInterval(timerRef.current);
       return;
     }
@@ -117,7 +134,6 @@ export const QuizModule: React.FC = () => {
         const next = prev - decrement;
         if (next <= 0) {
           clearInterval(timerRef.current!);
-          // Trigger Timeout
           handleTimeout();
           return 0;
         }
@@ -128,7 +144,7 @@ export const QuizModule: React.FC = () => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [difficultyMode, isAnswered, countNumber]);
+  }, [screen, difficultyMode, isAnswered, countNumber]);
 
   // Handle Timeout
   const handleTimeout = () => {
@@ -145,6 +161,14 @@ export const QuizModule: React.FC = () => {
       xpEarned: score,
       currentStreak: 0,
     });
+
+    // Se estiver na sobrevivência: errou / zerou tempo, acabou!
+    if (selectedTrack === 'sobrevivencia') {
+      if (countNumber > currentRecord) setIsNewRecord(true);
+      setTimeout(() => {
+        setScreen('game_over');
+      }, 1000);
+    }
   };
 
   // Submission handler
@@ -158,29 +182,29 @@ export const QuizModule: React.FC = () => {
       parsedUser = parseBig(userInput);
       parsedCorrect = parseBig(currentQuestion.correctAnswer);
     } catch {
-      // Invalid input format
       return;
     }
 
     const correct = parsedUser.eq(parsedCorrect);
 
     if (correct) {
-      // Haptic feedback if supported
       if ('vibrate' in navigator) navigator.vibrate?.(40);
 
       const ratio = totalTime === Infinity ? 0 : timeLeft / totalTime;
-      const isAgile = totalTime !== Infinity && ratio >= 0.6; // Answered in first 40% of time
+      const isAgile = totalTime !== Infinity && ratio >= 0.6;
       const bonus = isAgile ? Math.max(5, Math.floor(ratio * 15)) : 0;
       const earnedXp = 10 + Math.min(streak * 2, 20) + bonus;
 
       const nextScore = score + earnedXp;
       const nextStreak = streak + 1;
+      const updatedMaxStreak = Math.max(maxStreakThisRun, nextStreak);
 
       setIsAnswered(true);
       setIsCorrect(true);
       setFlashColor('emerald');
       setScore(nextScore);
       setStreak(nextStreak);
+      setMaxStreakThisRun(updatedMaxStreak);
 
       if (isAgile) {
         setAgileXpBonus(bonus);
@@ -195,12 +219,12 @@ export const QuizModule: React.FC = () => {
         currentStreak: nextStreak,
       });
 
-      // Quick advance if correct
+      // Quick advance to next count
       setTimeout(() => {
         loadQuestion(countNumber + 1, selectedTrack);
       }, isAgile ? 850 : 500);
     } else {
-      // Incorrect answer
+      // Incorreto
       if ('vibrate' in navigator) navigator.vibrate?.([80, 50, 80]);
 
       setIsAnswered(true);
@@ -215,6 +239,14 @@ export const QuizModule: React.FC = () => {
         xpEarned: score,
         currentStreak: 0,
       });
+
+      // Se for Sobrevivência: errou, acabou!
+      if (selectedTrack === 'sobrevivencia') {
+        if (countNumber > currentRecord) setIsNewRecord(true);
+        setTimeout(() => {
+          setScreen('game_over');
+        }, 1200);
+      }
     }
   }, [
     isAnswered,
@@ -224,8 +256,10 @@ export const QuizModule: React.FC = () => {
     timeLeft,
     streak,
     score,
+    maxStreakThisRun,
     selectedTrack,
     countNumber,
+    currentRecord,
     loadQuestion,
     recordQuizAnswer,
   ]);
@@ -234,7 +268,6 @@ export const QuizModule: React.FC = () => {
   const handleAddDigit = (digit: string) => {
     if (isAnswered) return;
     setUserInput((prev) => {
-      // Limit to 10 characters to avoid overflow
       if (prev.length >= 10) return prev;
       return prev + digit;
     });
@@ -264,9 +297,11 @@ export const QuizModule: React.FC = () => {
 
   // Keyboard Event Listener
   useEffect(() => {
+    if (screen !== 'playing') return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isAnswered) {
-        if (e.key === 'Enter' || e.key === ' ') {
+        if (selectedTrack !== 'sobrevivencia' && (e.key === 'Enter' || e.key === ' ')) {
           e.preventDefault();
           loadQuestion(countNumber + 1, selectedTrack);
         }
@@ -290,9 +325,274 @@ export const QuizModule: React.FC = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isAnswered, countNumber, selectedTrack, handleConfirm, loadQuestion]);
+  }, [screen, isAnswered, countNumber, selectedTrack, handleConfirm, loadQuestion]);
 
-  // Timer calculation
+  // ==========================================
+  // SCREEN 1: LOBBY / MENU (Estilo MatSpeed)
+  // ==========================================
+  if (screen === 'lobby') {
+    const somaNivel = quizProgress.tracks?.soma?.currentLevel || 1;
+    const subNivel = quizProgress.tracks?.subtracao?.currentLevel || 1;
+    const multNivel = quizProgress.tracks?.multiplicacao?.currentLevel || 1;
+    const divNivel = quizProgress.tracks?.divisao?.currentLevel || 1;
+    const sobrevRecorde = quizProgress.survival?.recordCount || 0;
+
+    return (
+      <div className="flex flex-col items-center gap-6 max-w-xl mx-auto pb-24 md:pb-12 select-none animate-in fade-in">
+        {/* Title & Subtitle */}
+        <div className="flex flex-col items-center text-center mt-2">
+          <h1 className="text-4xl sm:text-5xl font-black tracking-widest text-amber-400 font-mono drop-shadow-[0_4px_10px_rgba(251,191,36,0.3)]">
+            MAT SPEED
+          </h1>
+          <p className="text-xs sm:text-sm font-semibold text-slate-400 mt-2">
+            Escolha sua trilha: 100 níveis em cada modo.
+          </p>
+        </div>
+
+        {/* Difficulty Selectors (Pills) */}
+        <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-inner">
+          <button
+            type="button"
+            onClick={() => setDifficultyMode('tranquilo')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 touch-target ${
+              difficultyMode === 'tranquilo'
+                ? 'bg-slate-800 text-emerald-400 border border-emerald-500/50 shadow-sm'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <span>🌱</span> Tranquilo
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setDifficultyMode('velocidade')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 touch-target ${
+              difficultyMode === 'velocidade'
+                ? 'bg-amber-400/10 text-amber-400 border border-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.25)]'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <span>⚡</span> Velocidade
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setDifficultyMode('brutal')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 touch-target ${
+              difficultyMode === 'brutal'
+                ? 'bg-red-500/10 text-red-400 border border-red-500 shadow-[0_0_12px_rgba(239,68,68,0.25)]'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <span>🔥</span> Brutal
+          </button>
+        </div>
+
+        {/* 2x2 Grid of Tracks */}
+        <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          {/* Card Soma */}
+          <button
+            type="button"
+            onClick={() => handleStartTrack('soma')}
+            className="p-5 rounded-3xl bg-slate-900/80 hover:bg-slate-900 border border-slate-800/80 hover:border-indigo-500/80 transition-all flex flex-col items-center text-center gap-2 group shadow-lg hover:shadow-indigo-500/10 active:scale-[0.98] touch-target"
+          >
+            <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Plus size={24} className="stroke-[2.5]" />
+            </div>
+            <h3 className="text-lg font-black text-white">Soma</h3>
+            <p className="text-[11px] font-medium text-slate-400">
+              do 3+7 ao 742,3+3497
+            </p>
+            <span className="mt-1 px-3 py-0.5 rounded-full bg-emerald-950/60 text-emerald-400 border border-emerald-800/60 font-mono text-xs font-bold">
+              Nível {somaNivel}/100
+            </span>
+          </button>
+
+          {/* Card Subtração */}
+          <button
+            type="button"
+            onClick={() => handleStartTrack('subtracao')}
+            className="p-5 rounded-3xl bg-slate-900/80 hover:bg-slate-900 border border-slate-800/80 hover:border-rose-500/80 transition-all flex flex-col items-center text-center gap-2 group shadow-lg hover:shadow-rose-500/10 active:scale-[0.98] touch-target"
+          >
+            <div className="w-10 h-10 rounded-2xl bg-rose-500/10 text-rose-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Minus size={24} className="stroke-[2.5]" />
+            </div>
+            <h3 className="text-lg font-black text-white">Subtração</h3>
+            <p className="text-[11px] font-medium text-slate-400">
+              do 9-4 ao troco encadeado
+            </p>
+            <span className="mt-1 px-3 py-0.5 rounded-full bg-rose-950/60 text-rose-400 border border-rose-800/60 font-mono text-xs font-bold">
+              Nível {subNivel}/100
+            </span>
+          </button>
+
+          {/* Card Multiplicação */}
+          <button
+            type="button"
+            onClick={() => handleStartTrack('multiplicacao')}
+            className="p-5 rounded-3xl bg-slate-900/80 hover:bg-slate-900 border border-slate-800/80 hover:border-amber-500/80 transition-all flex flex-col items-center text-center gap-2 group shadow-lg hover:shadow-amber-500/10 active:scale-[0.98] touch-target"
+          >
+            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <X size={24} className="stroke-[2.5]" />
+            </div>
+            <h3 className="text-lg font-black text-white">Multiplicação</h3>
+            <p className="text-[11px] font-medium text-slate-400">
+              da tabuada ao 27×24
+            </p>
+            <span className="mt-1 px-3 py-0.5 rounded-full bg-amber-950/60 text-amber-400 border border-amber-800/60 font-mono text-xs font-bold">
+              Nível {multNivel}/100
+            </span>
+          </button>
+
+          {/* Card Divisão */}
+          <button
+            type="button"
+            onClick={() => handleStartTrack('divisao')}
+            className="p-5 rounded-3xl bg-slate-900/80 hover:bg-slate-900 border border-slate-800/80 hover:border-cyan-500/80 transition-all flex flex-col items-center text-center gap-2 group shadow-lg hover:shadow-cyan-500/10 active:scale-[0.98] touch-target"
+          >
+            <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Divide size={24} className="stroke-[2.5]" />
+            </div>
+            <h3 className="text-lg font-black text-white">Divisão</h3>
+            <p className="text-[11px] font-medium text-slate-400">
+              sempre exata, do reflexo ao 1932÷14
+            </p>
+            <span className="mt-1 px-3 py-0.5 rounded-full bg-cyan-950/60 text-cyan-400 border border-cyan-800/60 font-mono text-xs font-bold">
+              Nível {divNivel}/100
+            </span>
+          </button>
+        </div>
+
+        {/* Card Inferior: Sobrevivência (Full Width) */}
+        <button
+          type="button"
+          onClick={() => handleStartTrack('sobrevivencia')}
+          className="w-full p-6 rounded-3xl bg-gradient-to-b from-purple-950/40 to-slate-950 border border-purple-900/60 hover:border-purple-500 transition-all flex flex-col items-center text-center gap-2 group shadow-xl hover:shadow-purple-500/20 active:scale-[0.98] touch-target"
+        >
+          <div className="w-12 h-12 rounded-2xl bg-purple-500/20 text-purple-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <Skull size={28} className="stroke-[2.5]" />
+          </div>
+          <h2 className="text-xl font-black text-white tracking-wide">
+            Sobrevivência
+          </h2>
+          <p className="text-xs font-semibold text-slate-400 max-w-sm">
+            errou, acabou — 20s por conta, as 4 operações misturadas até a #200
+          </p>
+          <div className="flex items-center gap-3 mt-1 text-xs font-bold text-purple-300">
+            <span>Recorde: Conta #{sobrevRecorde}</span>
+            <span>•</span>
+            <span>{quizProgress.survival?.highScore || 0} XP Máximo</span>
+          </div>
+        </button>
+
+        {/* Extra option: Regra de Três Simples */}
+        <div className="w-full flex justify-center">
+          <button
+            type="button"
+            onClick={() => handleStartTrack('regra_simples')}
+            className="text-xs font-semibold text-slate-400 hover:text-indigo-400 flex items-center gap-1.5 transition-colors py-1 px-3 rounded-xl hover:bg-slate-900"
+          >
+            <Scale size={14} /> Treinar Trilha de Regra de Três Simples
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ==========================================
+  // SCREEN 2: GAME OVER (Modo Sobrevivência)
+  // ==========================================
+  if (screen === 'game_over') {
+    return (
+      <div className="flex flex-col items-center gap-6 max-w-xl mx-auto pb-24 md:pb-12 select-none animate-in fade-in">
+        <div className="w-full p-8 rounded-3xl bg-slate-950 text-white border border-red-900/60 shadow-2xl flex flex-col items-center text-center gap-6">
+          <div className="w-16 h-16 rounded-3xl bg-red-950/60 border border-red-800 text-red-400 flex items-center justify-center">
+            <Skull size={36} />
+          </div>
+
+          <div>
+            <h2 className="text-3xl font-black tracking-tight text-white">
+              Fim da Sobrevivência
+            </h2>
+            <p className="text-sm font-semibold text-slate-400 mt-1">
+              {isTimedOut ? 'O tempo esgotou!' : 'Você errou a conta.'}
+            </p>
+          </div>
+
+          {isNewRecord && (
+            <div className="px-4 py-2 rounded-2xl bg-amber-500/20 border border-amber-500/60 text-amber-400 font-black text-xs flex items-center gap-1.5 shadow-lg animate-pulse">
+              <Trophy size={16} /> NOVO RECORDE PESSOAL: CONTA #{countNumber}!
+            </div>
+          )}
+
+          {/* Stats Badges */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full max-w-md">
+            <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col items-center">
+              <span className="text-xs text-slate-400 font-semibold">Conta</span>
+              <span className="text-xl font-mono font-black text-white">#{countNumber}</span>
+            </div>
+            <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col items-center">
+              <span className="text-xs text-slate-400 font-semibold">XP Ganho</span>
+              <span className="text-xl font-mono font-black text-amber-400">+{score}</span>
+            </div>
+            <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col items-center col-span-2 sm:col-span-1">
+              <span className="text-xs text-slate-400 font-semibold">Maior Combo</span>
+              <span className="text-xl font-mono font-black text-orange-400">x{maxStreakThisRun} 🔥</span>
+            </div>
+          </div>
+
+          {/* Correct Answer Revelation */}
+          <div className="w-full max-w-md p-4 rounded-2xl bg-red-950/30 border border-red-900/40 text-left">
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              A conta era:
+            </p>
+            <p className="text-xl font-mono font-black text-white mt-1">
+              {currentQuestion.displayExpression} ={' '}
+              <span className="text-emerald-400 underline">
+                {formatNumberSmart(
+                  currentQuestion.correctAnswer,
+                  settings.decimalPlaces,
+                  settings.decimalSeparator
+                )}
+              </span>
+            </p>
+          </div>
+
+          {/* Actions */}
+          <div className="flex flex-col sm:flex-row items-center gap-3 w-full max-w-md">
+            <button
+              type="button"
+              onClick={handleRestart}
+              className="flex-1 w-full py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-sm tracking-wider uppercase transition-all shadow-lg flex items-center justify-center gap-2 touch-target"
+            >
+              <RotateCcw size={18} /> Jogar Novamente
+            </button>
+            <button
+              type="button"
+              onClick={handleExitToLobby}
+              className="flex-1 w-full py-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-slate-300 font-bold text-sm transition-all border border-slate-800 touch-target"
+            >
+              ← Voltar ao Menu
+            </button>
+          </div>
+        </div>
+
+        {/* Didactic Step-by-Step for what went wrong */}
+        {currentQuestion.explanation.length > 0 && (
+          <div className="w-full">
+            <StepByStep
+              title="Explicação Didática da Conta"
+              steps={currentQuestion.explanation}
+            />
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ==========================================
+  // SCREEN 3: PLAYING (Em jogo com Teclado Direto)
+  // ==========================================
   const timerPercentage =
     totalTime === Infinity ? 100 : Math.max(0, Math.min(100, (timeLeft / totalTime) * 100));
 
@@ -303,78 +603,27 @@ export const QuizModule: React.FC = () => {
     timerColor = 'bg-amber-500';
   }
 
-  // Account progress calculation (e.g. #16 de 200)
   const totalGoal = currentQuestion.totalGoal || 200;
   const progressPercentage = Math.min(100, ((countNumber - 1) / totalGoal) * 100);
 
   return (
-    <div className="flex flex-col gap-5 max-w-xl mx-auto pb-24 md:pb-12 select-none">
-      {/* Track & Difficulty Selectors Bar */}
-      <div className="flex flex-col gap-2.5 p-3 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800/80 shadow-xs backdrop-blur-md">
-        {/* Track Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-          {(
-            [
-              { id: 'sobrevivencia', label: 'Sobrevivência 💀' },
-              { id: 'soma', label: 'Soma +' },
-              { id: 'subtracao', label: 'Subtração −' },
-              { id: 'multiplicacao', label: 'Multiplicação ×' },
-              { id: 'divisao', label: 'Divisão ÷' },
-              { id: 'regra_simples', label: 'Regra de 3' },
-            ] as const
-          ).map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => handleTrackChange(item.id)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all touch-target ${
-                selectedTrack === item.id
-                  ? 'bg-indigo-600 text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
+    <div className="flex flex-col gap-4 max-w-xl mx-auto pb-24 md:pb-12 select-none">
+      {/* Top Bar: Return to Lobby ("← sair") */}
+      <div className="flex items-center justify-between px-1">
+        <button
+          type="button"
+          onClick={handleExitToLobby}
+          className="text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1 py-1 px-2.5 rounded-xl hover:bg-slate-900 transition-colors"
+        >
+          <ChevronLeft size={16} /> sair
+        </button>
 
-        {/* Difficulty Pills & Restart */}
-        <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100 dark:border-slate-800/60">
-          <div className="flex items-center gap-1.5">
-            {(
-              [
-                { id: 'tranquilo', label: 'Tranquilo' },
-                { id: 'velocidade', label: 'Velocidade' },
-                { id: 'brutal', label: 'Brutal 🔥' },
-              ] as const
-            ).map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => handleDifficultyChange(item.id)}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
-                  difficultyMode === item.id
-                    ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-xs'
-                    : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-
-          <button
-            type="button"
-            onClick={handleRestart}
-            title="Reiniciar sessão"
-            className="text-xs font-semibold text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-          >
-            <RotateCcw size={13} /> Reiniciar
-          </button>
-        </div>
+        <span className="text-xs font-bold uppercase tracking-wider text-slate-500 font-mono">
+          {selectedTrack === 'sobrevivencia' ? 'Sobrevivência 💀' : `Trilha: ${selectedTrack}`}
+        </span>
       </div>
 
-      {/* Main Game Card (Dark Arcade Theme inspired by MatSpeed) */}
+      {/* Main Game Card */}
       <div
         className={`relative p-6 sm:p-8 rounded-3xl bg-slate-950 text-white border transition-all duration-300 shadow-2xl flex flex-col items-center gap-6 overflow-hidden ${
           flashColor === 'emerald'
@@ -384,10 +633,10 @@ export const QuizModule: React.FC = () => {
             : 'border-slate-800/90 shadow-indigo-950/40'
         }`}
       >
-        {/* Subtle Background Glow */}
+        {/* Subtle Glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-48 bg-gradient-to-b from-indigo-500/10 to-transparent blur-3xl pointer-events-none" />
 
-        {/* Top Header Row: Account Index vs XP/Streak */}
+        {/* Status Row */}
         <div className="w-full flex items-start justify-between gap-4 z-10">
           <div>
             <div className="flex items-center gap-1.5 text-slate-200 font-black text-sm tracking-wider uppercase">
@@ -417,7 +666,6 @@ export const QuizModule: React.FC = () => {
 
         {/* Dual Progress Bars */}
         <div className="w-full flex flex-col gap-1.5 z-10">
-          {/* Top Bar: Timer (Countdown) */}
           {difficultyMode !== 'tranquilo' && (
             <div className="w-full h-2 rounded-full bg-slate-800/80 overflow-hidden p-0.5">
               <div
@@ -427,7 +675,6 @@ export const QuizModule: React.FC = () => {
             </div>
           )}
 
-          {/* Bottom Bar: Account progress */}
           <div className="w-full h-1.5 rounded-full bg-slate-800/60 overflow-hidden">
             <div
               className="h-full rounded-full bg-indigo-500/80 transition-all duration-300"
@@ -436,7 +683,7 @@ export const QuizModule: React.FC = () => {
           </div>
         </div>
 
-        {/* Agile Feedback Badge (Floating with slight rotation) */}
+        {/* Agile Feedback Badge */}
         {showAgileBadge && (
           <div className="absolute top-24 right-6 z-20 animate-bounce">
             <div className="px-3 py-1.5 rounded-xl bg-emerald-500 text-slate-950 font-black text-xs flex items-center gap-1 shadow-lg shadow-emerald-500/30 transform rotate-3">
@@ -481,9 +728,8 @@ export const QuizModule: React.FC = () => {
           </div>
         </div>
 
-        {/* Virtual Keypad (3x4) + Confirm Button */}
+        {/* Keypad Grid (3x4) + Big GO! Button */}
         <div className="w-full max-w-xs flex flex-col gap-2.5 z-10">
-          {/* Keypad Grid */}
           <div className="grid grid-cols-3 gap-2">
             {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
               <button
@@ -497,7 +743,6 @@ export const QuizModule: React.FC = () => {
               </button>
             ))}
 
-            {/* Row 4: Comma, 0, Backspace */}
             <button
               type="button"
               disabled={isAnswered}
@@ -527,7 +772,6 @@ export const QuizModule: React.FC = () => {
             </button>
           </div>
 
-          {/* Quick Negative Toggle for numbers that may be negative */}
           <div className="flex justify-end">
             <button
               type="button"
@@ -539,11 +783,14 @@ export const QuizModule: React.FC = () => {
             </button>
           </div>
 
-          {/* Big GO! Button */}
           <button
             type="button"
             disabled={Boolean(isAnswered && isCorrect)}
-            onClick={isAnswered ? () => loadQuestion(countNumber + 1, selectedTrack) : handleConfirm}
+            onClick={
+              isAnswered
+                ? () => loadQuestion(countNumber + 1, selectedTrack)
+                : handleConfirm
+            }
             className={`w-full py-3.5 sm:py-4 rounded-2xl font-black text-lg sm:text-xl tracking-wider uppercase transition-all shadow-lg flex items-center justify-center gap-2 touch-target active:scale-[0.98] ${
               isAnswered && !isCorrect
                 ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/30'
@@ -560,8 +807,8 @@ export const QuizModule: React.FC = () => {
           </button>
         </div>
 
-        {/* Immediate Feedback Banner on Error / Timeout */}
-        {isAnswered && !isCorrect && (
+        {/* Feedback on Individual Tracks (if not sobrevivência) */}
+        {isAnswered && !isCorrect && selectedTrack !== 'sobrevivencia' && (
           <div className="w-full max-w-md p-4 rounded-2xl bg-red-950/50 border border-red-800/80 text-red-200 flex items-center justify-between gap-3 z-10 animate-in fade-in">
             <div className="flex items-center gap-3">
               <XCircle size={24} className="text-red-400 shrink-0" />
@@ -593,8 +840,8 @@ export const QuizModule: React.FC = () => {
         )}
       </div>
 
-      {/* Didactic Step-by-Step on Error or on Demand */}
-      {isAnswered && !isCorrect && currentQuestion.explanation.length > 0 && (
+      {/* StepByStep for individual tracks on error */}
+      {isAnswered && !isCorrect && selectedTrack !== 'sobrevivencia' && currentQuestion.explanation.length > 0 && (
         <div className="animate-in fade-in">
           <StepByStep
             title="Passo a Passo Didático da Resolução"

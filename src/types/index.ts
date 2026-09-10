@@ -131,6 +131,14 @@ export interface QuizQuestion {
   timeLimitSeconds?: number;
 }
 
+export interface UpdaterStatus {
+  status: 'checking' | 'available' | 'not-available' | 'downloading' | 'downloaded' | 'error';
+  version?: string;
+  releaseDate?: string;
+  percent?: number;
+  message?: string;
+}
+
 declare global {
   interface Window {
     electronAPI?: {
@@ -143,6 +151,9 @@ declare global {
       openFile: (
         filters?: Array<{ name: string; extensions: string[] }>
       ) => Promise<{ success: boolean; data?: HistoryItem[]; path?: string; canceled?: boolean; error?: string }>;
+      checkForUpdates?: () => Promise<{ success: boolean; updateInfo?: unknown; error?: string; message?: string }>;
+      installUpdate?: () => Promise<{ success: boolean }>;
+      onUpdateStatus?: (callback: (status: UpdaterStatus) => void) => () => void;
     };
   }
 }

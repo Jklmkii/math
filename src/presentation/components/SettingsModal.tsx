@@ -1,7 +1,7 @@
-import React, { useRef, useState } from 'react';
-import { X, Moon, Sun, Laptop, Trash2, Download, Upload, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import React, { useRef, useState, useEffect } from 'react';
+import { X, Moon, Sun, Laptop, Trash2, Download, Upload, ShieldCheck, CheckCircle2, RefreshCw, Sparkles } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
-import type { DecimalPlaces, DecimalSeparator, ThemeMode } from '../../types';
+import type { DecimalPlaces, DecimalSeparator, ThemeMode, UpdaterStatus } from '../../types';
 import { validateHistorySchema } from '../../core/storage/historyValidator';
 
 interface SettingsModalProps {
@@ -13,7 +13,37 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   const { settings, updateSettings, history, clearHistory, importHistory } = useAppStore();
   const [confirmClear, setConfirmClear] = useState(false);
   const [importStatus, setImportStatus] = useState<string | null>(null);
+  const [updateStatus, setUpdateStatus] = useState<UpdaterStatus | null>(null);
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!window.electronAPI?.onUpdateStatus) return;
+    const cleanup = window.electronAPI.onUpdateStatus((status) => {
+      setUpdateStatus(status);
+      if (status.status !== 'checking') {
+        setIsCheckingUpdate(false);
+      }
+    });
+    return () => cleanup?.();
+  }, []);
+
+  const handleCheckUpdate = async () => {
+    if (!window.electronAPI?.checkForUpdates) {
+      setUpdateStatus({
+        status: 'not-available',
+        message: 'Atualizações automáticas ativas no executável Windows desktop.',
+      });
+      return;
+    }
+    setIsCheckingUpdate(true);
+    setUpdateStatus({ status: 'checking', message: 'Conectando ao GitHub para verificar novidades...' });
+    const res = await window.electronAPI.checkForUpdates();
+    setIsCheckingUpdate(false);
+    if (!res.success && res.error) {
+      setUpdateStatus({ status: 'error', message: res.error });
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -320,6 +350,54 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                 </button>
               )}
             </div>
+          </div>
+
+          {/* App Updates Section */}
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <RefreshCw size={16} className={isCheckingUpdate ? 'animate-spin text-indigo-500' : 'text-indigo-500'} />
+                  Atualizações do Aplicativo
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  MathUtils v1.0.0 (atualizações diretas via GitHub)
+                </p>
+              </div>
+
+              {updateStatus?.status === 'downloaded' ? (
+                <button
+                  type="button"
+                  onClick={() => window.electronAPI?.installUpdate?.()}
+                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1 shadow-sm transition-all"
+                >
+                  <Sparkles size={14} /> Atualizar Agora
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  disabled={isCheckingUpdate || updateStatus?.status === 'downloading'}
+                  onClick={handleCheckUpdate}
+                  className="px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/60 text-indigo-700 dark:text-indigo-300 font-semibold text-xs hover:bg-indigo-100 transition-colors disabled:opacity-50"
+                >
+                  {isCheckingUpdate ? 'Verificando...' : 'Verificar Atualizações'}
+                </button>
+              )}
+            </div>
+
+            {updateStatus && (
+              <div className="text-xs p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 text-slate-700 dark:text-slate-300">
+                <p className="font-medium">{updateStatus.message}</p>
+                {updateStatus.status === 'downloading' && (
+                  <div className="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full mt-2 overflow-hidden">
+                    <div
+                      className="h-full bg-indigo-500 rounded-full transition-all duration-200"
+                      style={{ width: `${updateStatus.percent ?? 0}%` }}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Privacy & Offline Banner */}

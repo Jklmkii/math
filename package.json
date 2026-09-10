@@ -28,6 +28,11 @@
     "directories": {
       "output": "release"
     },
+    "publish": {
+      "provider": "github",
+      "owner": "Jklmkii",
+      "repo": "math"
+    },
     "files": [
       "dist/**/*",
       "electron/**/*",
@@ -66,6 +71,7 @@
     "@capacitor/core": "^8.5.1",
     "big.js": "^7.0.1",
     "clsx": "^2.1.1",
+    "electron-updater": "^6.8.9",
     "lucide-react": "^1.43.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
