@@ -174,7 +174,7 @@ export function calculateBhaskara(
  * - "3x² = 27"
  */
 export function parseQuadraticEquation(rawText: string): { a: string; b: string; c: string } | null {
-  if (!rawText || !rawText.trim()) return null;
+  if (!rawText || !rawText.trim() || rawText.length > 200) return null;
 
   const text = rawText
     .toLowerCase()
