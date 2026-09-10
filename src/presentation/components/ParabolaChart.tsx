@@ -83,14 +83,14 @@ export const ParabolaChart: React.FC<ParabolaChartProps> = ({
   }, [a, b, c, x1, x2, vertex.x, vertex.y, delta]);
 
   // Coordinate mapping functions
-  const mapX = (xVal: number) => {
+  const mapX = React.useCallback((xVal: number) => {
     return padding.left + ((xVal - xMin) / (xMax - xMin)) * plotWidth;
-  };
+  }, [xMin, xMax, plotWidth, padding.left]);
 
-  const mapY = (yVal: number) => {
+  const mapY = React.useCallback((yVal: number) => {
     // In SVG, y increases downwards, so invert yVal
     return padding.top + ((yMax - yVal) / (yMax - yMin)) * plotHeight;
-  };
+  }, [yMin, yMax, plotHeight, padding.top]);
 
   // Generate SVG Path for parabola
   const pathD = useMemo(() => {
@@ -99,7 +99,7 @@ export const ParabolaChart: React.FC<ParabolaChartProps> = ({
       const py = mapY(pt.y);
       return index === 0 ? `M ${px.toFixed(2)} ${py.toFixed(2)}` : `${acc} L ${px.toFixed(2)} ${py.toFixed(2)}`;
     }, '');
-  }, [points, xMin, xMax, yMin, yMax]);
+  }, [points, mapX, mapY]);
 
   // Axis Positions in SVG coordinates
   const originX = mapX(0);

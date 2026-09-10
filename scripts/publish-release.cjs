@@ -1,6 +1,3 @@
-const fs = require('fs');
-const path = require('path');
-
 const TOKEN = process.env.GITHUB_TOKEN;
 const OWNER = 'Jklmkii';
 const REPO = 'math';

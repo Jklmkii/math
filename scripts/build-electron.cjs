@@ -10,7 +10,7 @@ const tempOutputDir = path.join(os.tmpdir(), 'mathutils-electron-build');
 if (fs.existsSync(tempOutputDir)) {
   try {
     fs.rmSync(tempOutputDir, { recursive: true, force: true });
-  } catch (e) {
+  } catch {
     // Ignore
   }
 }
@@ -46,7 +46,7 @@ try {
 } finally {
   try {
     fs.rmSync(tempOutputDir, { recursive: true, force: true });
-  } catch (e) {
+  } catch {
     // Cleanup temporary intermediate files
   }
 }

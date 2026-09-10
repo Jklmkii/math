@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Sparkles, Calculator, AlertCircle, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { NumericInput } from '../components/NumericInput';
 import { ParabolaChart } from '../components/ParabolaChart';
@@ -6,7 +6,6 @@ import { StepByStep } from '../components/StepByStep';
 import { calculateBhaskara, parseQuadraticEquation } from '../../core/math/bhaskara';
 import { formatNumberSmart } from '../../core/math/precision';
 import { useAppStore } from '../../store/useAppStore';
-import type { BhaskaraResult } from '../../types';
 
 export const BhaskaraModule: React.FC = () => {
   const { settings, addHistoryItem } = useAppStore();
@@ -18,8 +17,7 @@ export const BhaskaraModule: React.FC = () => {
   const [equationText, setEquationText] = useState<string>('');
   const [textParserNotice, setTextParserNotice] = useState<string | null>(null);
 
-  const [result, setResult] = useState<BhaskaraResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [parserError, setParserError] = useState<string | null>(null);
 
   // Parse text equation if user types one
   const handleParseTextEquation = () => {
@@ -31,26 +29,20 @@ export const BhaskaraModule: React.FC = () => {
       setC(parsed.c);
       setTextParserNotice(`Extraído: a = ${parsed.a}, b = ${parsed.b}, c = ${parsed.c}`);
       setTimeout(() => setTextParserNotice(null), 3500);
-      setError(null);
+      setParserError(null);
     } else {
-      setError('Formato não reconhecido. Exemplo: 2x² - 3x + 1 = 0');
+      setParserError('Formato não reconhecido. Exemplo: 2x² - 3x + 1 = 0');
     }
   };
 
-  // Perform calculation
-  const runCalculation = (saveToHistory = false) => {
-    setError(null);
-
+  // Derive calculation from state instead of effect
+  const computedCalculation = React.useMemo(() => {
     if (!a.trim()) {
-      setError('O coeficiente "a" é obrigatório.');
-      setResult(null);
-      return;
+      return { err: 'O coeficiente "a" é obrigatório.', res: null };
     }
 
     if (a.trim() === '0' || a.trim() === '-0') {
-      setError('Em uma equação de 2º grau, o coeficiente "a" não pode ser zero.');
-      setResult(null);
-      return;
+      return { err: 'Em uma equação de 2º grau, o coeficiente "a" não pode ser zero.', res: null };
     }
 
     try {
@@ -58,39 +50,35 @@ export const BhaskaraModule: React.FC = () => {
         decimals: settings.decimalPlaces,
         separator: settings.decimalSeparator,
       });
-      setResult(calc);
-
-      if (saveToHistory) {
-        let rootSummary = '';
-        if (calc.rootType === 'two_real') {
-          rootSummary = `x₁ = ${formatNumberSmart(calc.x1!, settings.decimalPlaces, settings.decimalSeparator)}, x₂ = ${formatNumberSmart(calc.x2!, settings.decimalPlaces, settings.decimalSeparator)}`;
-        } else if (calc.rootType === 'single_real') {
-          rootSummary = `x = ${formatNumberSmart(calc.x1!, settings.decimalPlaces, settings.decimalSeparator)}`;
-        } else {
-          rootSummary = `Complexas: ${calc.complexRoots?.x1.formatted}`;
-        }
-
-        addHistoryItem({
-          type: 'bhaskara',
-          title: `Bhaskara: ${calc.formattedEquation}`,
-          summary: `Δ = ${calc.delta} | ${rootSummary}`,
-          details: calc.steps.join('\n'),
-          rawPayload: { a, b, c },
-        });
-      }
+      return { err: null, res: calc };
     } catch (err: unknown) {
-      setError((err as Error).message || 'Erro ao calcular.');
-      setResult(null);
+      return { err: (err as Error).message || 'Erro ao calcular.', res: null };
     }
-  };
-
-  // Run calculation whenever coefficients change
-  useEffect(() => {
-    runCalculation(false);
   }, [a, b, c, settings.decimalPlaces, settings.decimalSeparator]);
 
+  const activeResult = parserError !== null ? null : computedCalculation.res;
+  const activeError = parserError !== null ? parserError : computedCalculation.err;
+
   const handleManualCalculate = () => {
-    runCalculation(true);
+    if (activeResult && !activeError) {
+      const calc = activeResult;
+      let rootSummary = '';
+      if (calc.rootType === 'two_real') {
+        rootSummary = `x₁ = ${formatNumberSmart(calc.x1!, settings.decimalPlaces, settings.decimalSeparator)}, x₂ = ${formatNumberSmart(calc.x2!, settings.decimalPlaces, settings.decimalSeparator)}`;
+      } else if (calc.rootType === 'single_real') {
+        rootSummary = `x = ${formatNumberSmart(calc.x1!, settings.decimalPlaces, settings.decimalSeparator)}`;
+      } else {
+        rootSummary = `Complexas: ${calc.complexRoots?.x1.formatted}`;
+      }
+
+      addHistoryItem({
+        type: 'bhaskara',
+        title: `Bhaskara: ${calc.formattedEquation}`,
+        summary: `Δ = ${calc.delta} | ${rootSummary}`,
+        details: calc.steps.join('\n'),
+        rawPayload: { a, b, c },
+      });
+    }
   };
 
   const handleReset = () => {
@@ -98,7 +86,7 @@ export const BhaskaraModule: React.FC = () => {
     setB('-5');
     setC('6');
     setEquationText('');
-    setError(null);
+    setParserError(null);
   };
 
   return (
@@ -188,17 +176,17 @@ export const BhaskaraModule: React.FC = () => {
           />
         </div>
 
-        {error && (
+        {activeError && (
           <div className="p-3.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 flex items-center gap-3 text-red-600 dark:text-red-400 text-xs font-semibold">
             <AlertCircle size={18} className="shrink-0" />
-            <span>{error}</span>
+            <span>{activeError}</span>
           </div>
         )}
 
         <button
           type="button"
           onClick={handleManualCalculate}
-          disabled={!result || Boolean(error)}
+          disabled={!activeResult || Boolean(activeError)}
           className="w-full mt-2 py-3.5 px-5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white font-bold text-sm transition-all shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-2 touch-target"
         >
           <Calculator size={18} /> Salvar no Histórico
@@ -206,7 +194,7 @@ export const BhaskaraModule: React.FC = () => {
       </div>
 
       {/* Results Display */}
-      {result && (
+      {activeResult && (
         <div className="flex flex-col gap-6 animate-in fade-in duration-300">
           {/* Key Metrics Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -215,21 +203,21 @@ export const BhaskaraModule: React.FC = () => {
               <div>
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Discriminante</span>
                 <div className="text-3xl font-black text-slate-900 dark:text-white mt-1 font-mono">
-                  Δ = {result.delta}
+                  Δ = {activeResult.delta}
                 </div>
               </div>
               <div className="mt-4">
-                {result.delta > 0 && (
+                {activeResult.delta > 0 && (
                   <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
                     2 raízes reais distintas
                   </span>
                 )}
-                {result.delta === 0 && (
+                {activeResult.delta === 0 && (
                   <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300">
                     1 raiz real dupla
                   </span>
                 )}
-                {result.delta < 0 && (
+                {activeResult.delta < 0 && (
                   <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300">
                     Raízes complexas (ℂ)
                   </span>
@@ -241,25 +229,25 @@ export const BhaskaraModule: React.FC = () => {
             <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Raízes Encontradas</span>
               <div className="flex flex-col gap-1.5 mt-2 font-mono">
-                {result.rootType === 'two_real' && (
+                {activeResult.rootType === 'two_real' && (
                   <>
                     <div className="text-lg font-bold text-indigo-600 dark:text-indigo-400">
-                      x₁ = {formatNumberSmart(result.x1!, settings.decimalPlaces, settings.decimalSeparator)}
+                      x₁ = {formatNumberSmart(activeResult.x1!, settings.decimalPlaces, settings.decimalSeparator)}
                     </div>
                     <div className="text-lg font-bold text-indigo-600 dark:text-indigo-400">
-                      x₂ = {formatNumberSmart(result.x2!, settings.decimalPlaces, settings.decimalSeparator)}
+                      x₂ = {formatNumberSmart(activeResult.x2!, settings.decimalPlaces, settings.decimalSeparator)}
                     </div>
                   </>
                 )}
-                {result.rootType === 'single_real' && (
+                {activeResult.rootType === 'single_real' && (
                   <div className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
-                    x₁ = x₂ = {formatNumberSmart(result.x1!, settings.decimalPlaces, settings.decimalSeparator)}
+                    x₁ = x₂ = {formatNumberSmart(activeResult.x1!, settings.decimalPlaces, settings.decimalSeparator)}
                   </div>
                 )}
-                {result.rootType === 'complex' && result.complexRoots && (
+                {activeResult.rootType === 'complex' && activeResult.complexRoots && (
                   <div className="flex flex-col gap-1 text-sm font-bold text-purple-600 dark:text-purple-400">
-                    <div>x₁ = {result.complexRoots.x1.formatted}</div>
-                    <div>x₂ = {result.complexRoots.x2.formatted}</div>
+                    <div>x₁ = {activeResult.complexRoots.x1.formatted}</div>
+                    <div>x₂ = {activeResult.complexRoots.x2.formatted}</div>
                   </div>
                 )}
               </div>
@@ -273,18 +261,18 @@ export const BhaskaraModule: React.FC = () => {
               <div>
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Vértice da Parábola</span>
                 <div className="text-xl font-black text-slate-900 dark:text-white mt-1 font-mono">
-                  V = ({formatNumberSmart(result.vertex.x, settings.decimalPlaces, settings.decimalSeparator)};{' '}
-                  {formatNumberSmart(result.vertex.y, settings.decimalPlaces, settings.decimalSeparator)})
+                  V = ({formatNumberSmart(activeResult.vertex.x, settings.decimalPlaces, settings.decimalSeparator)};{' '}
+                  {formatNumberSmart(activeResult.vertex.y, settings.decimalPlaces, settings.decimalSeparator)})
                 </div>
               </div>
               <div className="mt-3 text-xs text-slate-600 dark:text-slate-400 space-y-1">
                 <p>
-                  Eixo de simetria: <span className="font-mono font-bold">x = {formatNumberSmart(result.axisOfSymmetry, settings.decimalPlaces, settings.decimalSeparator)}</span>
+                  Eixo de simetria: <span className="font-mono font-bold">x = {formatNumberSmart(activeResult.axisOfSymmetry, settings.decimalPlaces, settings.decimalSeparator)}</span>
                 </p>
                 <p>
                   Ponto de:{' '}
                   <span className="font-bold text-indigo-600 dark:text-indigo-400">
-                    {result.a > 0 ? 'Mínimo (concavidade para cima)' : 'Máximo (concavidade para baixo)'}
+                    {activeResult.a > 0 ? 'Mínimo (concavidade para cima)' : 'Máximo (concavidade para baixo)'}
                   </span>
                 </p>
               </div>
@@ -293,16 +281,16 @@ export const BhaskaraModule: React.FC = () => {
 
           {/* Dynamic Auto-scaled Parabola Chart */}
           <ParabolaChart
-            result={result}
+            result={activeResult}
             decimals={settings.decimalPlaces}
             separator={settings.decimalSeparator}
           />
 
           {/* Step By Step Accordion */}
           <StepByStep
-            title={`Passo a Passo: ${result.formattedEquation}`}
-            steps={result.steps}
-            summaryText={`Resolução completa da equação quadrática ${result.formattedEquation}`}
+            title={`Passo a Passo: ${activeResult.formattedEquation}`}
+            steps={activeResult.steps}
+            summaryText={`Resolução completa da equação quadrática ${activeResult.formattedEquation}`}
           />
         </div>
       )}
