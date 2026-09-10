@@ -57,7 +57,15 @@ function createWindow() {
 
   // Open external links in default OS browser
   win.webContents.setWindowOpenHandler(({ url }) => {
-    require('electron').shell.openExternal(url);
+    try {
+      const { protocol } = new URL(url);
+      // Security: Only allow http and https protocols to prevent local file execution or NTLM relay attacks
+      if (protocol === 'https:' || protocol === 'http:') {
+        require('electron').shell.openExternal(url);
+      }
+    } catch {
+      // Malformed URL, do nothing
+    }
     return { action: 'deny' };
   });
 
