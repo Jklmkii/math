@@ -121,6 +121,31 @@ export const QuizModule: React.FC = () => {
     setScreen('playing');
   };
 
+  // Handle Timeout
+  const handleTimeout = useCallback(() => {
+    setIsAnswered(true);
+    setIsCorrect(false);
+    setIsTimedOut(true);
+    setFlashColor('red');
+    setStreak(0);
+
+    recordQuizAnswer({
+      track: selectedTrack,
+      countNumber,
+      correct: false,
+      xpEarned: score,
+      currentStreak: 0,
+    });
+
+    // Se estiver na sobrevivência: errou / zerou tempo, acabou!
+    if (selectedTrack === 'sobrevivencia') {
+      if (countNumber > currentRecord) setIsNewRecord(true);
+      setTimeout(() => {
+        setScreen('game_over');
+      }, 1000);
+    }
+  }, [selectedTrack, countNumber, score, currentRecord, recordQuizAnswer]);
+
   // Timer Countdown Effect
   useEffect(() => {
     if (screen !== 'playing' || difficultyMode === 'tranquilo' || isAnswered) {
@@ -146,32 +171,7 @@ export const QuizModule: React.FC = () => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [screen, difficultyMode, isAnswered, countNumber]);
-
-  // Handle Timeout
-  const handleTimeout = () => {
-    setIsAnswered(true);
-    setIsCorrect(false);
-    setIsTimedOut(true);
-    setFlashColor('red');
-    setStreak(0);
-
-    recordQuizAnswer({
-      track: selectedTrack,
-      countNumber,
-      correct: false,
-      xpEarned: score,
-      currentStreak: 0,
-    });
-
-    // Se estiver na sobrevivência: errou / zerou tempo, acabou!
-    if (selectedTrack === 'sobrevivencia') {
-      if (countNumber > currentRecord) setIsNewRecord(true);
-      setTimeout(() => {
-        setScreen('game_over');
-      }, 1000);
-    }
-  };
+  }, [screen, difficultyMode, isAnswered, countNumber, handleTimeout]);
 
   // Submission handler
   const handleConfirm = useCallback(() => {
@@ -267,35 +267,35 @@ export const QuizModule: React.FC = () => {
   ]);
 
   // Keypad Handlers
-  const handleAddDigit = (digit: string) => {
+  const handleAddDigit = useCallback((digit: string) => {
     if (isAnswered) return;
     setUserInput((prev) => {
       if (prev.length >= 10) return prev;
       return prev + digit;
     });
-  };
+  }, [isAnswered]);
 
-  const handleAddDecimal = () => {
+  const handleAddDecimal = useCallback(() => {
     if (isAnswered) return;
     setUserInput((prev) => {
       if (prev.includes(',') || prev.includes('.')) return prev;
       return (prev || '0') + ',';
     });
-  };
+  }, [isAnswered]);
 
-  const handleToggleNegative = () => {
+  const handleToggleNegative = useCallback(() => {
     if (isAnswered) return;
     setUserInput((prev) => {
       if (!prev) return '-';
       if (prev.startsWith('-')) return prev.slice(1);
       return '-' + prev;
     });
-  };
+  }, [isAnswered]);
 
-  const handleBackspace = () => {
+  const handleBackspace = useCallback(() => {
     if (isAnswered) return;
     setUserInput((prev) => prev.slice(0, -1));
-  };
+  }, [isAnswered]);
 
   // Keyboard Event Listener
   useEffect(() => {
@@ -327,7 +327,7 @@ export const QuizModule: React.FC = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [screen, isAnswered, countNumber, selectedTrack, handleConfirm, loadQuestion]);
+  }, [screen, isAnswered, countNumber, selectedTrack, handleConfirm, loadQuestion, handleAddDigit, handleAddDecimal, handleToggleNegative, handleBackspace]);
 
   // ==========================================
   // SCREEN 1: LOBBY / MENU (Estilo MatSpeed)
