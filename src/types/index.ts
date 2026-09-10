@@ -142,6 +142,7 @@ export interface UpdaterStatus {
 }
 
 declare global {
+  const __APP_VERSION__: string;
   interface Window {
     electronAPI?: {
       isElectron: boolean;

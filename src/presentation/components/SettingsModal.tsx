@@ -389,7 +389,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                   Atualizações do Aplicativo
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  MathUtils v1.0.0 (atualizações diretas via GitHub)
+                  MathUtils v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.0.3'} ({t.updates_subtitle})
                 </p>
               </div>
 
@@ -444,7 +444,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
         {/* Footer */}
         <div className="p-4 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center text-xs text-slate-400">
-          <span>MathUtils v1.0.0 (Versão Definitiva)</span>
+          <span>MathUtils v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.0.3'} ({t.definitive_edition})</span>
           <button
             type="button"
             onClick={onClose}
