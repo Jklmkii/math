@@ -1,7 +1,7 @@
 {
   "name": "mathutils",
   "productName": "MathUtils",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "type": "module",
   "description": "Calculadora didática offline de Bhaskara e Regra de Três Simples e Composta",
   "author": {
