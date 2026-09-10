@@ -75,6 +75,17 @@ Os arquivos gerados estarão na pasta `release/`:
 * `MathUtils-Setup-1.0.0.exe` (Instalador tradicional NSIS)
 * `MathUtils-1.0.0-portable.exe` (Executável portátil autônomo)
 
+Você também pode baixar os executáveis prontos diretamente na página de [Releases do GitHub](https://github.com/Jklmkii/math/releases).
+
+### 6. Mobile Android (.apk via Capacitor)
+```bash
+# Compilar frontend e sincronizar com o projeto nativo Android
+npm run cap:sync
+
+# Abrir no Android Studio para gerar o .apk ou rodar no emulador/dispositivo
+npm run cap:android
+```
+
 ---
 
 ## 👤 Autor
