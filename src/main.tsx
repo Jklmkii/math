@@ -9,8 +9,8 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>,
 )
 
-// Register PWA Service Worker for offline support
-if ('serviceWorker' in navigator && import.meta.env.PROD) {
+// Register PWA Service Worker for offline support (Web only - skip in Electron to prevent file:// protocol error)
+if ('serviceWorker' in navigator && import.meta.env.PROD && !window.electronAPI) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch((err) => {
       console.log('SW registration failed: ', err);

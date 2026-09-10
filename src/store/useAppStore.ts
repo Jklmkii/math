@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { AppSettings, CalculationType, HistoryItem } from '../types';
+import { validateHistorySchema } from '../core/storage/historyValidator';
 
 export type ActiveTab = 'bhaskara' | 'regra_simples' | 'regra_composta' | 'quiz' | 'history' | 'settings';
 
@@ -97,9 +98,11 @@ export const useAppStore = create<AppState>()(
       clearHistory: () => set({ history: [] }),
 
       importHistory: (items) => {
-        if (!Array.isArray(items)) return;
+        const validation = validateHistorySchema(items);
+        if (!validation.valid || !validation.data) return;
+
         set((state) => {
-          const merged = [...items, ...state.history];
+          const merged = [...validation.data!, ...state.history];
           // deduplicate by id
           const seen = new Set<string>();
           const unique = merged.filter((item) => {

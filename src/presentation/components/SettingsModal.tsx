@@ -1,7 +1,8 @@
 import React, { useRef, useState } from 'react';
 import { X, Moon, Sun, Laptop, Trash2, Download, Upload, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
-import type { DecimalPlaces, DecimalSeparator, HistoryItem, ThemeMode } from '../../types';
+import type { DecimalPlaces, DecimalSeparator, ThemeMode } from '../../types';
+import { validateHistorySchema } from '../../core/storage/historyValidator';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -123,15 +124,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
     reader.onload = (event) => {
       try {
         const parsed = JSON.parse(event.target?.result as string);
-        if (Array.isArray(parsed)) {
-          importHistory(parsed as HistoryItem[]);
-          setImportStatus(`Importado com sucesso (${parsed.length} itens)!`);
+        const validation = validateHistorySchema(parsed);
+
+        if (validation.valid && validation.data) {
+          importHistory(validation.data);
+          setImportStatus(`Importado com sucesso (${validation.data.length} itens)!`);
           setTimeout(() => setImportStatus(null), 3000);
         } else {
-          setImportStatus('Arquivo inválido: deve ser uma lista de cálculos.');
+          setImportStatus(validation.error || 'Arquivo de backup inválido.');
         }
       } catch {
-        setImportStatus('Erro ao ler arquivo JSON.');
+        setImportStatus('Erro: o arquivo selecionado não é um JSON válido.');
       }
     };
     reader.readAsText(file);
