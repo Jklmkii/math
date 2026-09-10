@@ -19,7 +19,8 @@
     "electron:dev": "concurrently -k \"vite\" \"wait-on tcp:5173 && electron .\"",
     "electron:build": "node scripts/build-electron.cjs",
     "cap:sync": "npm run build && cap sync",
-    "cap:android": "cap open android"
+    "cap:android": "cap open android",
+    "apk:build": "node scripts/build-apk.cjs"
   },
   "build": {
     "appId": "com.mathutils.desktop",

@@ -60,7 +60,9 @@ async function main() {
     { name: 'latest.yml', type: 'application/x-yaml' },
     { name: `MathUtils-Setup-${pkg.version}.exe.blockmap`, type: 'application/octet-stream' },
     { name: `MathUtils-Setup-${pkg.version}.exe`, type: 'application/octet-stream' },
-    { name: `MathUtils-${pkg.version}-portable.exe`, type: 'application/octet-stream' }
+    { name: `MathUtils-${pkg.version}-portable.exe`, type: 'application/octet-stream' },
+    { name: `MathUtils-${pkg.version}.apk`, type: 'application/vnd.android.package-archive' },
+    { name: 'MathUtils.apk', type: 'application/vnd.android.package-archive' }
   ];
 
   for (const file of filesToUpload) {
