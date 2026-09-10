@@ -1,19 +1,111 @@
-const TOKEN = process.env.GITHUB_TOKEN;
-const OWNER = 'Jklmkii';
-const REPO = 'math';
-const TAG = process.env.RELEASE_TAG || 'v1.0.0';
+const fs = require('fs');
+const path = require('path');
 
-if (!TOKEN) {
-  console.error('Erro: Defina a variável de ambiente GITHUB_TOKEN para publicar a release.');
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
+if (!GITHUB_TOKEN) {
+  console.error('Missing GITHUB_TOKEN environment variable.');
   process.exit(1);
 }
+const OWNER = 'Jklmkii';
+const REPO = 'math';
+const TAG = 'v1.0.1';
 
 async function main() {
-  console.log(`Criando Release ${TAG} no repositório ${OWNER}/${REPO}...`);
-  // Script preparado para futuras releases automatizadas
+  const headers = {
+    'Authorization': `token ${GITHUB_TOKEN}`,
+    'Accept': 'application/vnd.github.v3+json',
+    'User-Agent': 'MathUtils-Publisher'
+  };
+
+  console.log(`Checking existing releases for ${OWNER}/${REPO}...`);
+  const listRes = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/releases`, { headers });
+  if (!listRes.ok) {
+    throw new Error(`Failed to list releases: ${listRes.status} ${listRes.statusText}`);
+  }
+  const releases = await listRes.json();
+  let targetRelease = releases.find(r => r.tag_name === TAG);
+
+  if (!targetRelease) {
+    console.log(`Creating release ${TAG}...`);
+    const createRes = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/releases`, {
+      method: 'POST',
+      headers: {
+        ...headers,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        tag_name: TAG,
+        target_commitish: 'main',
+        name: `MathUtils ${TAG} — Suporte a Inglês e Português`,
+        body: `## Novidades da versão 1.0.1\n\n- 🌐 **Suporte Bilíngue**: Alterne facilmente entre Português (Brasil) e English (US) no menu de configurações.\n- 🔄 **Auto-Updater Ativo**: Atualizações automáticas diretamente pelo GitHub Releases com verificação de integridade.\n- ⚡ **Otimizações de Desempenho**: Melhorias no módulo de quiz/sobrevivência e histórico.\n\n### Arquivos disponíveis\n- \`MathUtils-Setup-1.0.1.exe\` (Instalador com suporte a auto-update)\n- \`MathUtils-1.0.1-portable.exe\` (Versão portátil sem instalação)`,
+        draft: false,
+        prerelease: false
+      })
+    });
+
+    if (!createRes.ok) {
+      const errText = await createRes.text();
+      throw new Error(`Failed to create release: ${createRes.status} ${errText}`);
+    }
+    targetRelease = await createRes.json();
+    console.log(`Release ${TAG} created with ID ${targetRelease.id}.`);
+  } else {
+    console.log(`Release ${TAG} already exists (ID: ${targetRelease.id}).`);
+  }
+
+  const uploadBaseUrl = targetRelease.upload_url.split('{')[0];
+  const releaseDir = path.join(__dirname, '..', 'release');
+  const filesToUpload = [
+    { name: 'latest.yml', type: 'application/x-yaml' },
+    { name: 'MathUtils-Setup-1.0.1.exe.blockmap', type: 'application/octet-stream' },
+    { name: 'MathUtils-Setup-1.0.1.exe', type: 'application/octet-stream' },
+    { name: 'MathUtils-1.0.1-portable.exe', type: 'application/octet-stream' }
+  ];
+
+  for (const file of filesToUpload) {
+    const filePath = path.join(releaseDir, file.name);
+    if (!fs.existsSync(filePath)) {
+      console.warn(`File ${filePath} not found, skipping.`);
+      continue;
+    }
+
+    const existingAsset = (targetRelease.assets || []).find(a => a.name === file.name);
+    if (existingAsset) {
+      console.log(`Asset ${file.name} already exists (ID ${existingAsset.id}), deleting before re-upload...`);
+      await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/releases/assets/${existingAsset.id}`, {
+        method: 'DELETE',
+        headers
+      });
+    }
+
+    console.log(`Uploading ${file.name} (${(fs.statSync(filePath).size / (1024*1024)).toFixed(2)} MB)...`);
+    const fileStream = fs.createReadStream(filePath);
+    const fileSize = fs.statSync(filePath).size;
+
+    const uploadRes = await fetch(`${uploadBaseUrl}?name=${encodeURIComponent(file.name)}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `token ${GITHUB_TOKEN}`,
+        'Content-Type': file.type,
+        'Content-Length': fileSize.toString(),
+        'User-Agent': 'MathUtils-Publisher'
+      },
+      body: fileStream,
+      duplex: 'half'
+    });
+
+    if (!uploadRes.ok) {
+      const err = await uploadRes.text();
+      console.error(`Failed to upload ${file.name}: ${uploadRes.status} ${err}`);
+    } else {
+      console.log(`Successfully uploaded ${file.name}!`);
+    }
+  }
+
+  console.log('\n--- Release publication completed successfully! ---');
 }
 
-main().catch((err) => {
-  console.error(err);
+main().catch(err => {
+  console.error('Error publishing release:', err);
   process.exit(1);
 });
