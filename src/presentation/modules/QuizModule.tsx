@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Brain, Flame, Trophy, RefreshCw, CheckCircle2, XCircle, ArrowRight } from 'lucide-react';
 import { generateQuizQuestion } from '../../core/math/quizGenerator';
 import { StepByStep } from '../components/StepByStep';
 import type { QuizQuestion } from '../../types';
 
 export const QuizModule: React.FC = () => {
-  const [currentQuestion, setCurrentQuestion] = useState<QuizQuestion | null>(null);
+  const [currentQuestion, setCurrentQuestion] = useState<QuizQuestion>(generateQuizQuestion);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
   const [streak, setStreak] = useState(0);
@@ -16,10 +16,6 @@ export const QuizModule: React.FC = () => {
     setSelectedAnswer(null);
     setIsAnswered(false);
   };
-
-  useEffect(() => {
-    loadNewQuestion();
-  }, []);
 
   const handleSelectOption = (option: number) => {
     if (isAnswered || !currentQuestion) return;

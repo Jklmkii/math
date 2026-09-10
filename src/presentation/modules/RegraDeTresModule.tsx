@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Scale, Plus, Trash2, ArrowRightLeft, Sparkles, AlertCircle } from 'lucide-react';
 import { NumericInput } from '../components/NumericInput';
 import { StepByStep } from '../components/StepByStep';
 import { calculateRegraDeTresSimples, suggestProportionality } from '../../core/math/regraDeTresSimples';
 import { calculateRegraDeTresComposta } from '../../core/math/regraDeTresComposta';
 import { useAppStore } from '../../store/useAppStore';
-import type { CompostaColumn, ProportionType, RegraDeTresCompostaResult, RegraDeTresSimplesResult, SimpleGridPosition } from '../../types';
+import type { CompostaColumn, ProportionType, SimpleGridPosition } from '../../types';
 
 export const RegraDeTresModule: React.FC = () => {
   const { settings, addHistoryItem } = useAppStore();
@@ -20,8 +20,6 @@ export const RegraDeTresModule: React.FC = () => {
   const [proportionType, setProportionType] = useState<ProportionType>('direct');
   const [labelA, setLabelA] = useState<string>('Quantidade (kg)');
   const [labelB, setLabelB] = useState<string>('Preço (R$)');
-  const [simplesResult, setSimplesResult] = useState<RegraDeTresSimplesResult | null>(null);
-  const [simplesError, setSimplesError] = useState<string | null>(null);
 
   // COMPOSTA STATE
   const [compostaColumns, setCompostaColumns] = useState<CompostaColumn[]>([
@@ -29,26 +27,22 @@ export const RegraDeTresModule: React.FC = () => {
     { id: '2', name: 'Metros', val1: '120', val2: '300', isTarget: false, proportionWithTarget: 'direct' },
     { id: '3', name: 'Dias (Tempo)', val1: '8', val2: '', isTarget: true, proportionWithTarget: 'direct' },
   ]);
-  const [compostaResult, setCompostaResult] = useState<RegraDeTresCompostaResult | null>(null);
-  const [compostaError, setCompostaError] = useState<string | null>(null);
 
   // Heuristic check for Simples
   const suggestedType = suggestProportionality(labelA, labelB);
   const showHeuristicSuggestion = suggestedType !== proportionType;
 
   // Run Simples Calculation
-  useEffect(() => {
-    if (mode !== 'simples') return;
-    setSimplesError(null);
+  const computedSimples = React.useMemo(() => {
+    if (mode !== 'simples') return { res: null, err: null };
 
-    const checkVals: Record<SimpleGridPosition, string> = { a1, b1, a2, b2 };
-    const requiredKeys = (['a1', 'b1', 'a2', 'b2'] as SimpleGridPosition[]).filter((p) => p !== unknownPos);
-
-    for (const key of requiredKeys) {
-      if (!checkVals[key] || checkVals[key].trim() === '') {
-        setSimplesResult(null);
-        return;
-      }
+    if (
+      (unknownPos !== 'a1' && (!a1 || a1.trim() === '')) ||
+      (unknownPos !== 'b1' && (!b1 || b1.trim() === '')) ||
+      (unknownPos !== 'a2' && (!a2 || a2.trim() === '')) ||
+      (unknownPos !== 'b2' && (!b2 || b2.trim() === ''))
+    ) {
+      return { res: null, err: null };
     }
 
     try {
@@ -68,49 +62,52 @@ export const RegraDeTresModule: React.FC = () => {
           separator: settings.decimalSeparator,
         }
       );
-      setSimplesResult(calc);
+      return { res: calc, err: null };
     } catch (err: unknown) {
-      setSimplesError((err as Error).message || 'Erro no cálculo');
-      setSimplesResult(null);
+      return { res: null, err: (err as Error).message || 'Erro no cálculo' };
     }
   }, [a1, b1, a2, b2, unknownPos, proportionType, labelA, labelB, mode, settings.decimalPlaces, settings.decimalSeparator]);
 
+  const activeSimplesResult = computedSimples.res;
+  const activeSimplesError = computedSimples.err;
+
   // Run Composta Calculation
-  useEffect(() => {
-    if (mode !== 'composta') return;
-    setCompostaError(null);
+  const computedComposta = React.useMemo(() => {
+    if (mode !== 'composta') return { res: null, err: null };
 
     try {
       const calc = calculateRegraDeTresComposta(compostaColumns, {
         decimals: settings.decimalPlaces,
         separator: settings.decimalSeparator,
       });
-      setCompostaResult(calc);
+      return { res: calc, err: null };
     } catch (err: unknown) {
-      setCompostaError((err as Error).message);
-      setCompostaResult(null);
+      return { res: null, err: (err as Error).message };
     }
   }, [compostaColumns, mode, settings.decimalPlaces, settings.decimalSeparator]);
 
+  const activeCompostaResult = computedComposta.res;
+  const activeCompostaError = computedComposta.err;
+
   const handleSaveSimplesToHistory = () => {
-    if (!simplesResult) return;
+    if (!activeSimplesResult) return;
     addHistoryItem({
       type: 'regra_simples',
       title: `Regra de 3 Simples: ${labelA} x ${labelB}`,
-      summary: `x = ${simplesResult.formattedX} (${proportionType === 'direct' ? 'Direta' : 'Inversa'})`,
-      details: simplesResult.steps.join('\n'),
+      summary: `x = ${activeSimplesResult.formattedX} (${proportionType === 'direct' ? 'Direta' : 'Inversa'})`,
+      details: activeSimplesResult.steps.join('\n'),
       rawPayload: { a1, b1, a2, b2, unknownPos, proportionType },
     });
   };
 
   const handleSaveCompostaToHistory = () => {
-    if (!compostaResult) return;
+    if (!activeCompostaResult) return;
     const target = compostaColumns.find((c) => c.isTarget);
     addHistoryItem({
       type: 'regra_composta',
       title: `Regra de 3 Composta: ${target?.name || 'Alvo'}`,
-      summary: `x = ${compostaResult.formattedX} (${compostaColumns.length} grandezas)`,
-      details: compostaResult.steps.join('\n'),
+      summary: `x = ${activeCompostaResult.formattedX} (${compostaColumns.length} grandezas)`,
+      details: activeCompostaResult.steps.join('\n'),
       rawPayload: { columns: compostaColumns },
     });
   };
@@ -380,16 +377,16 @@ export const RegraDeTresModule: React.FC = () => {
               </div>
             </div>
 
-            {simplesError && (
+            {activeSimplesError && (
               <div className="p-3.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 flex items-center gap-3 text-red-600 dark:text-red-400 text-xs font-semibold">
                 <AlertCircle size={18} className="shrink-0" />
-                <span>{simplesError}</span>
+                <span>{activeSimplesError}</span>
               </div>
             )}
           </div>
 
           {/* Result Display for Simples */}
-          {simplesResult && (
+          {activeSimplesResult && (
             <div className="flex flex-col gap-6 animate-in fade-in duration-300">
               <div className="p-6 rounded-3xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white shadow-xl shadow-indigo-600/25 flex flex-col md:flex-row items-center justify-between gap-4">
                 <div>
@@ -397,10 +394,10 @@ export const RegraDeTresModule: React.FC = () => {
                     Incógnita Encontrada
                   </span>
                   <div className="text-4xl font-black mt-1 font-mono">
-                    x = {simplesResult.formattedX}
+                    x = {activeSimplesResult.formattedX}
                   </div>
                   <span className="text-xs text-indigo-100/90 font-mono mt-2 inline-block">
-                    Fórmula aplicada: {simplesResult.formula}
+                    Fórmula aplicada: {activeSimplesResult.formula}
                   </span>
                 </div>
 
@@ -415,8 +412,8 @@ export const RegraDeTresModule: React.FC = () => {
 
               <StepByStep
                 title="Passo a Passo: Regra de Três Simples"
-                steps={simplesResult.steps}
-                summaryText={`Regra de três simples (${proportionType === 'direct' ? 'direta' : 'inversa'}) com resultado x = ${simplesResult.formattedX}`}
+                steps={activeSimplesResult.steps}
+                summaryText={`Regra de três simples (${proportionType === 'direct' ? 'direta' : 'inversa'}) com resultado x = ${activeSimplesResult.formattedX}`}
               />
             </div>
           )}
@@ -560,16 +557,16 @@ export const RegraDeTresModule: React.FC = () => {
               ))}
             </div>
 
-            {compostaError && (
+            {activeCompostaError && (
               <div className="p-3.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 flex items-center gap-3 text-red-600 dark:text-red-400 text-xs font-semibold">
                 <AlertCircle size={18} className="shrink-0" />
-                <span>{compostaError}</span>
+                <span>{activeCompostaError}</span>
               </div>
             )}
           </div>
 
           {/* Result Display for Composta */}
-          {compostaResult && (
+          {activeCompostaResult && (
             <div className="flex flex-col gap-6 animate-in fade-in duration-300">
               <div className="p-6 rounded-3xl bg-gradient-to-tr from-violet-600 to-indigo-600 text-white shadow-xl shadow-violet-600/25 flex flex-col md:flex-row items-center justify-between gap-4">
                 <div>
@@ -577,10 +574,10 @@ export const RegraDeTresModule: React.FC = () => {
                     Incógnita Encontrada
                   </span>
                   <div className="text-4xl font-black mt-1 font-mono">
-                    x = {compostaResult.formattedX}
+                    x = {activeCompostaResult.formattedX}
                   </div>
                   <span className="text-xs text-violet-100/90 font-mono mt-2 inline-block">
-                    Equação: {compostaResult.equation}
+                    Equação: {activeCompostaResult.equation}
                   </span>
                 </div>
 
@@ -595,8 +592,8 @@ export const RegraDeTresModule: React.FC = () => {
 
               <StepByStep
                 title="Passo a Passo: Regra de Três Composta"
-                steps={compostaResult.steps}
-                summaryText={`Regra de três composta com ${compostaColumns.length} grandezas, resultado x = ${compostaResult.formattedX}`}
+                steps={activeCompostaResult.steps}
+                summaryText={`Regra de três composta com ${compostaColumns.length} grandezas, resultado x = ${activeCompostaResult.formattedX}`}
               />
             </div>
           )}
