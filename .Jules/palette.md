@@ -1,0 +1,3 @@
+## 2026-09-10 - Added Keyboard Focus States to StepByStep Component
+**Learning:** Keyboard accessibility is often overlooked in highly custom UI components built with Tailwind. The use of `focus:outline-none` without providing an alternative `focus-visible` state makes it difficult for keyboard users to navigate interactive elements. Providing clear focus rings (e.g., `focus-visible:ring-2`) is a crucial and easily implemented UX improvement for accessibility.
+**Action:** Always verify that interactive elements, especially custom buttons that remove default outlines, have a clear `focus-visible` style to ensure proper keyboard navigation support.

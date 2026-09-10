@@ -49,7 +49,7 @@ export const StepByStep: React.FC<StepByStepProps> = ({
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-2.5 text-left font-semibold text-slate-800 dark:text-slate-200 touch-target focus:outline-none"
+          className="flex items-center gap-2.5 text-left font-semibold text-slate-800 dark:text-slate-200 touch-target focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/50"
         >
           <span className="p-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400">
             {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
@@ -61,7 +61,7 @@ export const StepByStep: React.FC<StepByStepProps> = ({
           <button
             type="button"
             onClick={handleCopy}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors touch-target"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors touch-target focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/50"
             title="Copiar resolução"
             aria-label="Copiar resolução"
           >
@@ -82,7 +82,7 @@ export const StepByStep: React.FC<StepByStepProps> = ({
             <button
               type="button"
               onClick={handleShare}
-              className="p-2 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 touch-target flex items-center justify-center transition-colors"
+              className="p-2 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 touch-target flex items-center justify-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/50"
               title="Compartilhar resolução"
               aria-label="Compartilhar"
             >
