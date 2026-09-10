@@ -8,7 +8,14 @@ interface ParabolaChartProps {
   separator?: DecimalSeparator;
 }
 
-export const ParabolaChart: React.FC<ParabolaChartProps> = ({
+/**
+ * ⚡ Bolt: Performance Optimization
+ * 💡 What: Wrapped ParabolaChart with React.memo()
+ * 🎯 Why: This component renders a complex SVG tree and does not need to re-render when parent state (like the text input in BhaskaraModule) changes, as long as the computed `result` is structurally equal (it is memoized in the parent).
+ * 📊 Impact: Prevents expensive layout and SVG recreation on every keystroke when typing in the text equation parser.
+ * 🔬 Measurement: Observe React DevTools Profiler while typing in the Bhaskara text parser - ParabolaChart will no longer re-render.
+ */
+export const ParabolaChart: React.FC<ParabolaChartProps> = React.memo(({
   result,
   decimals = 2,
   separator = ',',
@@ -322,4 +329,4 @@ export const ParabolaChart: React.FC<ParabolaChartProps> = ({
       </div>
     </div>
   );
-};
+});
