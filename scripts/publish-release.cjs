@@ -8,7 +8,8 @@ if (!GITHUB_TOKEN) {
 }
 const OWNER = 'Jklmkii';
 const REPO = 'math';
-const TAG = 'v1.0.1';
+const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
+const TAG = 'v' + pkg.version;
 
 async function main() {
   const headers = {
@@ -36,8 +37,8 @@ async function main() {
       body: JSON.stringify({
         tag_name: TAG,
         target_commitish: 'main',
-        name: `MathUtils ${TAG} — Suporte a Inglês e Português`,
-        body: `## Novidades da versão 1.0.1\n\n- 🌐 **Suporte Bilíngue**: Alterne facilmente entre Português (Brasil) e English (US) no menu de configurações.\n- 🔄 **Auto-Updater Ativo**: Atualizações automáticas diretamente pelo GitHub Releases com verificação de integridade.\n- ⚡ **Otimizações de Desempenho**: Melhorias no módulo de quiz/sobrevivência e histórico.\n\n### Arquivos disponíveis\n- \`MathUtils-Setup-1.0.1.exe\` (Instalador com suporte a auto-update)\n- \`MathUtils-1.0.1-portable.exe\` (Versão portátil sem instalação)`,
+        name: `MathUtils ${TAG} — Atualizações e melhorias`,
+        body: `## Novidades da versão ${pkg.version}\n\n- 🚀 Melhorias de desempenho e estabilidade no Quiz e gráficos.\n- ♿ Melhorias de acessibilidade e foco no teclado.\n- 🔄 Suporte a atualizações automáticas via GitHub Releases.\n\n### Arquivos disponíveis\n- \`MathUtils-Setup-${pkg.version}.exe\` (Instalador com suporte a auto-update)\n- \`MathUtils-${pkg.version}-portable.exe\` (Versão portátil sem instalação)`,
         draft: false,
         prerelease: false
       })
@@ -57,9 +58,9 @@ async function main() {
   const releaseDir = path.join(__dirname, '..', 'release');
   const filesToUpload = [
     { name: 'latest.yml', type: 'application/x-yaml' },
-    { name: 'MathUtils-Setup-1.0.1.exe.blockmap', type: 'application/octet-stream' },
-    { name: 'MathUtils-Setup-1.0.1.exe', type: 'application/octet-stream' },
-    { name: 'MathUtils-1.0.1-portable.exe', type: 'application/octet-stream' }
+    { name: `MathUtils-Setup-${pkg.version}.exe.blockmap`, type: 'application/octet-stream' },
+    { name: `MathUtils-Setup-${pkg.version}.exe`, type: 'application/octet-stream' },
+    { name: `MathUtils-${pkg.version}-portable.exe`, type: 'application/octet-stream' }
   ];
 
   for (const file of filesToUpload) {
