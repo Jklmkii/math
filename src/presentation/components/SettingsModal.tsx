@@ -1,0 +1,350 @@
+import React, { useRef, useState } from 'react';
+import { X, Moon, Sun, Laptop, Trash2, Download, Upload, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { useAppStore } from '../../store/useAppStore';
+import type { DecimalPlaces, DecimalSeparator, HistoryItem, ThemeMode } from '../../types';
+
+interface SettingsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
+  const { settings, updateSettings, history, clearHistory, importHistory } = useAppStore();
+  const [confirmClear, setConfirmClear] = useState(false);
+  const [importStatus, setImportStatus] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  if (!isOpen) return null;
+
+  // RFC 4180 compliant CSV field escaping
+  const escapeCSVField = (val: unknown): string => {
+    if (val === null || val === undefined) return '""';
+    const str = String(val);
+    return `"${str.replace(/"/g, '""')}"`;
+  };
+
+  const generateCSVContent = (): string => {
+    const headers = ['ID', 'Data/Hora', 'Tipo', 'Título', 'Resumo', 'Passo a Passo', 'Favorito'];
+    const rows = history.map((item) => [
+      escapeCSVField(item.id),
+      escapeCSVField(new Date(item.timestamp).toLocaleString('pt-BR')),
+      escapeCSVField(item.type),
+      escapeCSVField(item.title),
+      escapeCSVField(item.summary),
+      escapeCSVField(item.details),
+      escapeCSVField(item.isPinned ? 'Sim' : 'Não'),
+    ]);
+
+    return [headers.join(';'), ...rows.map((row) => row.join(';'))].join('\r\n');
+  };
+
+  // Export JSON (Native Electron or Web Download)
+  const handleExportJSON = async () => {
+    const jsonStr = JSON.stringify(history, null, 2);
+    const defaultName = `mathutils-historico-${new Date().toISOString().slice(0, 10)}.json`;
+
+    if (window.electronAPI?.saveFile) {
+      const res = await window.electronAPI.saveFile(defaultName, jsonStr, [
+        { name: 'Arquivos JSON', extensions: ['json'] },
+      ]);
+      if (res.success) {
+        setImportStatus('Backup JSON salvo com sucesso!');
+        setTimeout(() => setImportStatus(null), 3000);
+      } else if (res.error) {
+        setImportStatus(`Erro ao salvar: ${res.error}`);
+      }
+      return;
+    }
+
+    // Web Fallback
+    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(jsonStr);
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute('href', dataStr);
+    downloadAnchor.setAttribute('download', defaultName);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  };
+
+  // Export CSV (Native Electron or Web Download)
+  const handleExportCSV = async () => {
+    const csvContent = generateCSVContent();
+    const defaultName = `mathutils-historico-${new Date().toISOString().slice(0, 10)}.csv`;
+
+    if (window.electronAPI?.saveFile) {
+      const res = await window.electronAPI.saveFile(defaultName, '\ufeff' + csvContent, [
+        { name: 'Arquivos CSV', extensions: ['csv'] },
+      ]);
+      if (res.success) {
+        setImportStatus('Backup CSV salvo com sucesso!');
+        setTimeout(() => setImportStatus(null), 3000);
+      } else if (res.error) {
+        setImportStatus(`Erro ao salvar: ${res.error}`);
+      }
+      return;
+    }
+
+    // Web Fallback
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', defaultName);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  };
+
+  // Import JSON file (Native Electron Dialog or HTML5 file picker fallback)
+  const handleImport = async () => {
+    if (window.electronAPI?.openFile) {
+      const res = await window.electronAPI.openFile([
+        { name: 'Arquivos JSON', extensions: ['json'] },
+      ]);
+      if (res.canceled) return;
+      if (res.success && res.data) {
+        importHistory(res.data);
+        setImportStatus(`Importado com sucesso (${res.data.length} itens)!`);
+        setTimeout(() => setImportStatus(null), 3000);
+      } else {
+        setImportStatus(res.error || 'Erro ao importar arquivo.');
+      }
+      return;
+    }
+
+    fileInputRef.current?.click();
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const parsed = JSON.parse(event.target?.result as string);
+        if (Array.isArray(parsed)) {
+          importHistory(parsed as HistoryItem[]);
+          setImportStatus(`Importado com sucesso (${parsed.length} itens)!`);
+          setTimeout(() => setImportStatus(null), 3000);
+        } else {
+          setImportStatus('Arquivo inválido: deve ser uma lista de cálculos.');
+        }
+      } catch {
+        setImportStatus('Erro ao ler arquivo JSON.');
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in">
+      <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800/80">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Configurações</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors touch-target flex items-center justify-center"
+            aria-label="Fechar"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-5 overflow-y-auto space-y-6 text-sm text-slate-700 dark:text-slate-300">
+          {/* Theme */}
+          <div>
+            <label className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-2">
+              Tema da Interface
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              {(
+                [
+                  { mode: 'light', label: 'Claro', icon: <Sun size={18} /> },
+                  { mode: 'dark', label: 'Escuro', icon: <Moon size={18} /> },
+                  { mode: 'system', label: 'Sistema', icon: <Laptop size={18} /> },
+                ] as const
+              ).map((item) => (
+                <button
+                  key={item.mode}
+                  type="button"
+                  onClick={() => updateSettings({ theme: item.mode as ThemeMode })}
+                  className={`flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border font-semibold transition-all touch-target ${
+                    settings.theme === item.mode
+                      ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400'
+                      : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                  }`}
+                >
+                  {item.icon}
+                  <span>{item.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Decimal Places */}
+          <div>
+            <label className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-2">
+              Precisão Decimal
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              {([2, 4, 6] as DecimalPlaces[]).map((places) => (
+                <button
+                  key={places}
+                  type="button"
+                  onClick={() => updateSettings({ decimalPlaces: places })}
+                  className={`p-3 rounded-2xl border font-semibold text-center transition-all touch-target ${
+                    settings.decimalPlaces === places
+                      ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400'
+                      : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                  }`}
+                >
+                  {places} casas
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Decimal Separator */}
+          <div>
+            <label className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-2">
+              Separador Decimal
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {(
+                [
+                  { sep: ',', label: 'Vírgula (ex: 3,14)' },
+                  { sep: '.', label: 'Ponto (ex: 3.14)' },
+                ] as const
+              ).map((item) => (
+                <button
+                  key={item.sep}
+                  type="button"
+                  onClick={() => updateSettings({ decimalSeparator: item.sep as DecimalSeparator })}
+                  className={`p-3 rounded-2xl border font-semibold text-center transition-all touch-target ${
+                    settings.decimalSeparator === item.sep
+                      ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400'
+                      : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* History Management */}
+          <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80">
+            <label className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-2">
+              Backup e Dados ({history.length} salvos)
+            </label>
+
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <button
+                type="button"
+                onClick={handleExportJSON}
+                disabled={history.length === 0}
+                className="flex items-center justify-center gap-2 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors font-semibold text-xs touch-target disabled:opacity-40"
+              >
+                <Download size={16} /> Exportar JSON
+              </button>
+              <button
+                type="button"
+                onClick={handleExportCSV}
+                disabled={history.length === 0}
+                className="flex items-center justify-center gap-2 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors font-semibold text-xs touch-target disabled:opacity-40"
+              >
+                <Download size={16} /> Exportar CSV
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+                accept=".json"
+                className="hidden"
+              />
+              <button
+                type="button"
+                onClick={handleImport}
+                className="w-full flex items-center justify-center gap-2 p-3 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors font-semibold text-xs touch-target"
+              >
+                <Upload size={16} /> Importar Backup JSON
+              </button>
+
+              {importStatus && (
+                <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 p-2.5 rounded-xl">
+                  <CheckCircle2 size={16} /> {importStatus}
+                </div>
+              )}
+            </div>
+
+            {/* Clear History */}
+            <div className="mt-3">
+              {confirmClear ? (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      clearHistory();
+                      setConfirmClear(false);
+                    }}
+                    className="flex-1 p-3 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs touch-target"
+                  >
+                    Confirmar Limpeza Total
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmClear(false)}
+                    className="p-3 rounded-2xl border border-slate-200 dark:border-slate-800 font-semibold text-xs touch-target"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setConfirmClear(true)}
+                  disabled={history.length === 0}
+                  className="w-full flex items-center justify-center gap-2 p-3 rounded-2xl text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors font-semibold text-xs touch-target disabled:opacity-40"
+                >
+                  <Trash2 size={16} /> Limpar todo o histórico
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Privacy & Offline Banner */}
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex items-start gap-3">
+            <ShieldCheck size={22} className="text-emerald-500 shrink-0 mt-0.5" />
+            <div className="text-xs space-y-1">
+              <p className="font-bold text-slate-800 dark:text-slate-200">
+                100% Offline e Privado
+              </p>
+              <p className="text-slate-500 dark:text-slate-400 leading-relaxed">
+                Nenhum dado sai do seu aparelho. Todos os cálculos e históricos são armazenados exclusivamente na memória do seu dispositivo.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="p-4 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center text-xs text-slate-400">
+          <span>MathUtils v1.0.0 (Versão Definitiva)</span>
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-5 py-2.5 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-bold touch-target"
+          >
+            Concluir
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
