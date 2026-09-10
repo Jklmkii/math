@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { AppSettings, CalculationType, HistoryItem } from '../types';
+import type { AppSettings, CalculationType, HistoryItem, QuizProgress, QuizTrackSelector } from '../types';
 import { validateHistorySchema } from '../core/storage/historyValidator';
 
 export type ActiveTab = 'bhaskara' | 'regra_simples' | 'regra_composta' | 'quiz' | 'history' | 'settings';
@@ -28,9 +28,37 @@ interface AppState {
   clearHistory: () => void;
   importHistory: (items: HistoryItem[]) => void;
 
+  // Treino / Quiz
+  quizProgress: QuizProgress;
+  recordQuizAnswer: (params: {
+    track: QuizTrackSelector;
+    countNumber: number;
+    correct: boolean;
+    xpEarned: number;
+    currentStreak: number;
+  }) => void;
+  resetQuizProgress: (track?: QuizTrackSelector) => void;
+
   // Onboarding
   completeOnboarding: () => void;
 }
+
+const DEFAULT_QUIZ_PROGRESS: QuizProgress = {
+  survival: {
+    highScore: 0,
+    maxStreak: 0,
+    recordCount: 0,
+    totalAnswered: 0,
+    totalCorrect: 0,
+  },
+  tracks: {
+    soma: { currentLevel: 1, bestStreak: 0, recordCount: 0, totalCorrect: 0, totalAnswered: 0 },
+    subtracao: { currentLevel: 1, bestStreak: 0, recordCount: 0, totalCorrect: 0, totalAnswered: 0 },
+    multiplicacao: { currentLevel: 1, bestStreak: 0, recordCount: 0, totalCorrect: 0, totalAnswered: 0 },
+    divisao: { currentLevel: 1, bestStreak: 0, recordCount: 0, totalCorrect: 0, totalAnswered: 0 },
+    regra_simples: { currentLevel: 1, bestStreak: 0, recordCount: 0, totalCorrect: 0, totalAnswered: 0 },
+  },
+};
 
 const DEFAULT_SETTINGS: AppSettings = {
   theme: 'system',
@@ -45,6 +73,81 @@ export const useAppStore = create<AppState>()(
     (set) => ({
       activeTab: 'bhaskara',
       setActiveTab: (tab) => set({ activeTab: tab }),
+
+      quizProgress: DEFAULT_QUIZ_PROGRESS,
+      recordQuizAnswer: ({ track, countNumber, correct, xpEarned, currentStreak }) => {
+        set((state) => {
+          const prevProgress = state.quizProgress || DEFAULT_QUIZ_PROGRESS;
+          if (track === 'sobrevivencia') {
+            const prevSurv = prevProgress.survival || DEFAULT_QUIZ_PROGRESS.survival;
+            return {
+              quizProgress: {
+                ...prevProgress,
+                survival: {
+                  ...prevSurv,
+                  totalAnswered: prevSurv.totalAnswered + 1,
+                  totalCorrect: prevSurv.totalCorrect + (correct ? 1 : 0),
+                  highScore: Math.max(prevSurv.highScore, xpEarned),
+                  maxStreak: Math.max(prevSurv.maxStreak, currentStreak),
+                  recordCount: Math.max(prevSurv.recordCount, countNumber),
+                },
+              },
+            };
+          } else {
+            const prevTrack = prevProgress.tracks?.[track] || {
+              currentLevel: 1,
+              bestStreak: 0,
+              recordCount: 0,
+              totalCorrect: 0,
+              totalAnswered: 0,
+            };
+            const newTotalAnswered = prevTrack.totalAnswered + 1;
+            const newTotalCorrect = prevTrack.totalCorrect + (correct ? 1 : 0);
+            const newBestStreak = Math.max(prevTrack.bestStreak, currentStreak);
+            const newRecordCount = Math.max(prevTrack.recordCount, countNumber);
+            const newLevel = Math.max(prevTrack.currentLevel, Math.floor(newRecordCount / 5) + 1);
+
+            return {
+              quizProgress: {
+                ...prevProgress,
+                tracks: {
+                  ...prevProgress.tracks,
+                  [track]: {
+                    currentLevel: newLevel,
+                    bestStreak: newBestStreak,
+                    recordCount: newRecordCount,
+                    totalCorrect: newTotalCorrect,
+                    totalAnswered: newTotalAnswered,
+                  },
+                },
+              },
+            };
+          }
+        });
+      },
+      resetQuizProgress: (targetTrack) => {
+        set((state) => {
+          const prev = state.quizProgress || DEFAULT_QUIZ_PROGRESS;
+          if (!targetTrack || targetTrack === 'sobrevivencia') {
+            return {
+              quizProgress: {
+                ...prev,
+                survival: { ...DEFAULT_QUIZ_PROGRESS.survival },
+              },
+            };
+          } else {
+            return {
+              quizProgress: {
+                ...prev,
+                tracks: {
+                  ...prev.tracks,
+                  [targetTrack]: { ...DEFAULT_QUIZ_PROGRESS.tracks[targetTrack] },
+                },
+              },
+            };
+          }
+        });
+      },
 
       settings: DEFAULT_SETTINGS,
       updateSettings: (partial) =>

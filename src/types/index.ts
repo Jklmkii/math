@@ -91,14 +91,44 @@ export interface AppSettings {
   hasCompletedOnboarding: boolean;
 }
 
+export type QuizDifficultyMode = 'tranquilo' | 'velocidade' | 'brutal';
+export type QuizTrack = 'soma' | 'subtracao' | 'multiplicacao' | 'divisao' | 'regra_simples';
+export type QuizTrackSelector = QuizTrack | 'sobrevivencia';
+
+export interface SurvivalStats {
+  highScore: number;
+  maxStreak: number;
+  recordCount: number;
+  totalAnswered: number;
+  totalCorrect: number;
+}
+
+export interface QuizTrackProgress {
+  currentLevel: number;
+  bestStreak: number;
+  recordCount: number;
+  totalCorrect: number;
+  totalAnswered: number;
+}
+
+export interface QuizProgress {
+  survival: SurvivalStats;
+  tracks: Record<QuizTrack, QuizTrackProgress>;
+}
+
 export interface QuizQuestion {
   id: string;
-  type: 'bhaskara' | 'regra_simples';
+  type: QuizTrack;
+  countNumber: number;
+  totalGoal?: number;
   question: string;
+  displayExpression: string;
   context?: string;
   correctAnswer: number;
-  options: number[];
+  formattedCorrectAnswer: string;
+  options?: number[];
   explanation: string[];
+  timeLimitSeconds?: number;
 }
 
 declare global {
