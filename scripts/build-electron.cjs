@@ -19,7 +19,7 @@ console.log(`2. Empacotando com electron-builder na pasta isolada: ${tempOutputD
 
 try {
   // Run electron-builder targeting the temp folder to avoid OneDrive file locking on intermediate unpack directories
-  execSync(`npx electron-builder --win -c.directories.output="${tempOutputDir.replace(/\\/g, '/')}"`, {
+  execSync(`npx electron-builder --win --publish never -c.directories.output="${tempOutputDir.replace(/\\/g, '/')}"`, {
     stdio: 'inherit',
   });
 
