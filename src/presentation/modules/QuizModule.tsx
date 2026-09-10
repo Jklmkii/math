@@ -19,10 +19,12 @@ import { generateQuizQuestion } from '../../core/math/quizGenerator';
 import { parseBig, formatNumberSmart } from '../../core/math/precision';
 import { StepByStep } from '../components/StepByStep';
 import { useAppStore } from '../../store/useAppStore';
+import { useTranslation } from '../../core/i18n/translations';
 import type { QuizDifficultyMode, QuizQuestion, QuizTrackSelector } from '../../types';
 
 export const QuizModule: React.FC = () => {
   const { quizProgress, recordQuizAnswer, settings } = useAppStore();
+  const t = useTranslation(settings.language || 'pt');
 
   // Screen View: 'lobby' | 'playing' | 'game_over'
   const [screen, setScreen] = useState<'lobby' | 'playing' | 'game_over'>('lobby');
@@ -342,10 +344,10 @@ export const QuizModule: React.FC = () => {
         {/* Title & Subtitle */}
         <div className="flex flex-col items-center text-center mt-2">
           <h1 className="text-4xl sm:text-5xl font-black tracking-widest text-amber-400 font-mono drop-shadow-[0_4px_10px_rgba(251,191,36,0.3)]">
-            MAT SPEED
+            {t.matspeed_title}
           </h1>
           <p className="text-xs sm:text-sm font-semibold text-slate-400 mt-2">
-            Escolha sua trilha: 100 níveis em cada modo.
+            {t.matspeed_subtitle}
           </p>
         </div>
 
@@ -360,7 +362,7 @@ export const QuizModule: React.FC = () => {
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            <span>🌱</span> Tranquilo
+            <span>🌱</span> {t.diff_casual}
           </button>
 
           <button
@@ -372,7 +374,7 @@ export const QuizModule: React.FC = () => {
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            <span>⚡</span> Velocidade
+            <span>⚡</span> {t.diff_speed}
           </button>
 
           <button
@@ -384,7 +386,7 @@ export const QuizModule: React.FC = () => {
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            <span>🔥</span> Brutal
+            <span>🔥</span> {t.diff_brutal}
           </button>
         </div>
 
@@ -399,12 +401,12 @@ export const QuizModule: React.FC = () => {
             <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center group-hover:scale-110 transition-transform">
               <Plus size={24} className="stroke-[2.5]" />
             </div>
-            <h3 className="text-lg font-black text-white">Soma</h3>
+            <h3 className="text-lg font-black text-white">{t.track_addition}</h3>
             <p className="text-[11px] font-medium text-slate-400">
-              do 3+7 ao 742,3+3497
+              {t.track_addition_sub}
             </p>
             <span className="mt-1 px-3 py-0.5 rounded-full bg-emerald-950/60 text-emerald-400 border border-emerald-800/60 font-mono text-xs font-bold">
-              Nível {somaNivel}/100
+              {t.level_badge} {somaNivel}/100
             </span>
           </button>
 
@@ -417,12 +419,12 @@ export const QuizModule: React.FC = () => {
             <div className="w-10 h-10 rounded-2xl bg-rose-500/10 text-rose-400 flex items-center justify-center group-hover:scale-110 transition-transform">
               <Minus size={24} className="stroke-[2.5]" />
             </div>
-            <h3 className="text-lg font-black text-white">Subtração</h3>
+            <h3 className="text-lg font-black text-white">{t.track_subtraction}</h3>
             <p className="text-[11px] font-medium text-slate-400">
-              do 9-4 ao troco encadeado
+              {t.track_subtraction_sub}
             </p>
             <span className="mt-1 px-3 py-0.5 rounded-full bg-rose-950/60 text-rose-400 border border-rose-800/60 font-mono text-xs font-bold">
-              Nível {subNivel}/100
+              {t.level_badge} {subNivel}/100
             </span>
           </button>
 
@@ -435,12 +437,12 @@ export const QuizModule: React.FC = () => {
             <div className="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform">
               <X size={24} className="stroke-[2.5]" />
             </div>
-            <h3 className="text-lg font-black text-white">Multiplicação</h3>
+            <h3 className="text-lg font-black text-white">{t.track_multiplication}</h3>
             <p className="text-[11px] font-medium text-slate-400">
-              da tabuada ao 27×24
+              {t.track_multiplication_sub}
             </p>
             <span className="mt-1 px-3 py-0.5 rounded-full bg-amber-950/60 text-amber-400 border border-amber-800/60 font-mono text-xs font-bold">
-              Nível {multNivel}/100
+              {t.level_badge} {multNivel}/100
             </span>
           </button>
 
@@ -453,12 +455,12 @@ export const QuizModule: React.FC = () => {
             <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center group-hover:scale-110 transition-transform">
               <Divide size={24} className="stroke-[2.5]" />
             </div>
-            <h3 className="text-lg font-black text-white">Divisão</h3>
+            <h3 className="text-lg font-black text-white">{t.track_division}</h3>
             <p className="text-[11px] font-medium text-slate-400">
-              sempre exata, do reflexo ao 1932÷14
+              {t.track_division_sub}
             </p>
             <span className="mt-1 px-3 py-0.5 rounded-full bg-cyan-950/60 text-cyan-400 border border-cyan-800/60 font-mono text-xs font-bold">
-              Nível {divNivel}/100
+              {t.level_badge} {divNivel}/100
             </span>
           </button>
         </div>
@@ -473,15 +475,15 @@ export const QuizModule: React.FC = () => {
             <Skull size={28} className="stroke-[2.5]" />
           </div>
           <h2 className="text-xl font-black text-white tracking-wide">
-            Sobrevivência
+            {t.track_survival}
           </h2>
           <p className="text-xs font-semibold text-slate-400 max-w-sm">
-            errou, acabou — 20s por conta, as 4 operações misturadas até a #200
+            {t.track_survival_sub}
           </p>
           <div className="flex items-center gap-3 mt-1 text-xs font-bold text-purple-300">
-            <span>Recorde: Conta #{sobrevRecorde}</span>
+            <span>{t.record_prefix}: {t.account_prefix} #{sobrevRecorde}</span>
             <span>•</span>
-            <span>{quizProgress.survival?.highScore || 0} XP Máximo</span>
+            <span>{quizProgress.survival?.highScore || 0} {t.xp_survival}</span>
           </div>
         </button>
 
@@ -492,7 +494,7 @@ export const QuizModule: React.FC = () => {
             onClick={() => handleStartTrack('regra_simples')}
             className="text-xs font-semibold text-slate-400 hover:text-indigo-400 flex items-center gap-1.5 transition-colors py-1 px-3 rounded-xl hover:bg-slate-900"
           >
-            <Scale size={14} /> Treinar Trilha de Regra de Três Simples
+            <Scale size={14} /> {t.track_rule_three}
           </button>
         </div>
       </div>
@@ -512,31 +514,31 @@ export const QuizModule: React.FC = () => {
 
           <div>
             <h2 className="text-3xl font-black tracking-tight text-white">
-              Fim da Sobrevivência
+              {t.game_over_title}
             </h2>
             <p className="text-sm font-semibold text-slate-400 mt-1">
-              {isTimedOut ? 'O tempo esgotou!' : 'Você errou a conta.'}
+              {isTimedOut ? t.game_over_timeout : t.game_over_wrong}
             </p>
           </div>
 
           {isNewRecord && (
             <div className="px-4 py-2 rounded-2xl bg-amber-500/20 border border-amber-500/60 text-amber-400 font-black text-xs flex items-center gap-1.5 shadow-lg animate-pulse">
-              <Trophy size={16} /> NOVO RECORDE PESSOAL: CONTA #{countNumber}!
+              <Trophy size={16} /> {t.new_record_badge}: {t.account_prefix} #{countNumber}!
             </div>
           )}
 
           {/* Stats Badges */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full max-w-md">
             <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col items-center">
-              <span className="text-xs text-slate-400 font-semibold">Conta</span>
+              <span className="text-xs text-slate-400 font-semibold">{t.account_prefix}</span>
               <span className="text-xl font-mono font-black text-white">#{countNumber}</span>
             </div>
             <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col items-center">
-              <span className="text-xs text-slate-400 font-semibold">XP Ganho</span>
+              <span className="text-xs text-slate-400 font-semibold">{t.earned_xp}</span>
               <span className="text-xl font-mono font-black text-amber-400">+{score}</span>
             </div>
             <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col items-center col-span-2 sm:col-span-1">
-              <span className="text-xs text-slate-400 font-semibold">Maior Combo</span>
+              <span className="text-xs text-slate-400 font-semibold">{t.max_combo}</span>
               <span className="text-xl font-mono font-black text-orange-400">x{maxStreakThisRun} 🔥</span>
             </div>
           </div>
@@ -544,7 +546,7 @@ export const QuizModule: React.FC = () => {
           {/* Correct Answer Revelation */}
           <div className="w-full max-w-md p-4 rounded-2xl bg-red-950/30 border border-red-900/40 text-left">
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-              A conta era:
+              {t.correct_was}
             </p>
             <p className="text-xl font-mono font-black text-white mt-1">
               {currentQuestion.displayExpression} ={' '}
@@ -565,14 +567,14 @@ export const QuizModule: React.FC = () => {
               onClick={handleRestart}
               className="flex-1 w-full py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-sm tracking-wider uppercase transition-all shadow-lg flex items-center justify-center gap-2 touch-target"
             >
-              <RotateCcw size={18} /> Jogar Novamente
+              <RotateCcw size={18} /> {t.play_again}
             </button>
             <button
               type="button"
               onClick={handleExitToLobby}
               className="flex-1 w-full py-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-slate-300 font-bold text-sm transition-all border border-slate-800 touch-target"
             >
-              ← Voltar ao Menu
+              {t.back_to_menu}
             </button>
           </div>
         </div>
@@ -581,7 +583,7 @@ export const QuizModule: React.FC = () => {
         {currentQuestion.explanation.length > 0 && (
           <div className="w-full">
             <StepByStep
-              title="Explicação Didática da Conta"
+              title={t.explanation_title}
               steps={currentQuestion.explanation}
             />
           </div>
@@ -615,11 +617,11 @@ export const QuizModule: React.FC = () => {
           onClick={handleExitToLobby}
           className="text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1 py-1 px-2.5 rounded-xl hover:bg-slate-900 transition-colors"
         >
-          <ChevronLeft size={16} /> sair
+          <ChevronLeft size={16} /> {t.exit_button}
         </button>
 
         <span className="text-xs font-bold uppercase tracking-wider text-slate-500 font-mono">
-          {selectedTrack === 'sobrevivencia' ? 'Sobrevivência 💀' : `Trilha: ${selectedTrack}`}
+          {selectedTrack === 'sobrevivencia' ? `${t.track_survival} 💀` : `${t.level_badge}: ${selectedTrack}`}
         </span>
       </div>
 
@@ -641,10 +643,10 @@ export const QuizModule: React.FC = () => {
           <div>
             <div className="flex items-center gap-1.5 text-slate-200 font-black text-sm tracking-wider uppercase">
               <Skull size={18} className="text-indigo-400 shrink-0" />
-              <span>CONTA #{countNumber}</span>
+              <span>{t.account_prefix} #{countNumber}</span>
             </div>
             <p className="text-[11px] font-semibold text-slate-400 mt-0.5">
-              de {totalGoal} · recorde {currentRecord}
+              {t.of} {totalGoal} · {t.record_prefix} {currentRecord}
             </p>
           </div>
 
@@ -653,7 +655,7 @@ export const QuizModule: React.FC = () => {
               {score.toLocaleString('pt-BR')}
             </span>
             <div className="flex items-center gap-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-1">
-              <span>XP SOBREVIVÊNCIA</span>
+              <span>{t.xp_survival}</span>
               {streak > 0 && (
                 <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-orange-500/20 text-orange-400 font-black">
                   <Flame size={12} className="fill-orange-400 text-orange-400" />
@@ -688,7 +690,7 @@ export const QuizModule: React.FC = () => {
           <div className="absolute top-24 right-6 z-20 animate-bounce">
             <div className="px-3 py-1.5 rounded-xl bg-emerald-500 text-slate-950 font-black text-xs flex items-center gap-1 shadow-lg shadow-emerald-500/30 transform rotate-3">
               <Sparkles size={14} className="fill-slate-950" />
-              <span>✓ RESPOSTA ÁGIL! +{agileXpBonus} XP</span>
+              <span>{t.agile_badge} +{agileXpBonus} XP</span>
             </div>
           </div>
         )}
@@ -779,7 +781,7 @@ export const QuizModule: React.FC = () => {
               onClick={handleToggleNegative}
               className="text-[11px] font-semibold text-slate-400 hover:text-slate-200 flex items-center gap-1 py-0.5 px-2 rounded-md hover:bg-slate-800/60 transition-colors"
             >
-              <span className="font-bold text-xs">±</span> Alternar sinal (±)
+              <span className="font-bold text-xs">±</span> {t.toggle_sign}
             </button>
           </div>
 
@@ -799,10 +801,10 @@ export const QuizModule: React.FC = () => {
           >
             {isAnswered && !isCorrect ? (
               <>
-                Continuar <ArrowRight size={20} />
+                {t.continue_button} <ArrowRight size={20} />
               </>
             ) : (
-              'GO!'
+              t.go_button
             )}
           </button>
         </div>
@@ -834,7 +836,7 @@ export const QuizModule: React.FC = () => {
               onClick={() => loadQuestion(countNumber + 1, selectedTrack)}
               className="px-3.5 py-2 rounded-xl bg-white text-slate-900 font-bold text-xs flex items-center gap-1 shrink-0 shadow-sm"
             >
-              Próxima <ArrowRight size={14} />
+              {t.next_question} <ArrowRight size={14} />
             </button>
           </div>
         )}

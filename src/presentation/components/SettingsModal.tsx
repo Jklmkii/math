@@ -1,8 +1,9 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { X, Moon, Sun, Laptop, Trash2, Download, Upload, ShieldCheck, CheckCircle2, RefreshCw, Sparkles } from 'lucide-react';
+import { X, Moon, Sun, Laptop, Trash2, Download, Upload, ShieldCheck, CheckCircle2, RefreshCw, Sparkles, Globe } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
-import type { DecimalPlaces, DecimalSeparator, ThemeMode, UpdaterStatus } from '../../types';
+import type { DecimalPlaces, DecimalSeparator, ThemeMode, UpdaterStatus, AppLanguage } from '../../types';
 import { validateHistorySchema } from '../../core/storage/historyValidator';
+import { useTranslation } from '../../core/i18n/translations';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface SettingsModalProps {
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const { settings, updateSettings, history, clearHistory, importHistory } = useAppStore();
+  const t = useTranslation(settings.language || 'pt');
   const [confirmClear, setConfirmClear] = useState(false);
   const [importStatus, setImportStatus] = useState<string | null>(null);
   const [updateStatus, setUpdateStatus] = useState<UpdaterStatus | null>(null);
@@ -213,6 +215,32 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                 >
                   {item.icon}
                   <span>{item.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Language Selector */}
+          <div>
+            <label className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-2 flex items-center gap-1.5">
+              <Globe size={14} className="text-indigo-500" /> {t.language}
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { lang: 'pt', label: 'Português 🇧🇷' },
+                { lang: 'en', label: 'English 🇺🇸' },
+              ].map((item) => (
+                <button
+                  key={item.lang}
+                  type="button"
+                  onClick={() => updateSettings({ language: item.lang as AppLanguage })}
+                  className={`p-3 rounded-2xl border font-bold text-center transition-all touch-target ${
+                    (settings.language || 'pt') === item.lang
+                      ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 shadow-xs'
+                      : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                  }`}
+                >
+                  {item.label}
                 </button>
               ))}
             </div>

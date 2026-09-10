@@ -82,9 +82,11 @@ export interface HistoryItem {
 export type ThemeMode = 'light' | 'dark' | 'system';
 export type DecimalPlaces = 2 | 4 | 6;
 export type DecimalSeparator = ',' | '.';
+export type AppLanguage = 'pt' | 'en';
 
 export interface AppSettings {
   theme: ThemeMode;
+  language: AppLanguage;
   decimalPlaces: DecimalPlaces;
   decimalSeparator: DecimalSeparator;
   historyLimit: number;

@@ -10,6 +10,7 @@ import {
   Laptop,
 } from 'lucide-react';
 import { useAppStore, type ActiveTab } from '../../store/useAppStore';
+import { useTranslation } from '../../core/i18n/translations';
 
 interface NavbarProps {
   onOpenSettings: () => void;
@@ -17,14 +18,15 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings }) => {
   const { activeTab, setActiveTab, settings, updateSettings, history } = useAppStore();
+  const t = useTranslation(settings.language || 'pt');
 
   const tabs: { id: ActiveTab; label: string; icon: React.ReactNode; badge?: number }[] = [
-    { id: 'bhaskara', label: 'Bhaskara', icon: <Sigma size={20} /> },
-    { id: 'regra_simples', label: 'Regra de 3', icon: <Scale size={20} /> },
-    { id: 'quiz', label: 'Treino', icon: <Brain size={20} /> },
+    { id: 'bhaskara', label: t.nav_bhaskara, icon: <Sigma size={20} /> },
+    { id: 'regra_simples', label: t.nav_regra, icon: <Scale size={20} /> },
+    { id: 'quiz', label: t.nav_treino, icon: <Brain size={20} /> },
     {
       id: 'history',
-      label: 'Histórico',
+      label: t.nav_historico,
       icon: <History size={20} />,
       badge: history.length > 0 ? history.length : undefined,
     },
@@ -51,7 +53,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings }) => {
                 MathUtils
               </h1>
               <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                Utilidades Matemáticas Offline
+                {t.app_subtitle}
               </p>
             </div>
           </div>

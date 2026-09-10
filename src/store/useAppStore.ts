@@ -62,6 +62,7 @@ const DEFAULT_QUIZ_PROGRESS: QuizProgress = {
 
 const DEFAULT_SETTINGS: AppSettings = {
   theme: 'system',
+  language: 'pt',
   decimalPlaces: 2,
   decimalSeparator: ',',
   historyLimit: 20,
