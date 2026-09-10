@@ -133,6 +133,20 @@ export interface QuizQuestion {
   timeLimitSeconds?: number;
 }
 
+export interface UserProfile {
+  totalXp: number;
+  streakDays: number;
+  lastActiveDate: string;
+  unlockedAchievements: string[];
+  stats: {
+    totalCalculations: number;
+    totalBhaskara: number;
+    totalRegraDeTres: number;
+    totalQuizCorrect: number;
+    bestSurvivalRecord: number;
+  };
+}
+
 export interface UpdaterStatus {
   status: 'checking' | 'available' | 'not-available' | 'downloading' | 'downloaded' | 'error';
   version?: string;

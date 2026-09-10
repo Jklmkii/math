@@ -37,6 +37,21 @@ export const translations = {
     privacy_desc: 'Nenhum dado sai do seu aparelho. Todos os cálculos e históricos são armazenados exclusivamente na memória do seu dispositivo.',
     done: 'Concluir',
 
+    // Profile & Gamification
+    profile_title: 'Perfil do Matemático',
+    level_label: 'Nível',
+    total_xp: 'XP Total',
+    next_level: 'Próximo Nível',
+    streak_days: 'Ofensiva',
+    streak_suffix: 'dias seguidos',
+    stats_overview: 'Estatísticas Gerais',
+    stat_calculations: 'Cálculos Realizados',
+    stat_quiz_correct: 'Acertos no Treino',
+    stat_survival_record: 'Recorde na Sobrevivência',
+    achievements_title: 'Conquistas & Medalhas',
+    unlocked_badge: 'Conquistada',
+    locked_badge: 'Bloqueada',
+
     // MatSpeed / Treino
     matspeed_title: 'MAT SPEED',
     matspeed_subtitle: 'Escolha sua trilha: 100 níveis em cada modo.',
@@ -111,6 +126,21 @@ export const translations = {
     privacy_title: '100% Offline & Private',
     privacy_desc: 'No data leaves your device. All calculations and history are stored locally in your device memory.',
     done: 'Done',
+
+    // Profile & Gamification
+    profile_title: 'Mathematician Profile',
+    level_label: 'Level',
+    total_xp: 'Total XP',
+    next_level: 'Next Level',
+    streak_days: 'Daily Streak',
+    streak_suffix: 'days streak',
+    stats_overview: 'Overall Statistics',
+    stat_calculations: 'Completed Calculations',
+    stat_quiz_correct: 'Training Correct Answers',
+    stat_survival_record: 'Survival Record',
+    achievements_title: 'Achievements & Badges',
+    unlocked_badge: 'Unlocked',
+    locked_badge: 'Locked',
 
     // MatSpeed / Treino
     matspeed_title: 'MAT SPEED',

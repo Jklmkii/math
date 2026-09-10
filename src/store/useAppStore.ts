@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { AppSettings, CalculationType, HistoryItem, QuizProgress, QuizTrackSelector } from '../types';
+import type { AppSettings, CalculationType, HistoryItem, QuizProgress, QuizTrackSelector, UserProfile } from '../types';
 import { validateHistorySchema } from '../core/storage/historyValidator';
+import { calculateStreakUpdate, checkNewAchievements, ACHIEVEMENTS } from '../core/gamification/leveling';
 
 export type ActiveTab = 'bhaskara' | 'regra_simples' | 'regra_composta' | 'quiz' | 'history' | 'settings';
 
@@ -9,6 +10,12 @@ interface AppState {
   // Navigation
   activeTab: ActiveTab;
   setActiveTab: (tab: ActiveTab) => void;
+
+  // Gamification & Profile
+  profile: UserProfile;
+  addXp: (amount: number, reason?: string) => void;
+  checkAndUpdateStreak: () => void;
+  unlockAchievement: (id: string) => void;
 
   // Settings
   settings: AppSettings;
@@ -43,6 +50,20 @@ interface AppState {
   completeOnboarding: () => void;
 }
 
+const DEFAULT_PROFILE: UserProfile = {
+  totalXp: 0,
+  streakDays: 1,
+  lastActiveDate: new Date().toISOString().split('T')[0],
+  unlockedAchievements: [],
+  stats: {
+    totalCalculations: 0,
+    totalBhaskara: 0,
+    totalRegraDeTres: 0,
+    totalQuizCorrect: 0,
+    bestSurvivalRecord: 0,
+  },
+};
+
 const DEFAULT_QUIZ_PROGRESS: QuizProgress = {
   survival: {
     highScore: 0,
@@ -75,13 +96,98 @@ export const useAppStore = create<AppState>()(
       activeTab: 'bhaskara',
       setActiveTab: (tab) => set({ activeTab: tab }),
 
+      profile: DEFAULT_PROFILE,
+
+      addXp: (amount) => {
+        set((state) => {
+          const prevProf = state.profile || DEFAULT_PROFILE;
+          const newTotalXp = Math.max(0, (prevProf.totalXp || 0) + amount);
+          const candidate: UserProfile = { ...prevProf, totalXp: newTotalXp };
+          const newlyUnlocked = checkNewAchievements(candidate);
+          return {
+            profile: {
+              ...candidate,
+              unlockedAchievements: [...new Set([...(prevProf.unlockedAchievements || []), ...newlyUnlocked])],
+            },
+          };
+        });
+      },
+
+      checkAndUpdateStreak: () => {
+        set((state) => {
+          const prevProf = state.profile || DEFAULT_PROFILE;
+          const update = calculateStreakUpdate(prevProf.lastActiveDate, prevProf.streakDays);
+          const candidate: UserProfile = {
+            ...prevProf,
+            streakDays: update.newStreak,
+            lastActiveDate: update.newLastActiveDate,
+          };
+          const newlyUnlocked = checkNewAchievements(candidate);
+          return {
+            profile: {
+              ...candidate,
+              unlockedAchievements: [...new Set([...(prevProf.unlockedAchievements || []), ...newlyUnlocked])],
+            },
+          };
+        });
+      },
+
+      unlockAchievement: (id) => {
+        set((state) => {
+          const prevProf = state.profile || DEFAULT_PROFILE;
+          if (prevProf.unlockedAchievements?.includes(id)) return {};
+          const def = ACHIEVEMENTS.find((a) => a.id === id);
+          const bonus = def ? def.xpReward : 0;
+          return {
+            profile: {
+              ...prevProf,
+              totalXp: (prevProf.totalXp || 0) + bonus,
+              unlockedAchievements: [...(prevProf.unlockedAchievements || []), id],
+            },
+          };
+        });
+      },
+
       quizProgress: DEFAULT_QUIZ_PROGRESS,
       recordQuizAnswer: ({ track, countNumber, correct, xpEarned, currentStreak }) => {
         set((state) => {
           const prevProgress = state.quizProgress || DEFAULT_QUIZ_PROGRESS;
+          const prevProf = state.profile || DEFAULT_PROFILE;
+          const prevStats = prevProf.stats || DEFAULT_PROFILE.stats;
+
+          const earned = correct ? Math.max(10, xpEarned || 10) : 0;
+          const newTotalXp = (prevProf.totalXp || 0) + earned;
+          const newStats = {
+            ...prevStats,
+            totalQuizCorrect: (prevStats.totalQuizCorrect || 0) + (correct ? 1 : 0),
+            bestSurvivalRecord:
+              track === 'sobrevivencia'
+                ? Math.max(prevStats.bestSurvivalRecord || 0, countNumber)
+                : prevStats.bestSurvivalRecord || 0,
+          };
+
+          const candidateProfile: UserProfile = {
+            ...prevProf,
+            totalXp: newTotalXp,
+            stats: newStats,
+          };
+          const newlyUnlocked = checkNewAchievements(candidateProfile);
+          let bonusXp = 0;
+          for (const achId of newlyUnlocked) {
+            const def = ACHIEVEMENTS.find((a) => a.id === achId);
+            if (def) bonusXp += def.xpReward;
+          }
+
+          const finalProfile: UserProfile = {
+            ...candidateProfile,
+            totalXp: newTotalXp + bonusXp,
+            unlockedAchievements: [...new Set([...(prevProf.unlockedAchievements || []), ...newlyUnlocked])],
+          };
+
           if (track === 'sobrevivencia') {
             const prevSurv = prevProgress.survival || DEFAULT_QUIZ_PROGRESS.survival;
             return {
+              profile: finalProfile,
               quizProgress: {
                 ...prevProgress,
                 survival: {
@@ -109,6 +215,7 @@ export const useAppStore = create<AppState>()(
             const newLevel = Math.max(prevTrack.currentLevel, Math.floor(newRecordCount / 5) + 1);
 
             return {
+              profile: finalProfile,
               quizProgress: {
                 ...prevProgress,
                 tracks: {
@@ -183,7 +290,38 @@ export const useAppStore = create<AppState>()(
             return b.timestamp - a.timestamp;
           });
 
-          return { history: limited };
+          // Gamification: grant 25 XP for performing calculations with step-by-step
+          const prevProf = state.profile || DEFAULT_PROFILE;
+          const prevStats = prevProf.stats || DEFAULT_PROFILE.stats;
+          const newStats = {
+            ...prevStats,
+            totalCalculations: (prevStats.totalCalculations || 0) + 1,
+            totalBhaskara: (prevStats.totalBhaskara || 0) + (type === 'bhaskara' ? 1 : 0),
+            totalRegraDeTres: (prevStats.totalRegraDeTres || 0) + (type.startsWith('regra') ? 1 : 0),
+          };
+          const newTotalXp = (prevProf.totalXp || 0) + 25;
+          const candidateProfile: UserProfile = {
+            ...prevProf,
+            totalXp: newTotalXp,
+            stats: newStats,
+          };
+          const newlyUnlocked = checkNewAchievements(candidateProfile);
+          let bonusXp = 0;
+          for (const achId of newlyUnlocked) {
+            const def = ACHIEVEMENTS.find((a) => a.id === achId);
+            if (def) bonusXp += def.xpReward;
+          }
+
+          const finalProfile: UserProfile = {
+            ...candidateProfile,
+            totalXp: newTotalXp + bonusXp,
+            unlockedAchievements: [...new Set([...(prevProf.unlockedAchievements || []), ...newlyUnlocked])],
+          };
+
+          return {
+            history: limited,
+            profile: finalProfile,
+          };
         });
       },
 

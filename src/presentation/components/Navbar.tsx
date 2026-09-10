@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Sigma,
   Scale,
@@ -8,17 +8,27 @@ import {
   Sun,
   Moon,
   Laptop,
+  Trophy,
 } from 'lucide-react';
 import { useAppStore, type ActiveTab } from '../../store/useAppStore';
 import { useTranslation } from '../../core/i18n/translations';
+import { calculateLevelInfo } from '../../core/gamification/leveling';
+import { ProfileModal } from './ProfileModal';
 
 interface NavbarProps {
   onOpenSettings: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings }) => {
-  const { activeTab, setActiveTab, settings, updateSettings, history } = useAppStore();
+  const { activeTab, setActiveTab, settings, updateSettings, history, profile, checkAndUpdateStreak } = useAppStore();
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const t = useTranslation(settings.language || 'pt');
+
+  useEffect(() => {
+    checkAndUpdateStreak();
+  }, [checkAndUpdateStreak]);
+
+  const levelInfo = calculateLevelInfo(profile?.totalXp || 0, settings.language || 'pt');
 
   const tabs: { id: ActiveTab; label: string; icon: React.ReactNode; badge?: number }[] = [
     { id: 'bhaskara', label: t.nav_bhaskara, icon: <Sigma size={20} /> },
@@ -86,8 +96,25 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings }) => {
             })}
           </nav>
 
-          {/* Quick Actions (Theme & Settings) */}
+          {/* Quick Actions (Profile, Theme & Settings) */}
           <div className="flex items-center gap-2">
+            {/* Profile Level Chip */}
+            <button
+              type="button"
+              onClick={() => setIsProfileOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-200/80 dark:border-amber-800/60 bg-amber-50/60 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 font-bold text-xs hover:bg-amber-100/70 transition-all touch-target shadow-xs"
+              title={`${levelInfo.title} • ${profile?.totalXp || 0} XP (${t.profile_title})`}
+              aria-label="Perfil do usuário"
+            >
+              <Trophy size={15} className="text-amber-500" />
+              <span>Nv. {levelInfo.level}</span>
+              {(profile?.streakDays || 1) > 1 && (
+                <span className="flex items-center text-orange-500 font-extrabold text-[11px] ml-0.5">
+                  🔥{profile.streakDays}
+                </span>
+              )}
+            </button>
+
             {/* Theme Toggle Button */}
             <button
               type="button"
@@ -114,6 +141,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings }) => {
           </div>
         </div>
       </header>
+
+      {/* Profile Modal */}
+      <ProfileModal isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} />
 
       {/* Mobile Bottom Navigation Bar */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/90 dark:bg-slate-950/90 border-t border-slate-200/80 dark:border-slate-800/80 backdrop-blur-lg pb-safe">
