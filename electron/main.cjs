@@ -58,10 +58,10 @@ function createWindow() {
   // Open external links in default OS browser
   win.webContents.setWindowOpenHandler(({ url }) => {
     try {
-      const { protocol } = new URL(url);
+      const parsedUrl = new URL(url);
       // Security: Only allow http and https protocols to prevent local file execution or NTLM relay attacks
-      if (protocol === 'https:' || protocol === 'http:') {
-        require('electron').shell.openExternal(url);
+      if (parsedUrl.protocol === 'https:' || parsedUrl.protocol === 'http:') {
+        require('electron').shell.openExternal(parsedUrl.href);
       }
     } catch {
       // Malformed URL, do nothing
