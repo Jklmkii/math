@@ -74,7 +74,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings }) => {
             </div>
             <div>
               <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white leading-none">
-                MathUtils
+                Quantora
               </h1>
               <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
                 {t.app_subtitle}

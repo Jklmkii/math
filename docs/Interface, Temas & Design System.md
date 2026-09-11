@@ -1,6 +1,6 @@
 # 🎨 Interface, Temas & Design System
 
-Este documento detalha o sistema de design, estilos, componentes modulares e suporte a temas e internacionalização no **MathUtils**.
+Este documento detalha o sistema de design, estilos, componentes modulares e suporte a temas e internacionalização no **Quantora**.
 
 Arquivos-fonte:
 * `src/presentation/components/*`
@@ -45,7 +45,7 @@ Todas as strings da interface são centralizadas em `src/core/i18n/translations.
 ## 🧩 Componentes Centrais da Interface
 
 ### 1. `Navbar.tsx` (Barra Superior)
-* Exibe a marca MathUtils e a versão ativa.
+* Exibe a marca Quantora e a versão ativa.
 * **Badge de Nível:** Mostra o nível atual do jogador e o título histórico.
 * **Badge de Ofensiva (Streak):** Ícone de chama com a contagem de dias consecutivos.
 * **Badge do Desafio Diário:** Indicador visual de status (🟢 Concluído ou 🔴 Pendente).
@@ -70,6 +70,6 @@ Todas as strings da interface são centralizadas em `src/core/i18n/translations.
 ---
 
 ## 🔗 Links Relacionados
-* [[MathUtils - Visao Geral]]
+* [[Quantora - Visao Geral]]
 * [[Gamificacao & Niveis]]
 * [[Lousa de Rascunho (Scratchpad)]]

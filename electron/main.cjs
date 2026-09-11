@@ -15,7 +15,7 @@ function createWindow() {
     height: 750,
     minWidth: 450,
     minHeight: 600,
-    title: 'MathUtils',
+    title: 'Quantora',
     icon: path.join(__dirname, '../build/icon.ico'),
     backgroundColor: '#0f172a',
     show: false,
@@ -182,7 +182,7 @@ app.whenReady().then(() => {
   autoUpdater.on('update-not-available', () => {
     sendUpdateStatus({
       status: 'not-available',
-      message: 'O MathUtils já está atualizado com a versão mais recente.',
+      message: 'O Quantora já está atualizado com a versão mais recente.',
     });
   });
 

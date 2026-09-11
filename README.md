@@ -1,8 +1,8 @@
-# 🧮 MathUtils — Utilidades Matemáticas (Desktop & Web)
+# 📐 Quantora — Suíte Matemática & Desafios Mentais (Desktop & Mobile)
 
-Um aplicativo moderno, educativo e 100% offline para cálculos de **Equações do 2º Grau (Bhaskara)** e **Regra de Três (Simples e Composta)**, com resolução didática passo a passo, gráficos dinâmicos e exportação de backups.
+Um aplicativo moderno, educativo e 100% offline para cálculos avançados, treino com gamificação, lousa de rascunho digital, **Equações do 2º Grau (Bhaskara)** e **Regra de Três (Simples e Composta)**, com resolução didática passo a passo, gráficos dinâmicos e exportação de backups.
 
-Disponível como **Web App (PWA)** e como **Executável Nativo do Windows (.exe)**.
+Disponível como **Web App (PWA)**, **Executável Nativo do Windows (.exe)** e **Aplicativo Android (.apk)**.
 
 ---
 
@@ -72,8 +72,8 @@ npx vitest run
 npm run electron:build
 ```
 Os arquivos gerados estarão na pasta `release/`:
-* `MathUtils-Setup-1.0.0.exe` (Instalador tradicional NSIS)
-* `MathUtils-1.0.0-portable.exe` (Executável portátil autônomo)
+* `Quantora-Setup-1.1.1.exe` (Instalador tradicional NSIS)
+* `Quantora-1.1.1-portable.exe` (Executável portátil autônomo)
 
 Você também pode baixar os executáveis prontos diretamente na página de [Releases do GitHub](https://github.com/Jklmkii/math/releases).
 

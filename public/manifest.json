@@ -1,7 +1,7 @@
 {
-  "name": "MathUtils — Utilidades Matemáticas",
-  "short_name": "MathUtils",
-  "description": "Calculadora educativa offline de Bhaskara e Regra de Três Simples e Composta",
+  "name": "Quantora — Suíte Matemática & Desafios Mentais",
+  "short_name": "Quantora",
+  "description": "Suíte didática offline de matemática, ferramentas e desafios mentais",
   "start_url": "/",
   "display": "standalone",
   "orientation": "any",

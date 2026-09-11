@@ -1,6 +1,6 @@
 # 📐 Núcleo Matemático & Calculadoras Didáticas
 
-Este documento detalha o funcionamento algébrico, fórmulas, validações e tratamento de precisão das ferramentas de cálculo do **MathUtils**.
+Este documento detalha o funcionamento algébrico, fórmulas, validações e tratamento de precisão das ferramentas de cálculo do **Quantora**.
 
 Arquivos-fonte:
 * `src/core/math/bhaskara.ts`
@@ -104,6 +104,6 @@ Para evitar distorções clássicas do padrão IEEE 754 em Javascript (como `0.1
 ---
 
 ## 🔗 Links Relacionados
-* [[MathUtils - Visao Geral]]
+* [[Quantora - Visao Geral]]
 * [[Modos de Treino & Jogos]]
 * [[Suite de Testes & Qualidade]]

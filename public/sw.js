@@ -1,5 +1,5 @@
-// Offline Cache Service Worker for MathUtils
-const CACHE_NAME = 'mathutils-v1';
+// Offline Cache Service Worker for Quantora
+const CACHE_NAME = 'quantora-v1';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',

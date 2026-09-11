@@ -33,7 +33,7 @@ export const StepByStep: React.FC<StepByStepProps> = ({
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Resolução Matemática — MathUtils',
+          title: 'Resolução Matemática — Quantora',
           text: fullText,
         });
       } catch {

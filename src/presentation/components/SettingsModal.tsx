@@ -82,7 +82,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   // Export JSON (Native Electron or Web Download)
   const handleExportJSON = async () => {
     const jsonStr = JSON.stringify(history, null, 2);
-    const defaultName = `mathutils-historico-${new Date().toISOString().slice(0, 10)}.json`;
+    const defaultName = `quantora-historico-${new Date().toISOString().slice(0, 10)}.json`;
 
     if (window.electronAPI?.saveFile) {
       const res = await window.electronAPI.saveFile(defaultName, jsonStr, [
@@ -109,7 +109,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   // Export CSV (Native Electron or Web Download)
   const handleExportCSV = async () => {
     const csvContent = generateCSVContent();
-    const defaultName = `mathutils-historico-${new Date().toISOString().slice(0, 10)}.csv`;
+    const defaultName = `quantora-historico-${new Date().toISOString().slice(0, 10)}.csv`;
 
     if (window.electronAPI?.saveFile) {
       const res = await window.electronAPI.saveFile(defaultName, '\ufeff' + csvContent, [
@@ -400,7 +400,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                   {t.updates_title}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  MathUtils v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.1.1'} ({t.updates_subtitle})
+                  Quantora v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.1.1'} ({t.updates_subtitle})
                 </p>
               </div>
 
@@ -455,7 +455,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
         {/* Footer */}
         <div className="p-4 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center text-xs text-slate-400">
-          <span>MathUtils v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.1.1'} ({t.definitive_edition})</span>
+          <span>Quantora v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.1.1'} ({t.definitive_edition})</span>
           <button
             type="button"
             onClick={onClose}

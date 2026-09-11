@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.mathutils.app',
-  appName: 'MathUtils',
+  appId: 'com.quantora.app',
+  appName: 'Quantora',
   webDir: 'dist'
 };
 

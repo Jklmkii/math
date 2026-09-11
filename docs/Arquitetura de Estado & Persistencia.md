@@ -1,6 +1,6 @@
 # 💾 Arquitetura de Estado & Persistência
 
-Este documento descreve o padrão de gerenciamento de estado global, a estratégia de persistência local em disco e os mecanismos de validação e migração de schema do **MathUtils**.
+Este documento descreve o padrão de gerenciamento de estado global, a estratégia de persistência local em disco e os mecanismos de validação e migração de schema do **Quantora**.
 
 Arquivos-fonte:
 * `src/store/useAppStore.ts`
@@ -30,7 +30,7 @@ graph LR
     subgraph StorageLayer["🗄️ Camada de Persistência"]
         Middleware["Zustand Persist Middleware"]
         Validator["historyValidator.ts"]
-        LocalStorage["localStorage ('mathutils-storage')"]
+        LocalStorage["localStorage ('quantora-storage')"]
     end
 
     ZustandStore --> Middleware
@@ -97,6 +97,6 @@ Para evitar falhas na inicialização devido a versões antigas ou dados corromp
 ---
 
 ## 🔗 Links Relacionados
-* [[MathUtils - Visao Geral]]
+* [[Quantora - Visao Geral]]
 * [[Gamificacao & Niveis]]
 * [[Suite de Testes & Qualidade]]

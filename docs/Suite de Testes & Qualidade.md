@@ -1,6 +1,6 @@
 # 🧪 Suíte de Testes, Qualidade & Auditoria de Código
 
-O **MathUtils** possui uma robusta esteira de garantia da qualidade (QA) com cobertura integral de testes unitários automatizados, testes de estresse estocástico e validação estática de código.
+O **Quantora** possui uma robusta esteira de garantia da qualidade (QA) com cobertura integral de testes unitários automatizados, testes de estresse estocástico e validação estática de código.
 
 ---
 
@@ -91,6 +91,6 @@ npm run lint
 ---
 
 ## 🔗 Links Relacionados
-* [[MathUtils - Visao Geral]]
+* [[Quantora - Visao Geral]]
 * [[Nucleo Matematico & Calculadoras]]
 * [[Deploy & Releases]]

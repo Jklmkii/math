@@ -1,6 +1,6 @@
 # 📜 Histórico de Versões, Changelog & Resolução de Bugs
 
-Este documento registra a evolução do **MathUtils**, detalhando as versões publicadas, novos recursos e as análises forenses de bugs solucionados.
+Este documento registra a evolução do **Quantora**, detalhando as versões publicadas, novos recursos e as análises forenses de bugs solucionados.
 
 ---
 
@@ -66,6 +66,6 @@ Este documento registra a evolução do **MathUtils**, detalhando as versões pu
 ---
 
 ## 🔗 Links Relacionados
-* [[MathUtils - Visao Geral]]
+* [[Quantora - Visao Geral]]
 * [[Gamificacao & Niveis]]
 * [[Suite de Testes & Qualidade]]

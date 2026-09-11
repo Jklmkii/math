@@ -6,7 +6,7 @@ const os = require('os');
 console.log('1. Compilando o frontend React...');
 execSync('tsc -b && vite build', { stdio: 'inherit' });
 
-const tempOutputDir = path.join(os.tmpdir(), 'mathutils-electron-build');
+const tempOutputDir = path.join(os.tmpdir(), 'quantora-electron-build');
 if (fs.existsSync(tempOutputDir)) {
   try {
     fs.rmSync(tempOutputDir, { recursive: true, force: true });

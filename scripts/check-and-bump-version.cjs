@@ -12,7 +12,7 @@ async function main() {
 
   const headers = {
     'Accept': 'application/vnd.github.v3+json',
-    'User-Agent': 'MathUtils-CI'
+    'User-Agent': 'Quantora-CI'
   };
   if (GITHUB_TOKEN) {
     headers['Authorization'] = `token ${GITHUB_TOKEN}`;

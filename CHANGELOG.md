@@ -1,4 +1,4 @@
-# 📜 Histórico de Versões — MathUtils
+# 📜 Histórico de Versões — Quantora
 
 Todas as alterações notáveis deste projeto são documentadas neste arquivo.
 

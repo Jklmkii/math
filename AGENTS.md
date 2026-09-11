@@ -1,12 +1,12 @@
-# 🤖 AGENTS.md — MathUtils Architecture & Guidelines for Autonomous Agents
+# 🤖 AGENTS.md — Quantora Architecture & Guidelines for Autonomous Agents
 
-Welcome, Agent! This document provides an architectural map, operational conventions, and technical constraints for autonomous agents (such as **Google Jules**) working on the **MathUtils** repository.
+Welcome, Agent! This document provides an architectural map, operational conventions, and technical constraints for autonomous agents (such as **Google Jules**) working on the **Quantora** repository.
 
 ---
 
 ## 🧭 1. Repository Overview & Mission
 
-**MathUtils** is an offline-first, cross-platform educational application designed for didactic step-by-step mathematical problem solving, rapid arithmetic mental training, and gamified challenges.
+**Quantora** is an offline-first, cross-platform educational application designed for didactic step-by-step mathematical problem solving, rapid arithmetic mental training, and gamified challenges.
 
 * **Primary Targets:**
   * **Web Application:** React 19 + TypeScript + Vite + Tailwind CSS v4.

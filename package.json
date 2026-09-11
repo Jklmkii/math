@@ -1,9 +1,9 @@
 {
-  "name": "mathutils",
-  "productName": "MathUtils",
+  "name": "quantora",
+  "productName": "Quantora",
   "version": "1.1.1",
   "type": "module",
-  "description": "Calculadora didática offline de Bhaskara e Regra de Três Simples e Composta",
+  "description": "Quantora — Suíte didática de matemática, ferramentas e desafios mentais",
   "author": {
     "name": "Lucas",
     "email": "suporte@local"
@@ -24,8 +24,8 @@
     "apk:build": "node scripts/build-apk.cjs"
   },
   "build": {
-    "appId": "com.mathutils.desktop",
-    "productName": "MathUtils",
+    "appId": "com.quantora.desktop",
+    "productName": "Quantora",
     "copyright": "Copyright © 2026",
     "directories": {
       "output": "release"
@@ -62,7 +62,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": "always",
       "createStartMenuShortcut": true,
-      "shortcutName": "MathUtils",
+      "shortcutName": "Quantora",
       "artifactName": "${productName}-Setup-${version}.${ext}"
     },
     "portable": {

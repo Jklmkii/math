@@ -132,6 +132,18 @@ const DEFAULT_SETTINGS: AppSettings = {
   hasCompletedOnboarding: false,
 };
 
+// Seamlessly migrate legacy storage key if present
+if (typeof window !== 'undefined' && window.localStorage) {
+  try {
+    const legacyData = localStorage.getItem('mathutils-storage');
+    if (legacyData && !localStorage.getItem('quantora-storage')) {
+      localStorage.setItem('quantora-storage', legacyData);
+    }
+  } catch {
+    // Ignore storage access errors
+  }
+}
+
 export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
@@ -589,7 +601,7 @@ export const useAppStore = create<AppState>()(
         })),
     }),
     {
-      name: 'mathutils-storage',
+      name: 'quantora-storage',
       storage: createJSONStorage(() => localStorage),
       version: 2,
       migrate: (persistedState: any, version: number) => {

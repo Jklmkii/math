@@ -1,4 +1,4 @@
-# 🧮 MathUtils — Visão Geral do Projeto
+# 🧮 Quantora — Visão Geral do Projeto
 
 Aplicativo educacional gamificado para treinamento mental, resolução passo a passo de problemas matemáticos e desafios cronometrados, com suporte nativo multiplataforma (Web, Desktop Windows e Android APK).
 
@@ -13,7 +13,7 @@ Aplicativo educacional gamificado para treinamento mental, resolução passo a p
 
 Toda a documentação técnica, fórmulas, arquitetura de software e guias operacionais estão organizados nos seguintes documentos:
 
-1. [[MathUtils - Visao Geral]] — Esta nota (painel geral e índice).
+1. [[Quantora - Visao Geral]] — Esta nota (painel geral e índice).
 2. [[Nucleo Matematico & Calculadoras]] — Resolução passo a passo de Bhaskara, Regra de Três Simples e Composta, raízes complexas e precisão com `big.js`.
 3. [[Modos de Treino & Jogos]] — Modo Treino (MatSpeed e Sobrevivência), Desafio Diário determinístico, Modo Blitz 60s e Batalha de Chefe Matemático.
 4. [[Lousa de Rascunho (Scratchpad)]] — Camada de desenho digital em HTML5 Canvas transparente com suporte a touch e mouse.

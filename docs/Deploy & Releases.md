@@ -21,8 +21,8 @@ npm run electron:build
 ```
 
 ### 📦 Artefatos Gerados no Diretório `release/`:
-* `MathUtils-Setup-1.1.1.exe` — Instalador padrão via NSIS com criação de atalhos e desinstalador limpo.
-* `MathUtils-1.1.1-portable.exe` — Versão portátil autocontida que roda diretamente sem instalação.
+* `Quantora-Setup-1.1.1.exe` — Instalador padrão via NSIS com criação de atalhos e desinstalador limpo.
+* `Quantora-1.1.1-portable.exe` — Versão portátil autocontida que roda diretamente sem instalação.
 * `latest.yml` — Manifesto criptográfico de hash e versão consumido pelo `electron-updater`.
 
 ---
@@ -30,7 +30,7 @@ npm run electron:build
 ## 📱 2. Distribuição Mobile Android (Capacitor 8)
 
 Arquivos de configuração:
-* `capacitor.config.ts` — Identificador do pacote (`com.mathutils.app`), nome e configurações da WebView.
+* `capacitor.config.ts` — Identificador do pacote (`com.quantora.app`), nome e configurações da WebView.
 * `android/` — Projeto nativo Android em Gradle e Java 21.
 * `scripts/build-apk.cjs` — Script de automação do build Android.
 
@@ -94,7 +94,7 @@ Para envios remotos via terminal no Windows sem interrupções por pop-ups do Gi
 ---
 
 ## 🔗 Links Relacionados
-* [[MathUtils - Visao Geral]]
+* [[Quantora - Visao Geral]]
 * [[Mapa de Dependencias]]
 * [[Credenciais & Tokens]]
 * [[Suite de Testes & Qualidade]]

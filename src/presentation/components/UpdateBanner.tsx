@@ -33,7 +33,7 @@ export const UpdateBanner: React.FC = () => {
       <div className="bg-indigo-600 text-white px-4 py-2 text-xs font-semibold flex items-center justify-between shadow-md z-50 animate-in fade-in">
         <div className="flex items-center gap-2">
           <RefreshCw size={14} className="animate-spin" />
-          <span>Baixando atualização do MathUtils: {updaterState.percent ?? 0}%...</span>
+          <span>Baixando atualização do Quantora: {updaterState.percent ?? 0}%...</span>
         </div>
         <button
           type="button"

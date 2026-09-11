@@ -1,6 +1,6 @@
-# 🗺️ Mapa Visual de Dependências & Camadas — MathUtils
+# 🗺️ Mapa Visual de Dependências & Camadas — Quantora
 
-Este documento detalha o mapa arquitetural completo de bibliotecas, camadas internas e plataformas suportadas pelo **MathUtils**.
+Este documento detalha o mapa arquitetural completo de bibliotecas, camadas internas e plataformas suportadas pelo **Quantora**.
 
 ---
 
@@ -28,7 +28,7 @@ graph TD
         Store["useAppStore.ts"]
         Persist["Zustand Persist Middleware"]
         Validator["historyValidator.ts"]
-        LocalStorage["localStorage ('mathutils-storage')"]
+        LocalStorage["localStorage ('quantora-storage')"]
     end
 
     subgraph Core_Engines["🧠 Núcleo de Regras de Negócio & Algoritmos"]
@@ -90,6 +90,6 @@ graph TD
 ---
 
 ## 🔗 Links Relacionados
-* [[MathUtils - Visao Geral]]
+* [[Quantora - Visao Geral]]
 * [[Deploy & Releases]]
 * [[Suite de Testes & Qualidade]]

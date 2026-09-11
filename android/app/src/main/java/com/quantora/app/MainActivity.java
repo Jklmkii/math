@@ -1,4 +1,4 @@
-package com.mathutils.app;
+package com.quantora.app;
 
 import com.getcapacitor.BridgeActivity;
 

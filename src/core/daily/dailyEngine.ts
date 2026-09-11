@@ -1,5 +1,5 @@
 /**
- * Daily Challenge Engine — MathUtils
+ * Daily Challenge Engine — Quantora
  * 
  * Deterministic PRNG seeded by integer hash of YYYY-MM-DD (Mulberry32).
  * Guarantees identical challenge on all devices for the same date.
@@ -137,10 +137,10 @@ export function getTimeUntilMidnight(now: Date = new Date()): TimeUntilMidnight 
 export function formatDailyShareText(dateStr: string, isCorrect: boolean, streak: number): string {
   const resultIcon = isCorrect ? '✅ Acertou!' : '❌';
   return [
-    `📐 MathUtils — Desafio Diário (${dateStr})`,
+    `📐 Quantora — Desafio Diário (${dateStr})`,
     `Resultado: ${resultIcon}`,
     `🔥 Sequência: ${streak} dias`,
-    `💡 mathutils.app`,
+    `💡 quantora.app`,
   ].join('\n');
 }
 

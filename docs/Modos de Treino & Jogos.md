@@ -1,6 +1,6 @@
 # 🎮 Modos de Treino, Jogos & Desafios
 
-O **MathUtils** combina cálculo didático com uma esteira dinâmica de desafios rápidos e gamificados para exercitar a agilidade aritmética mental.
+O **Quantora** combina cálculo didático com uma esteira dinâmica de desafios rápidos e gamificados para exercitar a agilidade aritmética mental.
 
 Arquivos-fonte:
 * `src/core/quiz/quizGenerator.ts`
@@ -47,7 +47,7 @@ Mecânica de engajamento diário inspirada no Wordle, garantindo que **todos os 
 * **Timer Regressivo:** Exibe horas, minutos e segundos restantes até a meia-noite local (`getTimeUntilMidnight()`).
 * **Botão "Compartilhar":** Copia para a área de transferência um texto amigável pronto para envio:
   ```text
-  MathUtils Desafio Diário (11/09) 🏆
+  Quantora Desafio Diário (11/09) 🏆
   Acertou! 🔥 Streak: 4 dias
   ```
 
@@ -109,7 +109,7 @@ stateDiagram-v2
 ---
 
 ## 🔗 Links Relacionados
-* [[MathUtils - Visao Geral]]
+* [[Quantora - Visao Geral]]
 * [[Gamificacao & Niveis]]
 * [[Lousa de Rascunho (Scratchpad)]]
 * [[Suite de Testes & Qualidade]]

@@ -41,6 +41,6 @@ O componente renderiza uma camada transparente com aceleração gráfica via ele
 ---
 
 ## 🔗 Links Relacionados
-* [[MathUtils - Visao Geral]]
+* [[Quantora - Visao Geral]]
 * [[Gamificacao & Niveis]]
 * [[Modos de Treino & Jogos]]

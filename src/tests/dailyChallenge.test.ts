@@ -117,16 +117,16 @@ describe('Motor de Desafio Diário (dailyEngine)', () => {
   describe('Formatação de Compartilhamento (formatDailyShareText)', () => {
     it('formata corretamente o texto para acerto com emojis e streak', () => {
       const text = formatDailyShareText('2026-09-15', true, 5);
-      expect(text).toContain('MathUtils');
+      expect(text).toContain('Quantora');
       expect(text).toContain('2026-09-15');
       expect(text).toContain('✅ Acertou!');
       expect(text).toContain('🔥 Sequência: 5 dias');
-      expect(text).toContain('mathutils.app');
+      expect(text).toContain('quantora.app');
     });
 
     it('formata corretamente o texto para erro com emojis e streak', () => {
       const text = formatDailyShareText('2026-09-15', false, 1);
-      expect(text).toContain('MathUtils');
+      expect(text).toContain('Quantora');
       expect(text).toContain('2026-09-15');
       expect(text).toContain('❌');
       expect(text).toContain('🔥 Sequência: 1 dias');

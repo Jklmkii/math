@@ -3,7 +3,7 @@ import type { AppLanguage } from '../../types';
 export const translations = {
   pt: {
     // Navbar
-    app_subtitle: 'Utilidades Matemáticas Offline',
+    app_subtitle: 'Suíte Matemática & Desafios Mentais',
     nav_bhaskara: 'Bhaskara',
     nav_regra: 'Regra de 3',
     nav_treino: 'Treino',
@@ -113,7 +113,7 @@ export const translations = {
   },
   en: {
     // Navbar
-    app_subtitle: 'Offline Math Utilities',
+    app_subtitle: 'Math Suite & Mental Training',
     nav_bhaskara: 'Quadratic',
     nav_regra: 'Rule of 3',
     nav_treino: 'Practice',

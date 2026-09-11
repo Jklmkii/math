@@ -12,6 +12,7 @@ const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'
 const TAG = 'v' + pkg.version;
 
 function getReleaseNotes(version) {
+  const appName = pkg.productName || 'Quantora';
   const changelogPath = path.join(__dirname, '..', 'CHANGELOG.md');
   if (fs.existsSync(changelogPath)) {
     const content = fs.readFileSync(changelogPath, 'utf8');
@@ -20,17 +21,18 @@ function getReleaseNotes(version) {
     const match = content.match(regex);
     if (match && match[1].trim()) {
       const cleanBody = match[1].replace(/\n---\s*$/, '').trim();
-      return `## O que há de novo na Versão ${version}\n\n` + cleanBody + `\n\n### Arquivos disponíveis\n- \`MathUtils-Setup-${version}.exe\` (Instalador oficial com auto-update)\n- \`MathUtils-${version}-portable.exe\` (Versão portátil sem instalação)\n- \`MathUtils.apk\` (Aplicativo para Android)`;
+      return `## O que há de novo na Versão ${version}\n\n` + cleanBody + `\n\n### Arquivos disponíveis\n- \`${appName}-Setup-${version}.exe\` (Instalador oficial com auto-update)\n- \`${appName}-${version}-portable.exe\` (Versão portátil sem instalação)\n- \`${appName}.apk\` (Aplicativo para Android)`;
     }
   }
-  return `## Novidades da versão ${version}\n\n- Atualizações de desempenho, recursos e estabilidade geral.\n\n### Arquivos disponíveis\n- \`MathUtils-Setup-${version}.exe\`\n- \`MathUtils-${version}-portable.exe\`\n- \`MathUtils.apk\``;
+  return `## Novidades da versão ${version}\n\n- Atualizações de desempenho, recursos e estabilidade geral.\n\n### Arquivos disponíveis\n- \`${appName}-Setup-${version}.exe\`\n- \`${appName}-${version}-portable.exe\`\n- \`${appName}.apk\``;
 }
 
 async function main() {
+  const appName = pkg.productName || 'Quantora';
   const headers = {
     'Authorization': `token ${GITHUB_TOKEN}`,
     'Accept': 'application/vnd.github.v3+json',
-    'User-Agent': 'MathUtils-Publisher'
+    'User-Agent': `${appName}-Publisher`
   };
 
   const changelogContent = fs.existsSync(path.join(__dirname, '..', 'CHANGELOG.md'))
@@ -38,7 +40,7 @@ async function main() {
     : '';
   const titleMatch = changelogContent.match(new RegExp(`##\\s*\\[?v?${pkg.version.replace(/\\./g, '\\.')}\\]?\\s*—\\s*([^\\n(]*)`));
   const subtitle = titleMatch && titleMatch[1].trim() ? titleMatch[1].trim() : 'Atualizações e melhorias';
-  const releaseTitle = `MathUtils ${TAG} — ${subtitle}`;
+  const releaseTitle = `${appName} ${TAG} — ${subtitle}`;
   const releaseBody = getReleaseNotes(pkg.version);
 
   console.log(`Checking existing releases for ${OWNER}/${REPO}...`);
@@ -91,11 +93,11 @@ async function main() {
   const releaseDir = path.join(__dirname, '..', 'release');
   const filesToUpload = [
     { name: 'latest.yml', type: 'application/x-yaml' },
-    { name: `MathUtils-Setup-${pkg.version}.exe.blockmap`, type: 'application/octet-stream' },
-    { name: `MathUtils-Setup-${pkg.version}.exe`, type: 'application/octet-stream' },
-    { name: `MathUtils-${pkg.version}-portable.exe`, type: 'application/octet-stream' },
-    { name: `MathUtils-${pkg.version}.apk`, type: 'application/vnd.android.package-archive' },
-    { name: 'MathUtils.apk', type: 'application/vnd.android.package-archive' }
+    { name: `${appName}-Setup-${pkg.version}.exe.blockmap`, type: 'application/octet-stream' },
+    { name: `${appName}-Setup-${pkg.version}.exe`, type: 'application/octet-stream' },
+    { name: `${appName}-${pkg.version}-portable.exe`, type: 'application/octet-stream' },
+    { name: `${appName}-${pkg.version}.apk`, type: 'application/vnd.android.package-archive' },
+    { name: `${appName}.apk`, type: 'application/vnd.android.package-archive' }
   ];
 
   for (const file of filesToUpload) {
@@ -124,7 +126,7 @@ async function main() {
         'Authorization': `token ${GITHUB_TOKEN}`,
         'Content-Type': file.type,
         'Content-Length': fileSize.toString(),
-        'User-Agent': 'MathUtils-Publisher'
+        'User-Agent': `${appName}-Publisher`
       },
       body: fileStream,
       duplex: 'half'

@@ -1,6 +1,6 @@
 # 🏆 Sistema de Gamificação, Níveis & Conquistas
 
-O motor de gamificação do **MathUtils** estimula o aprendizado e a regularidade do usuário por meio de pontos de experiência (XP), títulos matemáticos históricos, catálogo de medalhas desbloqueáveis e ofensiva diária vinculada ao dispositivo.
+O motor de gamificação do **Quantora** estimula o aprendizado e a regularidade do usuário por meio de pontos de experiência (XP), títulos matemáticos históricos, catálogo de medalhas desbloqueáveis e ofensiva diária vinculada ao dispositivo.
 
 Arquivo-fonte: `src/core/gamification/leveling.ts`
 
@@ -106,6 +106,6 @@ Para garantir total integridade e evitar que a ofensiva avance indevidamente:
 ---
 
 ## 🔗 Links Relacionados
-* [[MathUtils - Visao Geral]]
+* [[Quantora - Visao Geral]]
 * [[Modos de Treino & Jogos]]
 * [[Arquitetura de Estado & Persistencia]]

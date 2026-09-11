@@ -41,8 +41,9 @@ if (!fs.existsSync(releaseDir)) {
   fs.mkdirSync(releaseDir, { recursive: true });
 }
 
-const destVersioned = path.join(releaseDir, `MathUtils-${pkg.version}.apk`);
-const destGeneric = path.join(releaseDir, 'MathUtils.apk');
+const appName = pkg.productName || 'Quantora';
+const destVersioned = path.join(releaseDir, `${appName}-${pkg.version}.apk`);
+const destGeneric = path.join(releaseDir, `${appName}.apk`);
 
 fs.copyFileSync(apkSource, destVersioned);
 fs.copyFileSync(apkSource, destGeneric);

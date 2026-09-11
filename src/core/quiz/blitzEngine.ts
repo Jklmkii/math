@@ -2,7 +2,7 @@
  * Blitz Engine (Modo 60 Segundos)
  *
  * Core pure functions and fast arithmetic question generator
- * for the high-intensity, rapid-solving MathUtils Blitz Mode.
+ * for the high-intensity, rapid-solving Quantora Blitz Mode.
  */
 
 export const BLITZ_INITIAL_TIME = 60;

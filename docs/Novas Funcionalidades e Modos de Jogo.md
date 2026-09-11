@@ -1,4 +1,4 @@
-# 🎮 Novas Funcionalidades & Modos de Jogo — MathUtils
+# 🎮 Novas Funcionalidades & Modos de Jogo — Quantora
 
 Documentação rápida das novas mecânicas de jogo, gamificação e utilidades implementadas na versão `v1.1.0` (*The Evolution Update*).
 
@@ -53,7 +53,7 @@ Ao desbloquear qualquer conquista:
 ---
 
 ## 🔗 Links Relacionados
-* [[MathUtils - Visao Geral]]
+* [[Quantora - Visao Geral]]
 * [[Modos de Treino & Jogos]]
 * [[Gamificacao & Niveis]]
 * [[Dashboard]]

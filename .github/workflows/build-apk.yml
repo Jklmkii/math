@@ -57,14 +57,14 @@ jobs:
       - name: Prepare APK outputs
         run: |
           mkdir -p release
-          cp android/app/build/outputs/apk/release/app-release.apk release/MathUtils.apk
-          echo "APK ready at release/MathUtils.apk"
+          cp android/app/build/outputs/apk/release/app-release.apk release/Quantora.apk
+          echo "APK ready at release/Quantora.apk"
 
       - name: Upload APK as Workflow Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: MathUtils-Android-APK
-          path: release/MathUtils.apk
+          name: Quantora-Android-APK
+          path: release/Quantora.apk
           retention-days: 30
 
       - name: Upload APK to GitHub Release
@@ -73,6 +73,6 @@ jobs:
         continue-on-error: true
         run: |
           RELEASE_TAG="v$(node -p "require('./package.json').version")"
-          echo "Uploading MathUtils.apk to release $RELEASE_TAG..."
-          gh release delete-asset "$RELEASE_TAG" "MathUtils.apk" -y 2>/dev/null || true
-          gh release upload "$RELEASE_TAG" release/MathUtils.apk --clobber || true
+          echo "Uploading Quantora.apk to release $RELEASE_TAG..."
+          gh release delete-asset "$RELEASE_TAG" "Quantora.apk" -y 2>/dev/null || true
+          gh release upload "$RELEASE_TAG" release/Quantora.apk --clobber || true
