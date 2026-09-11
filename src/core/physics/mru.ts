@@ -247,18 +247,22 @@ export function calculateMRU(
 
   const formattedS = formatNumberSmart(bigS, decimals, separator);
   const formattedV = formatNumberSmart(bigV, decimals, separator);
+  const formattedS0 = formatNumberSmart(bigS0, decimals, separator);
+  const formattedT = formatNumberSmart(bigT, decimals, separator);
 
   return {
     mode: 'mru',
     category: 'cinematica',
     equationTitle: 'Movimento Retilíneo Uniforme (MRU)',
-    summary: `S = ${formattedS} m | v = ${formattedV} m/s | t = ${formatNumberSmart(bigT, decimals, separator)} s`,
+    summary: `S = ${formattedS} m | S₀ = ${formattedS0} m | v = ${formattedV} m/s | t = ${formattedT} s`,
     s: Number(bigS.toString()),
     s0: Number(bigS0.toString()),
     v: Number(bigV.toString()),
     t: Number(bigT.toString()),
     formattedS,
+    formattedS0,
     formattedV,
+    formattedT,
     steps,
     chartData,
   };

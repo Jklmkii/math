@@ -377,6 +377,8 @@ export interface MRUResult extends PhysicsCalculationBaseResult {
   t: number;
   formattedS: string;
   formattedV: string;
+  formattedS0?: string;
+  formattedT?: string;
   chartData: TemporalChartData;
 }
 

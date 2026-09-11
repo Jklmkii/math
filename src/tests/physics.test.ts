@@ -81,6 +81,7 @@ describe('Physics Module - Unit Tests', () => {
         unknown: 't',
       });
       expect(res.t).toBe(5);
+      expect(res.formattedT).toBe('5');
     });
 
     it('calculates velocity v = (s - s0) / t', () => {
@@ -91,6 +92,7 @@ describe('Physics Module - Unit Tests', () => {
         unknown: 'v',
       });
       expect(res.v).toBe(10);
+      expect(res.formattedV).toBe('10');
     });
 
     it('calculates initial position s0 = s - v * t', () => {
@@ -101,6 +103,8 @@ describe('Physics Module - Unit Tests', () => {
         unknown: 's0',
       });
       expect(res.s0).toBe(40);
+      expect(res.formattedS0).toBe('40');
+      expect(res.formattedS).toBe('100');
     });
   });
 

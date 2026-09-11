@@ -57,6 +57,7 @@ export const PhysicsModule: React.FC = () => {
   const [convertMsInput, setConvertMsInput] = useState('20');
 
   // MRU Inputs
+  const [mruS, setMruS] = useState('100');
   const [mruS0, setMruS0] = useState('0');
   const [mruV, setMruV] = useState('20');
   const [mruT, setMruT] = useState('5');
@@ -140,7 +141,7 @@ export const PhysicsModule: React.FC = () => {
 
       switch (mode) {
         case 'mru':
-          return { res: calculateMRU({ s0: mruS0, v: mruV, t: mruT, unknown: mruTarget }, opts), err: null };
+          return { res: calculateMRU({ s: mruS, s0: mruS0, v: mruV, t: mruT, unknown: mruTarget }, opts), err: null };
         case 'mruv':
           if (mruvSubmode === 'torricelli') {
             return {
@@ -241,6 +242,7 @@ export const PhysicsModule: React.FC = () => {
     isAdvancedMode,
     settings.decimalPlaces,
     settings.decimalSeparator,
+    mruS,
     mruS0,
     mruV,
     mruT,
@@ -298,8 +300,10 @@ export const PhysicsModule: React.FC = () => {
     if (anyRes.formattedValues && typeof anyRes.formattedValues === 'object') {
       Object.assign(res, anyRes.formattedValues);
     }
+    if (anyRes.formattedS0) res['Posição Inicial (S₀)'] = `${anyRes.formattedS0} m`;
     if (anyRes.formattedS) res['Posição Final (S)'] = `${anyRes.formattedS} m`;
     if (anyRes.formattedV) res['Velocidade (v)'] = `${anyRes.formattedV} m/s`;
+    if (anyRes.formattedT) res['Tempo (t)'] = `${anyRes.formattedT} s`;
     if (anyRes.formattedTQueda) res['Tempo de Queda'] = `${anyRes.formattedTQueda} s`;
     if (anyRes.formattedVImpacto) res['Velocidade de Impacto'] = `${anyRes.formattedVImpacto} m/s`;
     if (anyRes.formattedVTerminal) res['Velocidade Terminal (vt)'] = `${anyRes.formattedVTerminal} m/s`;
@@ -622,6 +626,7 @@ export const PhysicsModule: React.FC = () => {
                     </button>
                   ))}
                 </div>
+                {mruTarget !== 's' && <NumericInput label="Posição Final S (m)" value={mruS} onChange={setMruS} />}
                 {mruTarget !== 's0' && <NumericInput label="Posição Inicial S₀ (m)" value={mruS0} onChange={setMruS0} />}
                 {mruTarget !== 'v' && <NumericInput label="Velocidade v (m/s)" value={mruV} onChange={setMruV} />}
                 {mruTarget !== 't' && <NumericInput label="Tempo t (s)" value={mruT} onChange={setMruT} />}
