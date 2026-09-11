@@ -174,7 +174,13 @@ When implementing features, fixing bugs, or refactoring code, adhere strictly to
        * **Merge / Release Assessment:** Estado de prontidão para commit, release e compilação.
   4. `📊 Resultado & Verificação` (status da compilação, testes unitários aprovados e versão publicada).
 * **Filtro Mandatório Contra Conteúdos Off-Topic:**
-  É terminantemente proibido registrar ou manter no Obsidian conteúdos que não façam parte do desenvolvimento deste programa, como dúvidas gerais, conversas casuais, pesquisas, explicações teóricas ou outros assuntos off-topic. Todo conteúdo dessa natureza deve ser sumariamente excluído do cofre.
+  É terminantemente proibido registrar ou manter no Obsidian conteúdos que não façam parte do desenvolvimento deste programa, como dúvidas gerais, conversas casuais, pesquisas, explicações teóricas ou outros assuntos off-topic.
+* **Exclusão Somente sob Permissão Expressa do Usuário (Regra Mandatória):**
+  Qualquer exclusão, expurgo ou remoção de notas, arquivos ou diretórios do Obsidian Vault só poderá ser realizada com a autorização prévia, expressa e explícita do usuário.
+* **Preservação da Pasta `raw/`:**
+  A pasta `raw/` abriga materiais brutos não tratados que serão mantidos intactos e processados exclusivamente quando solicitado pelo usuário.
+* **Credenciais & Tokens:**
+  O arquivo `Sistemas & Integracoes/Credenciais & Tokens.md` é permanente e vital para a autenticação não-interativa do Git (GitHub PAT) e execução dos agentes.
 
 ### G. Análise de Falhas, Causa Raiz & Prevenção no Vault (Regra Mandatória)
 * **Análise Prévia Obrigatória:** Toda falha recorrente ou relevante encontrada durante a execução (seja em testes, build, automação de CI/CD, comandos de terminal ou comportamento da UI) deve ser minuciosamente analisada **antes** de qualquer tentativa de correção.
