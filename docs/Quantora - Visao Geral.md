@@ -22,8 +22,11 @@ Toda a documentação técnica, fórmulas, arquitetura de software e guias opera
 7. [[Interface, Temas & Design System]] — Tailwind CSS v4, sistema de temas (Claro/Escuro/Sistema), internacionalização (PT/EN), acessibilidade e modais.
 8. [[Deploy & Releases]] — Pipelines de build no GitHub Actions, compilação de instaladores Windows (`.exe` NSIS e portátil), APK Android assinado e agente Jules AI.
 9. [[Mapa de Dependencias]] — Diagrama arquitetural Mermaid de dependências de produção, desenvolvimento e plataformas.
-10. [[Suite de Testes & Qualidade]] — Vitest com 154 testes unitários em 11 suítes, testes de estresse de PRNG, oxlint e auditoria de código.
-11. [[Changelog & Historico de Bugs]] — Linha do tempo detalhada das versões v1.0.0 a v1.1.0 e resolução forense de bugs (streak, tema, i18n).
+10. [[Suite de Testes & Qualidade]] — Vitest com 172 testes unitários em 12 suítes, testes de estresse de PRNG, oxlint e auditoria de código.
+11. [[Changelog & Historico de Bugs]] — Linha do tempo detalhada das versões v1.0.0 a v1.1.1 e resolução forense de bugs (streak, tema, i18n).
+12. [[README]] — Guia público de instalação, funcionalidades e comandos de compilação.
+13. [[CHANGELOG]] — Histórico oficial de lançamentos e versões do Quantora.
+14. [[AGENTS]] — Diretrizes de arquitetura para agentes autônomos (Google Jules).
 
 ---
 

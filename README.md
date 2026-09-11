@@ -92,3 +92,12 @@ npm run cap:android
 
 Desenvolvido por **Lucas**  
 Contato: `lucascaminha06@gmail.com`
+
+---
+
+## 🔗 Navegação na Documentação (Obsidian)
+* [[Quantora - Visao Geral]]
+* [[Dashboard]]
+* [[CHANGELOG]]
+* [[AGENTS]]
+* [[Deploy & Releases]]

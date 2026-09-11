@@ -106,3 +106,12 @@ Todas as alterações notáveis deste projeto são documentadas neste arquivo.
 
 ## [1.0.0] (2026-09-09)
 - 🎉 **Lançamento Inicial Desktop:** Calculadora científica, gerador de gráficos 2D, conversor de unidades, fórmulas interativas e quiz matemático.
+
+---
+
+## 🔗 Navegação na Documentação (Obsidian)
+* [[Quantora - Visao Geral]]
+* [[Dashboard]]
+* [[Changelog & Historico de Bugs]]
+* [[README]]
+* [[Deploy & Releases]]

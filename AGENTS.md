@@ -154,3 +154,11 @@ When implementing features, fixing bugs, or refactoring code, adhere strictly to
   1. What was changed.
   2. Why the change was made.
   3. Commands executed to verify the change (`vitest`, `npm run build`, `lint`).
+
+---
+
+## 🔗 Navegação na Documentação (Obsidian)
+* [[Quantora - Visao Geral]]
+* [[Dashboard]]
+* [[README]]
+* [[Suite de Testes & Qualidade]]
