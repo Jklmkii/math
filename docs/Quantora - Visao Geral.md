@@ -48,7 +48,7 @@ Toda a documentação técnica, fórmulas, arquitetura de software e guias opera
 ## 📂 Árvore de Diretórios do Projeto
 
 ```
-matematica-app/
+quantora/
 ├── .github/
 │   └── workflows/             # Pipelines CI/CD (release.yml, build-apk.yml, auto-merge-jules.yml)
 ├── android/                   # Projeto nativo Android gerado pelo Capacitor

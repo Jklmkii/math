@@ -36,7 +36,7 @@ Welcome, Agent! This document provides an architectural map, operational convent
 ## 📂 3. Directory Layout & Key Files
 
 ```
-matematica-app/
+quantora/
 ├── .github/workflows/
 │   ├── release.yml               # Windows Electron build & GitHub release
 │   ├── build-apk.yml             # Android Capacitor APK build via Gradle
