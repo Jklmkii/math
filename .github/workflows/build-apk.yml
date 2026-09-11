@@ -70,7 +70,9 @@ jobs:
       - name: Upload APK to GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
         run: |
           RELEASE_TAG="v$(node -p "require('./package.json').version")"
           echo "Uploading MathUtils.apk to release $RELEASE_TAG..."
-          gh release upload "$RELEASE_TAG" release/MathUtils.apk --clobber
+          gh release delete-asset "$RELEASE_TAG" "MathUtils.apk" -y 2>/dev/null || true
+          gh release upload "$RELEASE_TAG" release/MathUtils.apk --clobber || true
