@@ -10,6 +10,16 @@ interface SettingsModalProps {
   onClose: () => void;
 }
 
+// Move regex outside to avoid recompilation on every cell
+const QUOTE_REGEX = /"/g;
+
+// RFC 4180 compliant CSV field escaping
+const escapeCSVField = (val: unknown): string => {
+  if (val === null || val === undefined) return '""';
+  const str = String(val);
+  return `"${str.replace(QUOTE_REGEX, '""')}"`;
+};
+
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const { settings, updateSettings, history, clearHistory, importHistory } = useAppStore();
   const t = useTranslation(settings.language || 'pt');
@@ -53,13 +63,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   };
 
   if (!isOpen) return null;
-
-  // RFC 4180 compliant CSV field escaping
-  const escapeCSVField = (val: unknown): string => {
-    if (val === null || val === undefined) return '""';
-    const str = String(val);
-    return `"${str.replace(/"/g, '""')}"`;
-  };
 
   const generateCSVContent = (): string => {
     const headers = ['ID', 'Data/Hora', 'Tipo', 'Título', 'Resumo', 'Passo a Passo', 'Favorito'];
