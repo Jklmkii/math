@@ -8,6 +8,8 @@ on:
       - '**.md'
       - '.Jules/**'
       - '.jules/**'
+      - 'scripts/**'
+      - '.github/**'
   workflow_dispatch:
 
 permissions:
@@ -36,18 +38,21 @@ jobs:
       - name: Run unit tests
         run: npx vitest run
 
-      - name: Check and bump version if release already exists
+      - name: Check if release already exists
+        id: check_release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/check-and-bump-version.cjs
 
       - name: Build Electron application
+        if: steps.check_release.outputs.should_release != 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run electron:build
 
       - name: Publish release to GitHub
+        if: steps.check_release.outputs.should_release != 'false'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/publish-release.cjs

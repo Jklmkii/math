@@ -9,7 +9,6 @@ on:
       - 'android/**'
       - 'src/**'
       - 'capacitor.config.ts'
-      - '.github/workflows/build-apk.yml'
 
 permissions:
   contents: write
