@@ -13,7 +13,7 @@ Comando de execução:
 npx vitest run
 ```
 
-### 📊 Cobertura Atual: 11 Suítes / 154 Testes (100% Aprovados)
+### 📊 Cobertura Atual: 12 Suítes / 172 Testes (100% Aprovados)
 ```text
 ✓ src/tests/achievements.test.ts (23 tests)
 ✓ src/tests/blitz.test.ts (21 tests)
@@ -22,13 +22,14 @@ npx vitest run
 ✓ src/tests/gamification.test.ts (16 tests)
 ✓ src/tests/persistenceAndAchievementsStress.test.ts (27 tests)
 ✓ src/tests/stressMechanics.test.ts (8 tests)
-✓ src/tests/bhaskara.test.ts (10 tests)
-✓ src/tests/regraDeTres.test.ts (6 tests)
+✓ src/tests/bhaskara.test.ts (11 tests)
+✓ src/tests/precision.test.ts (12 tests)
+✓ src/tests/regraDeTres.test.ts (11 tests)
 ✓ src/tests/history.test.ts (4 tests)
 ✓ src/tests/quiz.test.ts (5 tests)
 
-Test Files  11 passed (11)
-     Tests  154 passed (154)
+Test Files  12 passed (12)
+     Tests  172 passed (172)
   Duration  ~800ms
 ```
 
