@@ -81,10 +81,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
         { name: 'Arquivos JSON', extensions: ['json'] },
       ]);
       if (res.success) {
-        setImportStatus('Backup JSON salvo com sucesso!');
+        setImportStatus(t.backup_saved_success);
         setTimeout(() => setImportStatus(null), 3000);
       } else if (res.error) {
-        setImportStatus(`Erro ao salvar: ${res.error}`);
+        setImportStatus(`${t.export_error} ${res.error}`);
       }
       return;
     }
@@ -109,10 +109,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
         { name: 'Arquivos CSV', extensions: ['csv'] },
       ]);
       if (res.success) {
-        setImportStatus('Backup CSV salvo com sucesso!');
+        setImportStatus(t.backup_saved_success);
         setTimeout(() => setImportStatus(null), 3000);
       } else if (res.error) {
-        setImportStatus(`Erro ao salvar: ${res.error}`);
+        setImportStatus(`${t.export_error} ${res.error}`);
       }
       return;
     }
@@ -137,10 +137,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
       if (res.canceled) return;
       if (res.success && res.data) {
         importHistory(res.data);
-        setImportStatus(`Importado com sucesso (${res.data.length} itens)!`);
+        setImportStatus(t.backup_imported_success);
         setTimeout(() => setImportStatus(null), 3000);
       } else {
-        setImportStatus(res.error || 'Erro ao importar arquivo.');
+        setImportStatus(res.error || t.backup_invalid);
       }
       return;
     }
@@ -160,13 +160,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
         if (validation.valid && validation.data) {
           importHistory(validation.data);
-          setImportStatus(`Importado com sucesso (${validation.data.length} itens)!`);
+          setImportStatus(t.backup_imported_success);
           setTimeout(() => setImportStatus(null), 3000);
         } else {
-          setImportStatus(validation.error || 'Arquivo de backup inválido.');
+          setImportStatus(validation.error || t.backup_invalid);
         }
       } catch {
-        setImportStatus('Erro: o arquivo selecionado não é um JSON válido.');
+        setImportStatus(t.backup_invalid);
       }
     };
     reader.readAsText(file);
@@ -177,12 +177,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
       <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800/80">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Configurações</h2>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">{t.settings_title}</h2>
           <button
             type="button"
             onClick={onClose}
             className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors touch-target flex items-center justify-center"
-            aria-label="Fechar"
+            aria-label={t.close}
           >
             <X size={20} />
           </button>
@@ -193,14 +193,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           {/* Theme */}
           <div>
             <label className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-2">
-              Tema da Interface
+              {t.theme}
             </label>
             <div className="grid grid-cols-3 gap-2">
               {(
                 [
-                  { mode: 'light', label: 'Claro', icon: <Sun size={18} /> },
-                  { mode: 'dark', label: 'Escuro', icon: <Moon size={18} /> },
-                  { mode: 'system', label: 'Sistema', icon: <Laptop size={18} /> },
+                  { mode: 'light', label: t.theme_light, icon: <Sun size={18} /> },
+                  { mode: 'dark', label: t.theme_dark, icon: <Moon size={18} /> },
+                  { mode: 'system', label: t.theme_system, icon: <Laptop size={18} /> },
                 ] as const
               ).map((item) => (
                 <button
@@ -227,8 +227,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
             </label>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { lang: 'pt', label: 'Português 🇧🇷' },
-                { lang: 'en', label: 'English 🇺🇸' },
+                { lang: 'pt', label: t.lang_pt },
+                { lang: 'en', label: t.lang_en },
               ].map((item) => (
                 <button
                   key={item.lang}
@@ -249,7 +249,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           {/* Decimal Places */}
           <div>
             <label className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-2">
-              Precisão Decimal
+              {t.precision}
             </label>
             <div className="grid grid-cols-3 gap-2">
               {([2, 4, 6] as DecimalPlaces[]).map((places) => (
@@ -263,7 +263,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                       : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60'
                   }`}
                 >
-                  {places} casas
+                  {places} {t.decimals_suffix}
                 </button>
               ))}
             </div>
@@ -272,13 +272,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           {/* Decimal Separator */}
           <div>
             <label className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-2">
-              Separador Decimal
+              {t.separator}
             </label>
             <div className="grid grid-cols-2 gap-2">
               {(
                 [
-                  { sep: ',', label: 'Vírgula (ex: 3,14)' },
-                  { sep: '.', label: 'Ponto (ex: 3.14)' },
+                  { sep: ',', label: t.separator_comma },
+                  { sep: '.', label: t.separator_dot },
                 ] as const
               ).map((item) => (
                 <button
@@ -300,7 +300,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           {/* History Management */}
           <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80">
             <label className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-2">
-              Backup e Dados ({history.length} salvos)
+              {t.backup_data} ({history.length} {t.saved_items})
             </label>
 
             <div className="grid grid-cols-2 gap-2 mb-2">
@@ -310,7 +310,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                 disabled={history.length === 0}
                 className="flex items-center justify-center gap-2 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors font-semibold text-xs touch-target disabled:opacity-40"
               >
-                <Download size={16} /> Exportar JSON
+                <Download size={16} /> {t.export_json}
               </button>
               <button
                 type="button"
@@ -318,7 +318,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                 disabled={history.length === 0}
                 className="flex items-center justify-center gap-2 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors font-semibold text-xs touch-target disabled:opacity-40"
               >
-                <Download size={16} /> Exportar CSV
+                <Download size={16} /> {t.export_csv}
               </button>
             </div>
 
@@ -335,7 +335,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                 onClick={handleImport}
                 className="w-full flex items-center justify-center gap-2 p-3 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors font-semibold text-xs touch-target"
               >
-                <Upload size={16} /> Importar Backup JSON
+                <Upload size={16} /> {t.import_json}
               </button>
 
               {importStatus && (
@@ -357,14 +357,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                     }}
                     className="flex-1 p-3 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs touch-target"
                   >
-                    Confirmar Limpeza Total
+                    {t.confirm_clear}
                   </button>
                   <button
                     type="button"
                     onClick={() => setConfirmClear(false)}
                     className="p-3 rounded-2xl border border-slate-200 dark:border-slate-800 font-semibold text-xs touch-target"
                   >
-                    Cancelar
+                    {t.cancel}
                   </button>
                 </div>
               ) : (
@@ -374,7 +374,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                   disabled={history.length === 0}
                   className="w-full flex items-center justify-center gap-2 p-3 rounded-2xl text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors font-semibold text-xs touch-target disabled:opacity-40"
                 >
-                  <Trash2 size={16} /> Limpar todo o histórico
+                  <Trash2 size={16} /> {t.clear_history}
                 </button>
               )}
             </div>
@@ -386,10 +386,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
               <div>
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                   <RefreshCw size={16} className={isCheckingUpdate ? 'animate-spin text-indigo-500' : 'text-indigo-500'} />
-                  Atualizações do Aplicativo
+                  {t.updates_title}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  MathUtils v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.0.3'} ({t.updates_subtitle})
+                  MathUtils v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.1.0'} ({t.updates_subtitle})
                 </p>
               </div>
 
@@ -399,7 +399,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                   onClick={() => window.electronAPI?.installUpdate?.()}
                   className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1 shadow-sm transition-all"
                 >
-                  <Sparkles size={14} /> Atualizar Agora
+                  <Sparkles size={14} /> {t.update_now}
                 </button>
               ) : (
                 <button
@@ -408,7 +408,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                   onClick={handleCheckUpdate}
                   className="px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/60 text-indigo-700 dark:text-indigo-300 font-semibold text-xs hover:bg-indigo-100 transition-colors disabled:opacity-50"
                 >
-                  {isCheckingUpdate ? 'Verificando...' : 'Verificar Atualizações'}
+                  {isCheckingUpdate ? t.checking_updates : t.check_updates}
                 </button>
               )}
             </div>
@@ -433,10 +433,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
             <ShieldCheck size={22} className="text-emerald-500 shrink-0 mt-0.5" />
             <div className="text-xs space-y-1">
               <p className="font-bold text-slate-800 dark:text-slate-200">
-                100% Offline e Privado
+                {t.privacy_title}
               </p>
               <p className="text-slate-500 dark:text-slate-400 leading-relaxed">
-                Nenhum dado sai do seu aparelho. Todos os cálculos e históricos são armazenados exclusivamente na memória do seu dispositivo.
+                {t.privacy_desc}
               </p>
             </div>
           </div>
@@ -444,13 +444,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
         {/* Footer */}
         <div className="p-4 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center text-xs text-slate-400">
-          <span>MathUtils v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.0.3'} ({t.definitive_edition})</span>
+          <span>MathUtils v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.1.0'} ({t.definitive_edition})</span>
           <button
             type="button"
             onClick={onClose}
             className="px-5 py-2.5 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-bold touch-target"
           >
-            Concluir
+            {t.done}
           </button>
         </div>
       </div>

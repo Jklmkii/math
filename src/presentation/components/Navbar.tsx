@@ -123,10 +123,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings }) => {
               }`}
               title={
                 isDailyCompleted
-                  ? 'Desafio Diário Concluído! (+150 XP)'
-                  : 'Desafio Diário Pendente! Clique para jogar (+150 XP)'
+                  ? t.daily_completed_tooltip
+                  : t.daily_pending_tooltip
               }
-              aria-label="Desafio Diário"
+              aria-label={t.daily_challenge_title}
             >
               {isDailyCompleted ? (
                 <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />
@@ -134,7 +134,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings }) => {
                 <Calendar size={14} className="text-amber-500 shrink-0 animate-bounce" />
               )}
               <span className="hidden sm:inline">
-                {isDailyCompleted ? 'Diário Concluído' : 'Diário Pendente'}
+                {isDailyCompleted ? t.daily_completed : t.daily_pending}
               </span>
               {!isDailyCompleted && (
                 <span className="sm:hidden text-[11px] font-extrabold text-amber-500">
@@ -149,10 +149,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings }) => {
               onClick={() => setIsProfileOpen(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-200/80 dark:border-amber-800/60 bg-amber-50/60 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 font-bold text-xs hover:bg-amber-100/70 transition-all touch-target shadow-xs"
               title={`${levelInfo.title} • ${profile?.totalXp || 0} XP (${t.profile_title})`}
-              aria-label="Perfil do usuário"
+              aria-label={t.profile_title}
             >
               <Trophy size={15} className="text-amber-500" />
-              <span>Nv. {levelInfo.level}</span>
+              <span>{t.level_prefix} {levelInfo.level}</span>
               {(profile?.streakDays || 1) > 1 && (
                 <span className="flex items-center text-orange-500 font-extrabold text-[11px] ml-0.5">
                   🔥{profile.streakDays}
@@ -165,8 +165,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings }) => {
               type="button"
               onClick={cycleTheme}
               className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100/70 dark:bg-slate-900/70 text-slate-700 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors touch-target flex items-center justify-center"
-              title={`Tema: ${settings.theme} (clique para alternar)`}
-              aria-label="Alternar tema visual"
+              title={`${t.theme_prefix}: ${settings.theme} (${t.theme_cycle_tooltip})`}
+              aria-label={t.theme}
             >
               {settings.theme === 'light' && <Sun size={18} />}
               {settings.theme === 'dark' && <Moon size={18} />}
@@ -178,8 +178,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings }) => {
               type="button"
               onClick={onOpenSettings}
               className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100/70 dark:bg-slate-900/70 text-slate-700 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors touch-target flex items-center justify-center"
-              title="Configurações do aplicativo"
-              aria-label="Configurações"
+              title={t.settings_title}
+              aria-label={t.settings_title}
             >
               <Settings size={18} />
             </button>
