@@ -29,7 +29,7 @@ export function parseBig(value: string | number): Big {
  */
 export function formatNumber(
   value: Big | number,
-  decimals: DecimalPlaces = 2,
+  decimals: DecimalPlaces | number = 2,
   separator: DecimalSeparator = ','
 ): string {
   const bigVal = typeof value === 'number' ? new Big(value) : value;
@@ -49,7 +49,7 @@ export function formatNumber(
  */
 export function formatNumberSmart(
   value: Big | number,
-  maxDecimals: DecimalPlaces = 4,
+  maxDecimals: DecimalPlaces | number = 4,
   separator: DecimalSeparator = ','
 ): string {
   const bigVal = typeof value === 'number' ? new Big(value) : value;
