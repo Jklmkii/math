@@ -3,8 +3,9 @@ const path = require('path');
 const { execSync } = require('child_process');
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
-const OWNER = 'Jklmkii';
-const REPO = 'math';
+const [envOwner, envRepo] = (process.env.GITHUB_REPOSITORY || '').split('/');
+const OWNER = envOwner || 'Jklmkii';
+const REPO = envRepo || 'quantora';
 
 async function main() {
   const pkgPath = path.join(__dirname, '..', 'package.json');

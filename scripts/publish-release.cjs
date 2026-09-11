@@ -6,9 +6,10 @@ if (!GITHUB_TOKEN) {
   console.error('Missing GITHUB_TOKEN environment variable.');
   process.exit(1);
 }
-const OWNER = 'Jklmkii';
+const [envOwner, envRepo] = (process.env.GITHUB_REPOSITORY || '').split('/');
+const OWNER = envOwner || 'Jklmkii';
 const { execSync } = require('child_process');
-const REPO = 'math';
+const REPO = envRepo || 'quantora';
 const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
 const TAG = 'v' + pkg.version;
 

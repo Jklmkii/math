@@ -33,7 +33,7 @@
     "publish": {
       "provider": "github",
       "owner": "Jklmkii",
-      "repo": "math"
+      "repo": "quantora"
     },
     "files": [
       "dist/**/*",
