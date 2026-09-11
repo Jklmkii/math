@@ -4,6 +4,38 @@ Todas as alterações notáveis deste projeto são documentadas neste arquivo.
 
 ---
 
+## [1.2.0] — Módulo de Física Clássica & Gráficos Interativos (2026-09-11)
+
+### ⚛️ Módulo de Física Clássica & Mecânica Analítica
+- **10 Modos de Resolução Passo a Passo:**
+  1. **MRU (Movimento Retilíneo Uniforme):** Posição horária, velocidade constante e tempo.
+  2. **MRUV & Torricelli:** Aceleração linear, distância e tempo de frenagem automática.
+  3. **Queda Livre:** Altura inicial, aceleração da gravidade, tempo de queda e velocidade de impacto.
+  4. **Lançamento Vertical:** Subida desacelerada, altura máxima, tempo total e velocidade de retorno.
+  5. **Lançamento Horizontal:** Decomposição independente de Galileu, alcance horizontal e velocidade resultante.
+  6. **Lançamento Oblíquo (Balística 2D):** Ângulo de disparo, alcance parabólico e ápice da trajetória.
+  7. **MCU (Movimento Circular Uniforme):** Frequência, período, velocidade angular ($\omega$), velocidade linear e aceleração centrípeta.
+  8. **MHS (Movimento Harmônico Simples):** Pêndulo simples e oscilador massa-mola com funções senoidais.
+  9. **Plano Inclinado & Leis de Newton:** Decomposição $P_x$ e $P_y$, força normal, atrito estático/cinético e aceleração na rampa.
+  10. **Conservação de Energia & Trabalho:** Energia cinética, potencial gravitacional e mecânica total; trabalho de forças constantes e potência mecânica (com conversões para CV e HP).
+- **5 Motores de Gráficos SVG Vetoriais Interativos (`PhysicsChart.tsx`):**
+  - Gráficos cartesianos temporais contínuos ($S \times t, v \times t$).
+  - Balística 2D com solo pontilhado, solo $y=0$, nós interativos de ápice ($h_{max}$) e alcance horizontal ($A$).
+  - Órbita circular com raio e vetores de velocidade e aceleração centrípeta.
+  - Diagrama de corpo livre do plano inclinado com 5 vetores de força renderizados dinamicamente.
+  - Gráficos de barras proporcionais para energias e trabalho.
+- **Integração Completa:**
+  - Aba de Física com ícone `Atom` na barra de navegação superior (`Navbar.tsx`).
+  - Tipo `'physics'` integrado ao validador e persistência de Histórico (`HistoryModule.tsx`).
+  - Suporte bilingue (Português e Inglês) em todos os modos e unidades.
+
+### 🧪 Expansão e Qualidade de Testes
+- **342 Testes Unitários Aprovados:** 17 suítes de teste executando 100% verde em Vitest.
+- **Zero Avisos no Linter:** Oxlint aprovado com 0 erros e 0 avisos em 74 arquivos.
+- **Build de Produção Limpo:** TypeScript strict mode compilado sem falhas.
+
+---
+
 ## [1.1.1] — Atualização de Estabilidade, Segurança & Jules AI (2026-09-11)
 
 ### 🔥 Correção Crítica de Ofensiva (Streak Diário)

@@ -19,7 +19,7 @@ import {
   ACHIEVEMENTS,
 } from '../core/gamification/leveling';
 
-export type ActiveTab = 'bhaskara' | 'regra_simples' | 'regra_composta' | 'quiz' | 'history' | 'settings';
+export type ActiveTab = 'bhaskara' | 'regra_simples' | 'regra_composta' | 'physics' | 'quiz' | 'history' | 'settings';
 
 interface AppState {
   // Navigation

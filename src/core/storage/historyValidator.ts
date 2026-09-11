@@ -6,7 +6,31 @@ export interface HistoryValidationResult {
   data?: HistoryItem[];
 }
 
-const VALID_TYPES: CalculationType[] = ['bhaskara', 'regra_simples', 'regra_composta'];
+export const VALID_TYPES: readonly CalculationType[] = [
+  'bhaskara',
+  'regra_simples',
+  'regra_composta',
+  'physics',
+] as const;
+
+/**
+ * Validates a single history item structure.
+ */
+export function validateHistoryItem(item: unknown): boolean {
+  if (!item || typeof item !== 'object') {
+    return false;
+  }
+  const candidate = item as Record<string, unknown>;
+  return (
+    typeof candidate.id === 'string' &&
+    typeof candidate.timestamp === 'number' &&
+    typeof candidate.type === 'string' &&
+    (VALID_TYPES as readonly string[]).includes(candidate.type) &&
+    typeof candidate.title === 'string' &&
+    typeof candidate.summary === 'string' &&
+    typeof candidate.details === 'string'
+  );
+}
 
 /**
  * Validates whether an unknown parsed JSON matches the expected HistoryItem[] schema.
@@ -22,16 +46,7 @@ export function validateHistorySchema(raw: unknown): HistoryValidationResult {
 
   for (let i = 0; i < raw.length; i++) {
     const item = raw[i];
-    if (
-      !item ||
-      typeof item !== 'object' ||
-      typeof item.id !== 'string' ||
-      typeof item.timestamp !== 'number' ||
-      !VALID_TYPES.includes(item.type) ||
-      typeof item.title !== 'string' ||
-      typeof item.summary !== 'string' ||
-      typeof item.details !== 'string'
-    ) {
+    if (!validateHistoryItem(item)) {
       return {
         valid: false,
         error: `O item #${i + 1} do arquivo não segue a estrutura esperada do histórico.`,

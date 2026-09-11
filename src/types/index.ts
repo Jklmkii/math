@@ -66,7 +66,8 @@ export interface RegraDeTresCompostaResult {
   equation: string;
 }
 
-export type CalculationType = 'bhaskara' | 'regra_simples' | 'regra_composta';
+export type CalculationType = 'bhaskara' | 'regra_simples' | 'regra_composta' | 'physics';
+export type ActiveTab = 'bhaskara' | 'regra_simples' | 'regra_composta' | 'physics' | 'quiz' | 'history' | 'settings';
 
 export interface HistoryItem {
   id: string;
@@ -153,6 +154,7 @@ export interface UserProfileStats {
   totalCalculations: number;
   totalBhaskara: number;
   totalRegraDeTres: number;
+  totalPhysics?: number;
   totalQuizCorrect: number;
   bestSurvivalRecord: number;
   scratchpadUses?: number;
@@ -221,3 +223,384 @@ declare global {
     };
   }
 }
+
+// ==========================================
+// Módulo de Física Clássica - Tipos & Modelos
+// ==========================================
+
+export type PhysicsCategory = 'cinematica' | 'circular_oscilacoes' | 'dinamica_energia';
+
+export type PhysicsMode =
+  // Cinemática Linear & Balística
+  | 'mru'
+  | 'mruv'
+  | 'queda_livre'
+  | 'lancamento_vertical'
+  | 'lancamento_horizontal'
+  | 'lancamento_obliquo'
+  // Cinemática Circular & Oscilações
+  | 'mcu'
+  | 'mhs'
+  // Dinâmica & Energia
+  | 'plano_inclinado'
+  | 'energia_trabalho';
+
+export interface PhysicsCalculationBaseResult {
+  mode: PhysicsMode;
+  category: PhysicsCategory;
+  steps: string[];
+  equationTitle: string;
+  summary: string;
+}
+
+// ------------------------------------------
+// Dados de Gráficos e Diagramas Vetoriais SVG
+// ------------------------------------------
+
+export interface TemporalChartPoint {
+  t: number;
+  s?: number;
+  v?: number;
+  y?: number;
+  x?: number;
+  a?: number;
+}
+
+export interface TemporalChartData {
+  type: 'temporal';
+  points: TemporalChartPoint[];
+  xLabel?: string;
+  yLabel?: string;
+}
+
+export interface TrajectoryChartPoint {
+  x: number;
+  y: number;
+  t?: number;
+}
+
+export interface BallisticChartData {
+  type: 'ballistic';
+  points: TrajectoryChartPoint[];
+  apex: { x: number; y: number };
+  range: { x: number; y: number };
+  initialHeight?: number;
+}
+
+export interface CircularVectorChartData {
+  type: 'circular';
+  radius: number;
+  omega: number;
+  vLinear: number;
+  aCentripeta: number;
+  angleDeg?: number;
+}
+
+export interface InclinedPlaneChartData {
+  type: 'inclined_plane';
+  angleDeg: number;
+  mass: number;
+  peso: number;
+  px: number;
+  py: number;
+  normal: number;
+  fat: number;
+  aceleracao: number;
+  frictionCoef?: number;
+  isStatic?: boolean;
+}
+
+export interface EnergyBarItem {
+  label: string;
+  value: number;
+  color?: string;
+}
+
+export interface EnergyChartData {
+  type: 'energy_bars';
+  ec: number;
+  ep: number;
+  em: number;
+  work?: number;
+  power?: number;
+  bars: EnergyBarItem[];
+}
+
+export type PhysicsChartData =
+  | TemporalChartData
+  | BallisticChartData
+  | CircularVectorChartData
+  | InclinedPlaneChartData
+  | EnergyChartData;
+
+export interface PhysicsChartProps {
+  mode: PhysicsMode;
+  category: PhysicsCategory;
+  chartData: PhysicsChartData;
+  className?: string;
+}
+
+export interface PhysicsCalculationOutput<TChartData = PhysicsChartData> {
+  results: Record<string, string>;
+  steps: string[];
+  chartData: TChartData;
+}
+
+export interface PhysicsCalculationResult {
+  mode: PhysicsMode;
+  category: PhysicsCategory;
+  inputs: Record<string, string>;
+  results: Record<string, string>;
+  steps: string[];
+  chartData: PhysicsChartData;
+}
+
+// ------------------------------------------
+// Interfaces de Entrada e Saída dos 10 Modos
+// ------------------------------------------
+
+// 1. MRU
+export interface MRUInput {
+  s0?: string; // m
+  v?: string;  // m/s
+  t?: string;  // s
+  s?: string;  // m
+  unknown: 's' | 's0' | 'v' | 't';
+}
+
+export interface MRUResult extends PhysicsCalculationBaseResult {
+  mode: 'mru';
+  s: number;
+  s0: number;
+  v: number;
+  t: number;
+  formattedS: string;
+  formattedV: string;
+  chartData: TemporalChartData;
+}
+
+// 2. MRUV & Torricelli
+export interface MRUVInput {
+  subMode: 'horaria' | 'torricelli';
+  s0?: string;
+  v0?: string;
+  a?: string;
+  t?: string;
+  s?: string;
+  v?: string;
+  deltaS?: string;
+  unknown: 's' | 'v' | 't' | 'a' | 'deltaS';
+}
+
+export interface MRUVResult extends PhysicsCalculationBaseResult {
+  mode: 'mruv';
+  subMode: 'horaria' | 'torricelli';
+  s0: number;
+  v0: number;
+  a: number;
+  t?: number;
+  s?: number;
+  v: number;
+  deltaS?: number;
+  stoppingTime?: number;
+  stoppingDistance?: number;
+  formattedValues: Record<string, string>;
+  chartData: TemporalChartData;
+}
+
+// 3. Queda Livre
+export interface QuedaLivreInput {
+  h0: string; // m
+  g?: string; // m/s² (default '9.8' ou '10')
+}
+
+export interface QuedaLivreResult extends PhysicsCalculationBaseResult {
+  mode: 'queda_livre';
+  h0: number;
+  g: number;
+  tQueda: number;
+  vImpacto: number;
+  formattedTQueda: string;
+  formattedVImpacto: string;
+  trajectoryPoints: Array<{ t: number; y: number; v: number }>;
+  chartData: TemporalChartData;
+}
+
+// 4. Lançamento Vertical
+export interface LancamentoVerticalInput {
+  y0?: string; // m (default '0')
+  v0: string;  // m/s
+  g?: string;  // m/s²
+}
+
+export interface LancamentoVerticalResult extends PhysicsCalculationBaseResult {
+  mode: 'lancamento_vertical';
+  y0: number;
+  v0: number;
+  g: number;
+  tSubida: number;
+  hMax: number;
+  tTotal: number;
+  vRetorno: number;
+  formattedTSubida: string;
+  formattedHMax: string;
+  formattedTTotal: string;
+  trajectoryPoints: Array<{ t: number; y: number; v: number }>;
+  chartData: TemporalChartData;
+}
+
+// 5. Lançamento Horizontal
+export interface LancamentoHorizontalInput {
+  h0: string;  // Altura inicial (m)
+  v0x: string; // Velocidade horizontal inicial (m/s)
+  g?: string;  // Gravidade
+}
+
+export interface LancamentoHorizontalResult extends PhysicsCalculationBaseResult {
+  mode: 'lancamento_horizontal';
+  h0: number;
+  v0x: number;
+  g: number;
+  tQueda: number;
+  alcance: number;
+  vImpacto: number;
+  vyFinal: number;
+  formattedTQueda: string;
+  formattedAlcance: string;
+  formattedVImpacto: string;
+  trajectoryPoints: Array<{ x: number; y: number; t: number }>;
+  chartData: BallisticChartData;
+}
+
+// 6. Lançamento Oblíquo
+export interface LancamentoObliquoInput {
+  v0: string;       // m/s
+  angleDeg: string; // graus
+  y0?: string;      // m (default '0')
+  g?: string;       // m/s²
+}
+
+export interface LancamentoObliquoResult extends PhysicsCalculationBaseResult {
+  mode: 'lancamento_obliquo';
+  v0: number;
+  angleDeg: number;
+  angleRad: number;
+  v0x: number;
+  v0y: number;
+  g: number;
+  tSubida: number;
+  tVoo: number;
+  hMax: number;
+  alcance: number;
+  formattedHMax: string;
+  formattedAlcance: string;
+  formattedTVoo: string;
+  trajectoryPoints: Array<{ x: number; y: number; t: number }>;
+  chartData: BallisticChartData;
+}
+
+// 7. MCU (Movimento Circular Uniforme)
+export interface MCUInput {
+  radius: string; // m
+  parameterType: 'period' | 'frequency' | 'angular_speed' | 'linear_speed';
+  value: string;
+}
+
+export interface MCUResult extends PhysicsCalculationBaseResult {
+  mode: 'mcu';
+  radius: number;
+  period: number;
+  frequency: number;
+  omega: number;
+  vLinear: number;
+  aCentripeta: number;
+  formattedValues: Record<string, string>;
+  chartData: CircularVectorChartData;
+}
+
+// 8. MHS (Movimento Harmônico Simples)
+export interface MHSInput {
+  type: 'pendulo' | 'massa_mola';
+  amplitude: string; // m
+  length?: string;   // m (pendulo)
+  g?: string;        // m/s² (pendulo)
+  mass?: string;     // kg (massa_mola)
+  k?: string;        // N/m (massa_mola)
+}
+
+export interface MHSResult extends PhysicsCalculationBaseResult {
+  mode: 'mhs';
+  type: 'pendulo' | 'massa_mola';
+  amplitude: number;
+  omega: number;
+  period: number;
+  frequency: number;
+  formattedPeriod: string;
+  formattedFrequency: string;
+  formattedOmega: string;
+  wavePoints: Array<{ t: number; x: number; v: number; a: number }>;
+  chartData: TemporalChartData;
+}
+
+// 9. Plano Inclinado & Leis de Newton
+export interface PlanoInclinadoInput {
+  mass: string;          // kg
+  angleDeg: string;      // graus (0 a 90)
+  frictionCoef?: string; // μ (default '0')
+  g?: string;            // m/s²
+}
+
+export interface PlanoInclinadoResult extends PhysicsCalculationBaseResult {
+  mode: 'plano_inclinado';
+  mass: number;
+  angleDeg: number;
+  g: number;
+  frictionCoef: number;
+  peso: number;
+  px: number;
+  py: number;
+  normal: number;
+  fat: number;
+  fRes: number;
+  aceleracao: number;
+  isStatic: boolean;
+  formattedValues: Record<string, string>;
+  chartData: InclinedPlaneChartData;
+}
+
+// 10. Conservação de Energia Mecânica & Trabalho
+export interface EnergiaTrabalhoInput {
+  calculationSubtype: 'conservacao_energia' | 'trabalho_potencia';
+  mass?: string;     // kg
+  v?: string;        // m/s
+  h?: string;        // m
+  g?: string;        // m/s²
+  force?: string;    // N
+  distance?: string; // m
+  angleDeg?: string; // graus (default '0')
+  time?: string;     // s
+}
+
+export interface EnergiaTrabalhoResult extends PhysicsCalculationBaseResult {
+  mode: 'energia_trabalho';
+  subtype: 'conservacao_energia' | 'trabalho_potencia';
+  ec?: number;
+  ep?: number;
+  em?: number;
+  work?: number;
+  power?: number;
+  formattedValues: Record<string, string>;
+  chartData: EnergyChartData;
+}
+
+export type AnyPhysicsResult =
+  | MRUResult
+  | MRUVResult
+  | QuedaLivreResult
+  | LancamentoVerticalResult
+  | LancamentoHorizontalResult
+  | LancamentoObliquoResult
+  | MCUResult
+  | MHSResult
+  | PlanoInclinadoResult
+  | EnergiaTrabalhoResult;

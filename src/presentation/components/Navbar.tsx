@@ -11,6 +11,7 @@ import {
   Trophy,
   Calendar,
   CheckCircle2,
+  Atom,
 } from 'lucide-react';
 import { useAppStore, type ActiveTab } from '../../store/useAppStore';
 import { useTranslation } from '../../core/i18n/translations';
@@ -47,6 +48,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings }) => {
   const tabs: { id: ActiveTab; label: string; icon: React.ReactNode; badge?: number }[] = [
     { id: 'bhaskara', label: t.nav_bhaskara, icon: <Sigma size={20} /> },
     { id: 'regra_simples', label: t.nav_regra, icon: <Scale size={20} /> },
+    { id: 'physics', label: t.physics_title || 'Física', icon: <Atom size={20} /> },
     { id: 'quiz', label: t.nav_treino, icon: <Brain size={20} /> },
     {
       id: 'history',

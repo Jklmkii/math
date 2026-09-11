@@ -3,6 +3,7 @@ import { useAppStore } from './store/useAppStore';
 import { Navbar } from './presentation/components/Navbar';
 import { BhaskaraModule } from './presentation/modules/BhaskaraModule';
 import { RegraDeTresModule } from './presentation/modules/RegraDeTresModule';
+import { PhysicsModule } from './presentation/modules/PhysicsModule';
 import { HistoryModule } from './presentation/modules/HistoryModule';
 import { QuizModule } from './presentation/modules/QuizModule';
 import { SettingsModal } from './presentation/components/SettingsModal';
@@ -60,6 +61,7 @@ export function App() {
         {(activeTab === 'regra_simples' || activeTab === 'regra_composta') && (
           <RegraDeTresModule />
         )}
+        {activeTab === 'physics' && <PhysicsModule />}
         {activeTab === 'quiz' && <QuizModule />}
         {activeTab === 'history' && <HistoryModule />}
       </main>

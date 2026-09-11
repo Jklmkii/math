@@ -11,6 +11,7 @@ import {
   Clock,
   Sigma,
   Scale,
+  Atom,
 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import type { CalculationType, HistoryItem } from '../../types';
@@ -89,6 +90,7 @@ export const HistoryModule: React.FC = () => {
               { id: 'pinned', label: 'Favoritos', icon: <Star size={12} className="fill-amber-400 text-amber-500" /> },
               { id: 'bhaskara', label: 'Bhaskara', icon: <Sigma size={12} /> },
               { id: 'regra_simples', label: 'Regra de 3', icon: <Scale size={12} /> },
+              { id: 'physics', label: 'Física', icon: <Atom size={12} /> },
             ] as const
           ).map((filter) => (
             <button
@@ -147,7 +149,7 @@ export const HistoryModule: React.FC = () => {
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                        {item.type === 'bhaskara' ? 'Bhaskara' : 'Regra de Três'}
+                        {item.type === 'bhaskara' ? 'Bhaskara' : item.type === 'physics' ? 'Física' : 'Regra de Três'}
                       </span>
                       <span className="text-[11px] text-slate-400">{dateStr}</span>
                     </div>

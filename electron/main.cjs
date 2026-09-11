@@ -133,7 +133,7 @@ app.whenReady().then(() => {
       }
 
       // Validate each item structure
-      const validTypes = ['bhaskara', 'regra_simples', 'regra_composta'];
+      const validTypes = ['bhaskara', 'regra_simples', 'regra_composta', 'physics'];
       for (let i = 0; i < parsed.length; i++) {
         const item = parsed[i];
         if (
