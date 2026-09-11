@@ -158,21 +158,23 @@ When implementing features, fixing bugs, or refactoring code, adhere strictly to
 * **Zero Production Mocks:** Production code must be fully implemented. Stubs, fake static returns, or mock simulations in production modules are strictly prohibited.
 * **Preserve Tests:** Do not delete or weaken existing tests in `src/tests/`. If changing business logic, update corresponding tests to reflect the new intended behavior and maintain 100% test pass rate.
 
-### F. Sincronização Obrigatória com o Obsidian (Obsidian-First)
+### F. Sincronização Obrigatória com o Obsidian (Obsidian-First — Foco Estrito no Desenvolvimento)
 * **Antes de Iniciar Qualquer Tarefa:** Sempre consulte as notas do projeto em `Obsidian-Vault/Projetos/Quantora/` (`Decisoes & Estado Atual.md`, `Quantora - Visao Geral.md`, etc.) para verificar requisitos prévios, convenções de arquitetura e decisões já tomadas, minimizando retrabalho e consumo desnecessário de contexto.
 * **Ao Concluir ou Alterar Funcionalidades:** Sempre registre ou atualize o Obsidian com as novas decisões, mudanças de estado, correções de bugs em `Changelog & Historico de Bugs.md` e impactos nos módulos correspondentes.
-* **Registro Obrigatório de Prompts & Raciocínio (Prompt Logging & Analysis):**
-  Cada solicitação ou mensagem do usuário referente ao projeto deve ser salva e indexada em `Obsidian-Vault/Projetos/Quantora/Historico de Prompts & Demandas.md`, contendo:
-  1. `💬 Texto Original do Usuário (Ipsis Litteris)`
-  2. `🧠 Analysis and Reasoning` (redigido obrigatoriamente em Português, seguindo rigorosamente a estrutura de avaliação do Google Jules):
-     * **User's Goal:** Resumo claro da intenção e expectativas do usuário.
+* **Indexação Estrita de Prompts de Desenvolvimento:**
+  A partir de agora, **todo prompt relacionado ao desenvolvimento deste programa deve ser salvo, indexado e correlacionado à alteração implementada no Obsidian**. Cada registro deve manter o vínculo estruturado entre:
+  1. `💬 Requisito / Texto Original do Usuário (Ipsis Litteris)`
+  2. `🛠️ Arquivos Modificados / Impactados` (caminhos absolutos e links diretos).
+  3. `🧠 Implementação Realizada & Raciocínio (Analysis and Reasoning em Português)`:
+     * **User's Goal:** Intenção do requisito de desenvolvimento.
      * **Evaluation of the Solution:**
-       * **Core Functionality:** Diagnóstico aprofundado dos problemas e lógica da solução aplicada.
-       * **Safety & Side Effects:** Análise de isolamento, segurança de tipos, performance e ausência de regressões.
-       * **Completeness:** Verificação de cobertura de requisitos, casos de borda e testes unitários.
+       * **Core Functionality:** Implementação técnica e lógica das alterações.
+       * **Safety & Side Effects:** Tipagem, segurança, ausência de regressões.
+       * **Completeness:** Validação contra requisitos e testes unitários.
        * **Merge / Release Assessment:** Estado de prontidão para commit, release e compilação.
-  3. `🔍 Decomposição & Análise Técnica das Demandas` (tabela de impacto e ações).
-  4. `🛠️ Arquivos Modificados / Impactados`.
+  4. `📊 Resultado & Verificação` (status da compilação, testes unitários aprovados e versão publicada).
+* **Filtro Mandatório Contra Conteúdos Off-Topic:**
+  É terminantemente proibido registrar ou manter no Obsidian conteúdos que não façam parte do desenvolvimento deste programa, como dúvidas gerais, conversas casuais, pesquisas, explicações teóricas ou outros assuntos off-topic. Todo conteúdo dessa natureza deve ser sumariamente excluído do cofre.
 
 ### G. Análise de Falhas, Causa Raiz & Prevenção no Vault (Regra Mandatória)
 * **Análise Prévia Obrigatória:** Toda falha recorrente ou relevante encontrada durante a execução (seja em testes, build, automação de CI/CD, comandos de terminal ou comportamento da UI) deve ser minuciosamente analisada **antes** de qualquer tentativa de correção.
