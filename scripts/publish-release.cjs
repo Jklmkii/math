@@ -19,7 +19,8 @@ function getReleaseNotes(version) {
     const regex = new RegExp(`##\\s*\\[?v?${escaped}\\]?[^\\n]*\\n([\\s\\S]*?)(?=\\n##\\s|$)`);
     const match = content.match(regex);
     if (match && match[1].trim()) {
-      return `## O que há de novo na Versão ${version}\n\n` + match[1].trim() + `\n\n### Arquivos disponíveis\n- \`MathUtils-Setup-${version}.exe\` (Instalador oficial com auto-update)\n- \`MathUtils-${version}-portable.exe\` (Versão portátil sem instalação)\n- \`MathUtils.apk\` (Aplicativo para Android)`;
+      const cleanBody = match[1].replace(/\n---\s*$/, '').trim();
+      return `## O que há de novo na Versão ${version}\n\n` + cleanBody + `\n\n### Arquivos disponíveis\n- \`MathUtils-Setup-${version}.exe\` (Instalador oficial com auto-update)\n- \`MathUtils-${version}-portable.exe\` (Versão portátil sem instalação)\n- \`MathUtils.apk\` (Aplicativo para Android)`;
     }
   }
   return `## Novidades da versão ${version}\n\n- Atualizações de desempenho, recursos e estabilidade geral.\n\n### Arquivos disponíveis\n- \`MathUtils-Setup-${version}.exe\`\n- \`MathUtils-${version}-portable.exe\`\n- \`MathUtils.apk\``;
@@ -32,7 +33,12 @@ async function main() {
     'User-Agent': 'MathUtils-Publisher'
   };
 
-  const releaseTitle = `MathUtils ${TAG} — Atualizações e melhorias`;
+  const changelogContent = fs.existsSync(path.join(__dirname, '..', 'CHANGELOG.md'))
+    ? fs.readFileSync(path.join(__dirname, '..', 'CHANGELOG.md'), 'utf8')
+    : '';
+  const titleMatch = changelogContent.match(new RegExp(`##\\s*\\[?v?${pkg.version.replace(/\\./g, '\\.')}\\]?\\s*—\\s*([^\\n(]*)`));
+  const subtitle = titleMatch && titleMatch[1].trim() ? titleMatch[1].trim() : 'Atualizações e melhorias';
+  const releaseTitle = `MathUtils ${TAG} — ${subtitle}`;
   const releaseBody = getReleaseNotes(pkg.version);
 
   console.log(`Checking existing releases for ${OWNER}/${REPO}...`);

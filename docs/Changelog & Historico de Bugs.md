@@ -6,7 +6,15 @@ Este documento registra a evolução do **MathUtils**, detalhando as versões pu
 
 ## 🚀 Linha do Tempo de Versões
 
-### `v1.1.0` — *The Evolution Update* (Versão Atual)
+### `v1.1.1` — *Estabilidade, Segurança & Jules AI* (Versão Atual)
+* **Correção Crítica de Ofensiva (Streak):** Data vinculada estritamente ao relógio do dispositivo (`getDeviceLocalDateString`), evitando avanço prematuro de dia em fusos como UTC-3. Recarregamento de página/app (`F5`) agora apenas realiza checagem passiva (`checkStreakMaintenance`) e nunca incrementa a ofensiva sem atividade real.
+* **Correções de Tema & i18n:** Alternância imediata entre Modo Claro e Escuro sem retenção de classe; modal de configurações 100% bilíngue (Português e Inglês).
+* **Segurança Reforçada:** Limite de 5MB no upload de histórico JSON (prevenção contra DoS e travamento de navegador), identificadores de histórico com `crypto.randomUUID()` e validação rigorosa de URLs no Electron com `parsedUrl.href`.
+* **Performance:** Reutilização de expressões regulares (`QUOTE_REGEX` no CSV e `BOLD_REGEX` no passo a passo) em escopo de módulo.
+* **Expansão de Testes:** Cobertura de 172 testes unitários em 12 suítes com nova suíte para `precision.ts` e testes de divisão por zero.
+* **Diretrizes de Agentes:** Adicionado `AGENTS.md` na raiz do repositório para o Google Jules.
+
+### `v1.1.0` — *The Evolution Update*
 * **Sistema de Conquistas (16 Medalhas):** Catálogo de troféus dividido em 4 categorias (Habilidade, Consistência, Mestria e Desafios), exibido na vitrine do Perfil.
 * **Lousa de Rascunho (Scratchpad):** Ferramenta flutuante com HTML5 Canvas transparente para desenhar contas de cabeça diretamente na tela, com suporte a mouse e touch.
 * **Desafio Diário Determinístico:** Questão diária universal baseada em semente PRNG Mulberry32 com hash FNV-1a da data (`YYYY-MM-DD`), recompensa de +150 XP e botão de compartilhamento social.

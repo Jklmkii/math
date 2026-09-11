@@ -1,6 +1,36 @@
-﻿# 📜 Histórico de Versões — MathUtils
+# 📜 Histórico de Versões — MathUtils
 
 Todas as alterações notáveis deste projeto são documentadas neste arquivo.
+
+---
+
+## [1.1.1] — Atualização de Estabilidade, Segurança & Jules AI (2026-09-11)
+
+### 🔥 Correção Crítica de Ofensiva (Streak Diário)
+- **Data Local do Dispositivo:** A ofensiva agora é estritamente vinculada ao relógio local do usuário (`getDeviceLocalDateString`), evitando que noites (a partir das 21h em fusos como UTC-3) avancem o calendário indevidamente para o dia seguinte.
+- **Prevenção de Falsos Incrementos:** Recarregar a tela (`F5`) ou reabrir o app agora executa apenas a manutenção passiva (`checkStreakMaintenance`); o streak **nunca** soma dias sem a conclusão de uma atividade real.
+
+### 🌓 Temas & Internacionalização (i18n)
+- **Modo Claro Instantâneo:** Correção na alternância entre temas Claro e Escuro, garantindo sincronização imediata no elemento raiz sem retenção de classes CSS.
+- **Configurações 100% Bilíngues:** Mapeamento completo e reativo de todos os rótulos, botões e status do modal de Configurações em Português e Inglês.
+
+### 🔒 Segurança & Confiabilidade (Contribuições Jules AI)
+- **Proteção contra Sobrecarga (DoS):** Limite de 5MB no upload de arquivos de histórico com mensagem amigável de erro, prevenindo travamentos do navegador.
+- **IDs Criptograficamente Seguros:** Geração de identificadores de histórico com `crypto.randomUUID()`.
+- **Navegação Segura no Electron:** Validação rigorosa de URLs externas no `shell.openExternal` utilizando `parsedUrl.href`.
+
+### ⚡ Performance & Qualidade de Código
+- **Otimização de Expressões Regulares:** Reutilização de regex (`QUOTE_REGEX` no exportador CSV e `BOLD_REGEX` no passo a passo) em escopo de módulo para evitar recompilações em loops de renderização.
+- **Log Semântico:** Uso de `console.error` para registro de falhas de registro do Service Worker.
+- **Refatoração:** Criação da função auxiliar `showTemporaryStatus` no modal de configurações.
+
+### 🧪 Expansão da Suíte de Testes (172 Testes)
+- Nova suíte de testes unitários para o módulo `precision.ts` (`src/tests/precision.test.ts`).
+- Novos testes para divisões por zero e tratamento de erros na Regra de Três Simples, Composta e Bhaskara.
+- Cobertura expandida para 172 testes unitários em 12 suítes, 100% aprovados.
+
+### 🤖 Automação & AGENTS.md
+- Adicionado o manifesto `AGENTS.md` na raiz do projeto com diretrizes arquiteturais, regras de streak local e convenções para o agente autônomo Jules da Google.
 
 ---
 

@@ -21,8 +21,8 @@ npm run electron:build
 ```
 
 ### 📦 Artefatos Gerados no Diretório `release/`:
-* `MathUtils-Setup-1.1.0.exe` — Instalador padrão via NSIS com criação de atalhos e desinstalador limpo.
-* `MathUtils-1.1.0-portable.exe` — Versão portátil autocontida que roda diretamente sem instalação.
+* `MathUtils-Setup-1.1.1.exe` — Instalador padrão via NSIS com criação de atalhos e desinstalador limpo.
+* `MathUtils-1.1.1-portable.exe` — Versão portátil autocontida que roda diretamente sem instalação.
 * `latest.yml` — Manifesto criptográfico de hash e versão consumido pelo `electron-updater`.
 
 ---

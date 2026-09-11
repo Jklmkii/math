@@ -2,7 +2,7 @@
 
 Aplicativo educacional gamificado para treinamento mental, resolução passo a passo de problemas matemáticos e desafios cronometrados, com suporte nativo multiplataforma (Web, Desktop Windows e Android APK).
 
-**Versão Atual:** `v1.1.0` *(The Evolution Update & Hotfixes de Estabilidade)*
+**Versão Atual:** `v1.1.1` *(Estabilidade, Segurança, Streak Local & Jules AI)*
 **Repositório Oficial:** [`github.com/Jklmkii/math`](https://github.com/Jklmkii/math)
 **Licença:** Proprietária / Pessoal
 **Autor:** Lucas
