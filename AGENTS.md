@@ -144,6 +144,18 @@ When implementing features, fixing bugs, or refactoring code, adhere strictly to
 ### F. Sincronização Obrigatória com o Obsidian (Obsidian-First)
 * **Antes de Iniciar Qualquer Tarefa:** Sempre consulte as notas do projeto em `Obsidian-Vault/Projetos/Quantora/` (`Decisoes & Estado Atual.md`, `Quantora - Visao Geral.md`, etc.) para verificar requisitos prévios, convenções de arquitetura e decisões já tomadas, minimizando retrabalho e consumo desnecessário de contexto.
 * **Ao Concluir ou Alterar Funcionalidades:** Sempre registre ou atualize o Obsidian com as novas decisões, mudanças de estado, correções de bugs em `Changelog & Historico de Bugs.md` e impactos nos módulos correspondentes.
+* **Registro Obrigatório de Prompts & Raciocínio (Prompt Logging & Analysis):**
+  Cada solicitação ou mensagem do usuário referente ao projeto deve ser salva e indexada em `Obsidian-Vault/Projetos/Quantora/Historico de Prompts & Demandas.md`, contendo:
+  1. `💬 Texto Original do Usuário (Ipsis Litteris)`
+  2. `🧠 Analysis and Reasoning` (seguindo rigorosamente o padrão de avaliação do Google Jules):
+     * **User's Goal:** Resumo claro da intenção e expectativas do usuário.
+     * **Evaluation of the Solution:**
+       * **Core Functionality:** Diagnóstico aprofundado dos problemas e lógica da solução aplicada.
+       * **Safety & Side Effects:** Análise de isolamento, segurança de tipos, performance e ausência de regressões.
+       * **Completeness:** Verificação de cobertura de requisitos, casos de borda e testes unitários.
+       * **Merge / Release Assessment:** Estado de prontidão para commit, release e compilação.
+  3. `🔍 Decomposição & Análise Técnica das Demandas` (tabela de impacto e ações).
+  4. `🛠️ Arquivos Modificados / Impactados`.
 
 ---
 
