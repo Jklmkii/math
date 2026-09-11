@@ -111,13 +111,16 @@ quantora/
 
 ## ⚡ 4. Verification & Testing Commands
 
-Before submitting any Pull Request or proposing code changes, run and verify the following commands:
+Before submitting any Pull Request or proposing code changes to the Quantora codebase, run and verify the following commands:
+
+> [!NOTE]
+> **Escopo de Execução dos Testes:** Quando a tarefa ou demanda não envolver alterações no código da aplicação Quantora (por exemplo: configurações globais de ambiente, servidores MCP, manutenção de documentação no Obsidian, credenciais ou scripts externos isolados), **não é necessário rodar a suíte Vitest nem compilar o bundle**. A execução completa é obrigatória apenas ao modificar arquivos de código-fonte do produto (`src/`, componentes, motores matemáticos/físicos, testes ou configurações de build).
 
 ```bash
-# 1. Run the entire automated unit test suite (Must be 100% passing)
+# 1. Run the entire automated unit test suite (Must be 100% passing when changing project code)
 npx vitest run
 
-# 2. Verify TypeScript types and production bundle build (Must exit with code 0)
+# 2. Verify TypeScript types and production bundle build (Must exit with code 0 when changing project code)
 npm run build
 
 # 3. Check for code smells, dead code, and linter errors
