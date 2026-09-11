@@ -69,8 +69,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings }) => {
         <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
           {/* Brand */}
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
-              <Sigma size={22} className="stroke-[2.5]" />
+            <div className="w-10 h-10 rounded-xl bg-slate-900/90 dark:bg-slate-900 border border-indigo-500/30 overflow-hidden flex items-center justify-center shadow-md shadow-indigo-500/20 shrink-0">
+              <img src="/favicon.svg" alt="Quantora" className="w-full h-full object-cover" />
             </div>
             <div>
               <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white leading-none">

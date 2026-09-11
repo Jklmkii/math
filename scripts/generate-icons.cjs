@@ -13,26 +13,39 @@ app.whenReady().then(async () => {
       },
     });
 
-    const svgPath = path.join(__dirname, '../public/favicon.svg');
-    const svgContent = fs.readFileSync(svgPath, 'utf8');
-    const base64Svg = Buffer.from(svgContent).toString('base64');
-    const dataUri = `data:image/svg+xml;base64,${base64Svg}`;
+    const imgPath = path.join(__dirname, '../build/quantora-logo.jpg');
+    const imgBase64 = fs.readFileSync(imgPath).toString('base64');
+    const dataUri = `data:image/jpeg;base64,${imgBase64}`;
 
-    const sizes = [16, 32, 48, 256];
+    const sizes = [16, 32, 48, 72, 96, 144, 192, 256, 512];
 
     const html = `
       <!DOCTYPE html>
       <html>
-        <body style="margin:0;padding:0;">
+        <body style="margin:0;padding:0;background:#0f172a;">
           ${sizes.map((s) => `<canvas id="c${s}" width="${s}" height="${s}"></canvas>`).join('\n')}
           <script>
             const img = new Image();
             img.onload = () => {
               window.renderedPngs = {};
-              [16, 32, 48, 256].forEach(size => {
+              // Crop the emblem centered without text
+              const sx = 140;
+              const sy = 60;
+              const sW = 744;
+              const sH = 744;
+
+              [16, 32, 48, 72, 96, 144, 192, 256, 512].forEach(size => {
                 const canvas = document.getElementById('c' + size);
                 const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, size, size);
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+
+                // Background matching dark slate #0f172a
+                ctx.fillStyle = '#0f172a';
+                ctx.fillRect(0, 0, size, size);
+
+                // Draw centered crystal-Q emblem
+                ctx.drawImage(img, sx, sy, sW, sH, 0, 0, size, size);
                 window.renderedPngs[size] = canvas.toDataURL('image/png');
               });
             };
@@ -56,37 +69,73 @@ app.whenReady().then(async () => {
     }
 
     const buildDir = path.join(__dirname, '../build');
+    const publicDir = path.join(__dirname, '../public');
     if (!fs.existsSync(buildDir)) {
       fs.mkdirSync(buildDir, { recursive: true });
     }
 
-    const pngFilePaths = [];
+    // Save build/icon.png (256x256)
+    const b64_256 = renderedPngs[256].replace(/^data:image\/png;base64,/, '');
+    fs.writeFileSync(path.join(buildDir, 'icon.png'), Buffer.from(b64_256, 'base64'));
 
-    // Save individual PNGs for all 4 sizes
-    for (const size of sizes) {
+    // Save public/icon-192.png and public/icon-512.png
+    if (renderedPngs[192]) {
+      fs.writeFileSync(path.join(publicDir, 'icon-192.png'), Buffer.from(renderedPngs[192].replace(/^data:image\/png;base64,/, ''), 'base64'));
+    }
+    if (renderedPngs[512]) {
+      fs.writeFileSync(path.join(publicDir, 'icon-512.png'), Buffer.from(renderedPngs[512].replace(/^data:image\/png;base64,/, ''), 'base64'));
+    }
+
+    // Update public/favicon.svg with embedded crisp emblem
+    const faviconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="112" fill="#0f172a"/>
+  <image href="${renderedPngs[256]}" x="0" y="0" width="512" height="512" preserveAspectRatio="xMidYMid meet" />
+</svg>`;
+    fs.writeFileSync(path.join(publicDir, 'favicon.svg'), faviconSvg);
+
+    // Multi-res .ico
+    const pngFilePaths = [];
+    for (const size of [16, 32, 48, 256]) {
       const dataUrl = renderedPngs[size];
       const base64Data = dataUrl.replace(/^data:image\/png;base64,/, '');
       const pngBuffer = Buffer.from(base64Data, 'base64');
-
-      const targetPath = size === 256 ? path.join(buildDir, 'icon.png') : path.join(buildDir, `icon_${size}.png`);
+      const targetPath = path.join(buildDir, `tmp_icon_${size}.png`);
       fs.writeFileSync(targetPath, pngBuffer);
       pngFilePaths.push(targetPath);
     }
 
-    // Pass all 4 distinct resolution images into pngToIco
     const { default: pngToIco } = await import('png-to-ico');
     const icoBuf = await pngToIco(pngFilePaths);
     fs.writeFileSync(path.join(buildDir, 'icon.ico'), icoBuf);
 
-    // Clean up temporary smaller PNGs, preserving build/icon.png (256x256) and build/icon.ico
-    for (const size of [16, 32, 48]) {
-      const tempPng = path.join(buildDir, `icon_${size}.png`);
-      if (fs.existsSync(tempPng)) {
-        fs.unlinkSync(tempPng);
-      }
+    for (const p of pngFilePaths) {
+      if (fs.existsSync(p)) fs.unlinkSync(p);
     }
 
-    console.log('Sucesso: build/icon.ico gerado com 4 camadas reais (16, 32, 48, 256px) e build/icon.png!');
+    // Android mipmap icons
+    const androidRes = path.join(__dirname, '../android/app/src/main/res');
+    const mipmapMap = {
+      'mipmap-mdpi': 48,
+      'mipmap-hdpi': 72,
+      'mipmap-xhdpi': 96,
+      'mipmap-xxhdpi': 144,
+      'mipmap-xxxhdpi': 192
+    };
+
+    if (fs.existsSync(androidRes)) {
+      for (const [folder, sz] of Object.entries(mipmapMap)) {
+        const targetFolder = path.join(androidRes, folder);
+        if (fs.existsSync(targetFolder)) {
+          const buf = Buffer.from(renderedPngs[sz].replace(/^data:image\/png;base64,/, ''), 'base64');
+          fs.writeFileSync(path.join(targetFolder, 'ic_launcher.png'), buf);
+          fs.writeFileSync(path.join(targetFolder, 'ic_launcher_round.png'), buf);
+          fs.writeFileSync(path.join(targetFolder, 'ic_launcher_foreground.png'), buf);
+        }
+      }
+      console.log('Ícones do Android (mipmaps) atualizados com sucesso!');
+    }
+
+    console.log('Sucesso: build/icon.ico, build/icon.png, favicon.svg e mipmaps do Android gerados com a nova identidade Quantora!');
   } catch (err) {
     console.error('Erro ao gerar ícones:', err);
     process.exit(1);
