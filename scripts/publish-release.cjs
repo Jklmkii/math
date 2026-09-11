@@ -11,12 +11,29 @@ const REPO = 'math';
 const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
 const TAG = 'v' + pkg.version;
 
+function getReleaseNotes(version) {
+  const changelogPath = path.join(__dirname, '..', 'CHANGELOG.md');
+  if (fs.existsSync(changelogPath)) {
+    const content = fs.readFileSync(changelogPath, 'utf8');
+    const escaped = version.replace(/\./g, '\\.');
+    const regex = new RegExp(`##\\s*\\[?v?${escaped}\\]?[^\\n]*\\n([\\s\\S]*?)(?=\\n##\\s|$)`);
+    const match = content.match(regex);
+    if (match && match[1].trim()) {
+      return `## O que há de novo na Versão ${version}\n\n` + match[1].trim() + `\n\n### Arquivos disponíveis\n- \`MathUtils-Setup-${version}.exe\` (Instalador oficial com auto-update)\n- \`MathUtils-${version}-portable.exe\` (Versão portátil sem instalação)\n- \`MathUtils.apk\` (Aplicativo para Android)`;
+    }
+  }
+  return `## Novidades da versão ${version}\n\n- Atualizações de desempenho, recursos e estabilidade geral.\n\n### Arquivos disponíveis\n- \`MathUtils-Setup-${version}.exe\`\n- \`MathUtils-${version}-portable.exe\`\n- \`MathUtils.apk\``;
+}
+
 async function main() {
   const headers = {
     'Authorization': `token ${GITHUB_TOKEN}`,
     'Accept': 'application/vnd.github.v3+json',
     'User-Agent': 'MathUtils-Publisher'
   };
+
+  const releaseTitle = `MathUtils ${TAG} — Atualizações e melhorias`;
+  const releaseBody = getReleaseNotes(pkg.version);
 
   console.log(`Checking existing releases for ${OWNER}/${REPO}...`);
   const listRes = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/releases`, { headers });
@@ -37,8 +54,8 @@ async function main() {
       body: JSON.stringify({
         tag_name: TAG,
         target_commitish: 'main',
-        name: `MathUtils ${TAG} — Atualizações e melhorias`,
-        body: `## Novidades da versão ${pkg.version}\n\n- 🚀 Melhorias de desempenho e estabilidade no Quiz e gráficos.\n- ♿ Melhorias de acessibilidade e foco no teclado.\n- 🔄 Suporte a atualizações automáticas via GitHub Releases.\n\n### Arquivos disponíveis\n- \`MathUtils-Setup-${pkg.version}.exe\` (Instalador com suporte a auto-update)\n- \`MathUtils-${pkg.version}-portable.exe\` (Versão portátil sem instalação)`,
+        name: releaseTitle,
+        body: releaseBody,
         draft: false,
         prerelease: false
       })
@@ -51,7 +68,17 @@ async function main() {
     targetRelease = await createRes.json();
     console.log(`Release ${TAG} created with ID ${targetRelease.id}.`);
   } else {
-    console.log(`Release ${TAG} already exists (ID: ${targetRelease.id}).`);
+    console.log(`Release ${TAG} already exists (ID: ${targetRelease.id}). Updating release notes...`);
+    await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/releases/${targetRelease.id}`, {
+      method: 'PATCH',
+      headers: {
+        ...headers,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        body: releaseBody
+      })
+    });
   }
 
   const uploadBaseUrl = targetRelease.upload_url.split('{')[0];

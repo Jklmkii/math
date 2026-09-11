@@ -68,10 +68,10 @@ jobs:
           path: release/MathUtils.apk
           retention-days: 30
 
-      - name: Upload APK to Latest GitHub Release
+      - name: Upload APK to GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          LATEST_TAG=$(gh release view --json tagName -q .tagName)
-          echo "Uploading MathUtils.apk to release $LATEST_TAG..."
-          gh release upload "$LATEST_TAG" release/MathUtils.apk --clobber
+          RELEASE_TAG="v$(node -p "require('./package.json').version")"
+          echo "Uploading MathUtils.apk to release $RELEASE_TAG..."
+          gh release upload "$RELEASE_TAG" release/MathUtils.apk --clobber
