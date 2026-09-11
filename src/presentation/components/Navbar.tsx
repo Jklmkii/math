@@ -18,6 +18,7 @@ import { useTranslation } from '../../core/i18n/translations';
 import { calculateLevelInfo } from '../../core/gamification/leveling';
 import { getTodayDateString } from '../../core/daily/dailyEngine';
 import { ProfileModal } from './ProfileModal';
+import logoImg from '../../assets/logo.png';
 
 interface NavbarProps {
   onOpenSettings: () => void;
@@ -35,6 +36,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings }) => {
     dailyChallenge,
   } = useAppStore();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [logoError, setLogoError] = useState(false);
   const t = useTranslation(settings.language || 'pt');
 
   useEffect(() => {
@@ -72,7 +74,19 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings }) => {
           {/* Brand */}
           <div className="flex items-center gap-2.5">
             <div className="w-10 h-10 rounded-xl bg-slate-900/90 dark:bg-slate-900 border border-indigo-500/30 overflow-hidden flex items-center justify-center shadow-md shadow-indigo-500/20 shrink-0">
-              <img src="/favicon.svg" alt="Quantora" className="w-full h-full object-cover" />
+              {logoError ? (
+                <span className="text-base font-black bg-gradient-to-tr from-cyan-400 via-indigo-400 to-fuchsia-400 bg-clip-text text-transparent select-none">
+                  Q
+                </span>
+              ) : (
+                <img
+                  src={logoImg}
+                  alt="Quantora"
+                  className="w-full h-full object-cover"
+                  loading="eager"
+                  onError={() => setLogoError(true)}
+                />
+              )}
             </div>
             <div>
               <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white leading-none">
