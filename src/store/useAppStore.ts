@@ -490,7 +490,7 @@ export const useAppStore = create<AppState>()(
       history: [],
       addHistoryItem: ({ type, title, summary, details, rawPayload }) => {
         const newItem: HistoryItem = {
-          id: `calc_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+          id: `calc_${Date.now()}_${crypto.randomUUID()}`,
           timestamp: Date.now(),
           type,
           title,
