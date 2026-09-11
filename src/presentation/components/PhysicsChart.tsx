@@ -552,3 +552,5 @@ export const PhysicsChart: React.FC<PhysicsChartProps> = React.memo(({
 
   return null;
 });
+
+PhysicsChart.displayName = 'PhysicsChart';

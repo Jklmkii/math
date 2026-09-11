@@ -330,3 +330,5 @@ export const ParabolaChart: React.FC<ParabolaChartProps> = React.memo(({
     </div>
   );
 });
+
+ParabolaChart.displayName = 'ParabolaChart';

@@ -14,10 +14,17 @@ import {
   Atom,
 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
+import { useShallow } from 'zustand/react/shallow';
 import type { CalculationType, HistoryItem } from '../../types';
 
 export const HistoryModule: React.FC = () => {
-  const { history, removeHistoryItem, togglePinHistoryItem } = useAppStore();
+  const { history, removeHistoryItem, togglePinHistoryItem } = useAppStore(
+    useShallow((s) => ({
+      history: s.history,
+      removeHistoryItem: s.removeHistoryItem,
+      togglePinHistoryItem: s.togglePinHistoryItem,
+    }))
+  );
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<'all' | CalculationType | 'pinned'>('all');
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null);

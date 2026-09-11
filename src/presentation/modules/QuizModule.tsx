@@ -22,21 +22,39 @@ import { generateQuizQuestion } from '../../core/math/quizGenerator';
 import { parseBig, formatNumberSmart } from '../../core/math/precision';
 import { StepByStep } from '../components/StepByStep';
 import { useAppStore } from '../../store/useAppStore';
+import { useShallow } from 'zustand/react/shallow';
 import { useTranslation } from '../../core/i18n/translations';
 import { DailyChallengeCard } from '../components/DailyChallengeCard';
-import { BlitzGame } from '../components/BlitzGame';
-import { BossBattle } from '../components/BossBattle';
 import type { QuizDifficultyMode, QuizQuestion, QuizTrackSelector } from '../../types';
 
+// Code-splitting: Lazy load heavy game modes on demand
+const BlitzGame = React.lazy(() =>
+  import('../components/BlitzGame').then((m) => ({ default: m.BlitzGame }))
+);
+const BossBattle = React.lazy(() =>
+  import('../components/BossBattle').then((m) => ({ default: m.BossBattle }))
+);
+
 export const QuizModule: React.FC = () => {
-  const { quizProgress, recordQuizAnswer, settings, profile } = useAppStore();
-  const t = useTranslation(settings.language || 'pt');
+  const { quizProgress, recordQuizAnswer, decimalPlaces, decimalSeparator, language, blitzHighScore, bossesDefeated } = useAppStore(
+    useShallow((s) => ({
+      quizProgress: s.quizProgress,
+      recordQuizAnswer: s.recordQuizAnswer,
+      decimalPlaces: s.settings.decimalPlaces,
+      decimalSeparator: s.settings.decimalSeparator,
+      language: s.settings.language || 'pt',
+      blitzHighScore: s.profile?.stats?.blitzHighScore || 0,
+      bossesDefeated: s.profile?.stats?.bossesDefeated || 0,
+    }))
+  );
+  const settings = React.useMemo(
+    () => ({ decimalPlaces, decimalSeparator, language }),
+    [decimalPlaces, decimalSeparator, language]
+  );
+  const t = useTranslation(language);
 
   // Screen View: 'lobby' | 'playing' | 'game_over' | 'blitz' | 'boss_rush'
   const [screen, setScreen] = useState<'lobby' | 'playing' | 'game_over' | 'blitz' | 'boss_rush'>('lobby');
-
-  const blitzHighScore = profile?.stats?.blitzHighScore || 0;
-  const bossesDefeated = profile?.stats?.bossesDefeated || 0;
 
   // Settings & Modes
   const [selectedTrack, setSelectedTrack] = useState<QuizTrackSelector>('sobrevivencia');
@@ -342,14 +360,40 @@ export const QuizModule: React.FC = () => {
   // SCREEN: BLITZ GAME (60 Segundos)
   // ==========================================
   if (screen === 'blitz') {
-    return <BlitzGame onExit={() => setScreen('lobby')} />;
+    return (
+      <React.Suspense
+        fallback={
+          <div className="flex flex-col items-center justify-center min-h-[400px] gap-3 animate-pulse">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
+              <Zap className="w-6 h-6 animate-bounce" />
+            </div>
+            <p className="text-sm font-bold text-amber-400">Carregando Modo Blitz...</p>
+          </div>
+        }
+      >
+        <BlitzGame onExit={() => setScreen('lobby')} />
+      </React.Suspense>
+    );
   }
 
   // ==========================================
   // SCREEN: BOSS BATTLE (Boss Rush)
   // ==========================================
   if (screen === 'boss_rush') {
-    return <BossBattle onExit={() => setScreen('lobby')} />;
+    return (
+      <React.Suspense
+        fallback={
+          <div className="flex flex-col items-center justify-center min-h-[400px] gap-3 animate-pulse">
+            <div className="w-12 h-12 rounded-2xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400">
+              <Swords className="w-6 h-6 animate-bounce" />
+            </div>
+            <p className="text-sm font-bold text-purple-400">Carregando Batalha de Chefe...</p>
+          </div>
+        }
+      >
+        <BossBattle onExit={() => setScreen('lobby')} />
+      </React.Suspense>
+    );
   }
 
   // ==========================================

@@ -26,6 +26,7 @@ import {
 } from '../../core/quiz/bossEngine';
 import type { BossBattleState, BossRoundResult } from '../../core/quiz/bossEngine';
 import { useAppStore } from '../../store/useAppStore';
+import { useShallow } from 'zustand/react/shallow';
 
 interface BossBattleProps {
   onExit?: () => void;
@@ -38,8 +39,14 @@ interface FloatingText {
 }
 
 export const BossBattle: React.FC<BossBattleProps> = ({ onExit }) => {
-  const store = useAppStore();
-  const profile = store.profile;
+  const { totalXp, recordBossVictory, addXp, unlockAchievement } = useAppStore(
+    useShallow((s) => ({
+      totalXp: s.profile?.totalXp || 0,
+      recordBossVictory: (s as unknown as { recordBossVictory?: (time: number, shields: number, xp: number) => void }).recordBossVictory,
+      addXp: s.addXp,
+      unlockAchievement: s.unlockAchievement,
+    }))
+  );
 
   // Combat State
   const [battleState, setBattleState] = useState<BossBattleState>(() => createInitialBossBattleState());
@@ -61,7 +68,7 @@ export const BossBattle: React.FC<BossBattleProps> = ({ onExit }) => {
   const victoryRecordedRef = useRef<boolean>(false);
 
   // Player level derived from totalXp (100 XP per level, min 1)
-  const playerLevel = Math.floor((profile?.totalXp || 0) / 100) + 1;
+  const playerLevel = Math.floor(totalXp / 100) + 1;
 
   // Boss Rage phase when HP is at or below 40%
   const isRageMode = battleState.bossHp <= 40 && battleState.bossHp > 0;
@@ -185,25 +192,18 @@ export const BossBattle: React.FC<BossBattleProps> = ({ onExit }) => {
       const shieldsRemaining = battleState.shields;
       const xpEarned = battleState.earnedXp;
 
-      // Check if store has recordBossVictory (Worker M1 integration)
-      const storeAny = store as unknown as {
-        recordBossVictory?: (time: number, shields: number, xp: number) => void;
-        addXp: (amount: number, reason?: string) => void;
-        unlockAchievement: (id: string) => void;
-      };
-
-      if (typeof storeAny.recordBossVictory === 'function') {
-        storeAny.recordBossVictory(totalTime, shieldsRemaining, xpEarned);
+      if (typeof recordBossVictory === 'function') {
+        recordBossVictory(totalTime, shieldsRemaining, xpEarned);
       } else {
         // Fallback store update
-        storeAny.addXp(xpEarned, 'Vitória no Boss Rush');
-        storeAny.unlockAchievement('boss_slayer');
+        addXp(xpEarned, 'Vitória no Boss Rush');
+        unlockAchievement('boss_slayer');
         if (shieldsRemaining >= 3) {
-          storeAny.unlockAchievement('boss_flawless');
+          unlockAchievement('boss_flawless');
         }
       }
     }
-  }, [battleState.status, battleState.totalTimeSeconds, battleState.shields, battleState.earnedXp, store]);
+  }, [battleState.status, battleState.totalTimeSeconds, battleState.shields, battleState.earnedXp, recordBossVictory, addXp, unlockAchievement]);
 
   // Keyboard controls: 1, 2, 3, 4 for multiple choice options
   useEffect(() => {

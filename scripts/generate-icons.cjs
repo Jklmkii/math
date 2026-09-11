@@ -70,20 +70,24 @@ app.whenReady().then(async () => {
 
     const buildDir = path.join(__dirname, '../build');
     const publicDir = path.join(__dirname, '../public');
+    const assetsSourceDir = path.join(__dirname, '../assets-source');
     if (!fs.existsSync(buildDir)) {
       fs.mkdirSync(buildDir, { recursive: true });
+    }
+    if (!fs.existsSync(assetsSourceDir)) {
+      fs.mkdirSync(assetsSourceDir, { recursive: true });
     }
 
     // Save build/icon.png (256x256)
     const b64_256 = renderedPngs[256].replace(/^data:image\/png;base64,/, '');
     fs.writeFileSync(path.join(buildDir, 'icon.png'), Buffer.from(b64_256, 'base64'));
 
-    // Save public/icon-192.png and public/icon-512.png
+    // Save assets-source/icon-192.png and assets-source/icon-512.png
     if (renderedPngs[192]) {
-      fs.writeFileSync(path.join(publicDir, 'icon-192.png'), Buffer.from(renderedPngs[192].replace(/^data:image\/png;base64,/, ''), 'base64'));
+      fs.writeFileSync(path.join(assetsSourceDir, 'icon-192.png'), Buffer.from(renderedPngs[192].replace(/^data:image\/png;base64,/, ''), 'base64'));
     }
     if (renderedPngs[512]) {
-      fs.writeFileSync(path.join(publicDir, 'icon-512.png'), Buffer.from(renderedPngs[512].replace(/^data:image\/png;base64,/, ''), 'base64'));
+      fs.writeFileSync(path.join(assetsSourceDir, 'icon-512.png'), Buffer.from(renderedPngs[512].replace(/^data:image\/png;base64,/, ''), 'base64'));
     }
 
     // Update public/favicon.svg with embedded crisp emblem

@@ -22,6 +22,7 @@ import {
   type BlitzState,
 } from '../../core/quiz/blitzEngine';
 import { useAppStore } from '../../store/useAppStore';
+import { useShallow } from 'zustand/react/shallow';
 
 export interface BlitzGameProps {
   onExit?: () => void;
@@ -35,7 +36,7 @@ interface FloatingFeedback {
 }
 
 interface BlitzStoreExtension {
-  recordBlitzResult?: (score: number, maxCombo: number, correctCount: number, xpEarned: number) => void;
+  recordBlitzResult?: (score: number, maxCombo: number, correctAnswers: number, xp: number) => void;
   profile?: {
     stats?: {
       blitzHighScore?: number;
@@ -47,8 +48,16 @@ interface BlitzStoreExtension {
 }
 
 export const BlitzGame: React.FC<BlitzGameProps> = ({ onExit, onReturnToLobby }) => {
-  const store = useAppStore() as unknown as BlitzStoreExtension;
-  const previousHighScore = store.profile?.stats?.blitzHighScore ?? 0;
+  const { previousHighScore, recordBlitzResult, addXp } = useAppStore(
+    useShallow((s) => {
+      const ext = s as unknown as BlitzStoreExtension;
+      return {
+        previousHighScore: ext.profile?.stats?.blitzHighScore ?? 0,
+        recordBlitzResult: ext.recordBlitzResult,
+        addXp: s.addXp,
+      };
+    })
+  );
 
   // Game flow states: 'ready' | 'playing' | 'game_over'
   const [phase, setPhase] = useState<'ready' | 'playing' | 'game_over'>('ready');
@@ -120,14 +129,14 @@ export const BlitzGame: React.FC<BlitzGameProps> = ({ onExit, onReturnToLobby })
 
       if (!hasRecordedResultRef.current) {
         hasRecordedResultRef.current = true;
-        if (typeof store.recordBlitzResult === 'function') {
-          store.recordBlitzResult(finalScore, finalMaxCombo, finalCorrect, totalXp);
-        } else if (typeof store.addXp === 'function') {
-          store.addXp(totalXp, 'Modo Blitz');
+        if (typeof recordBlitzResult === 'function') {
+          recordBlitzResult(finalScore, finalMaxCombo, finalCorrect, totalXp);
+        } else if (typeof addXp === 'function') {
+          addXp(totalXp, 'Modo Blitz');
         }
       }
     },
-    [previousHighScore, store]
+    [previousHighScore, recordBlitzResult, addXp]
   );
 
   // Timer Tick (100ms interval for smooth visual countdown)

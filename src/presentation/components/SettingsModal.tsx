@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { X, Moon, Sun, Laptop, Trash2, Download, Upload, ShieldCheck, CheckCircle2, RefreshCw, Sparkles, Globe } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
+import { useShallow } from 'zustand/react/shallow';
 import type { DecimalPlaces, DecimalSeparator, ThemeMode, UpdaterStatus, AppLanguage } from '../../types';
 import { validateHistorySchema } from '../../core/storage/historyValidator';
 import { useTranslation } from '../../core/i18n/translations';
@@ -22,7 +23,14 @@ const escapeCSVField = (val: unknown): string => {
 };
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
-  const { settings, updateSettings, history, clearHistory, importHistory } = useAppStore();
+  const { settings, updateSettings, clearHistory, importHistory } = useAppStore(
+    useShallow((s) => ({
+      settings: s.settings,
+      updateSettings: s.updateSettings,
+      clearHistory: s.clearHistory,
+      importHistory: s.importHistory,
+    }))
+  );
   const t = useTranslation(settings.language || 'pt');
   const [confirmClear, setConfirmClear] = useState(false);
   const [importStatus, setImportStatus] = useState<string | null>(null);
@@ -66,6 +74,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   if (!isOpen) return null;
 
   const generateCSVContent = (): string => {
+    const history = useAppStore.getState().history;
     const headers = ['ID', 'Data/Hora', 'Tipo', 'Título', 'Resumo', 'Passo a Passo', 'Favorito'];
     const rows = history.map((item) => [
       escapeCSVField(item.id),
@@ -82,6 +91,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
   // Export JSON (Native Electron or Web Download)
   const handleExportJSON = async () => {
+    const history = useAppStore.getState().history;
     const jsonStr = JSON.stringify(history, null, 2);
     const defaultName = `quantora-historico-${getDeviceLocalDateString()}.json`;
 

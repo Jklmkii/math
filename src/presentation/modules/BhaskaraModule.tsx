@@ -6,9 +6,20 @@ import { StepByStep } from '../components/StepByStep';
 import { calculateBhaskara, parseQuadraticEquation } from '../../core/math/bhaskara';
 import { formatNumberSmart } from '../../core/math/precision';
 import { useAppStore } from '../../store/useAppStore';
+import { useShallow } from 'zustand/react/shallow';
 
 export const BhaskaraModule: React.FC = () => {
-  const { settings, addHistoryItem } = useAppStore();
+  const { decimalPlaces, decimalSeparator, addHistoryItem } = useAppStore(
+    useShallow((s) => ({
+      decimalPlaces: s.settings.decimalPlaces,
+      decimalSeparator: s.settings.decimalSeparator,
+      addHistoryItem: s.addHistoryItem,
+    }))
+  );
+  const settings = React.useMemo(
+    () => ({ decimalPlaces, decimalSeparator }),
+    [decimalPlaces, decimalSeparator]
+  );
 
   const [a, setA] = useState<string>('1');
   const [b, setB] = useState<string>('-5');

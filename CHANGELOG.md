@@ -4,6 +4,41 @@ Todas as alterações notáveis deste projeto são documentadas neste arquivo.
 
 ---
 
+## [1.2.2] — Otimização de Performance, Code-Splitting & Seletores Reativos (2026-09-11)
+
+### ⚡ Performance, Bundle Slimming & Code-Splitting
+- **Code-Splitting via `React.lazy()` & `Suspense`:** Divisão dos 5 módulos centrais (`BhaskaraModule`, `RegraDeTresModule`, `PhysicsModule`, `QuizModule`, `HistoryModule`) em chunks dinâmicos carregados estritamente sob demanda.
+- **Redução de 42.4% no Bundle Inicial:** O chunk inicial `dist/assets/index.js` diminuiu de **575.23 kB** para **331.53 kB** (101.41 kB gzipped), eliminando alertas do Vite.
+- **Subdivisão Dinâmica no Quiz:** Carregamento sob demanda dos sub-modos `BlitzGame` (18.37 kB) e `BossBattle` (33.63 kB).
+- **Seletores Granulares no Zustand v5:** Substituição de desestruturações integrais da store (`useAppStore()`) por seletores e `useShallow` em todos os módulos e componentes de apresentação, isolando re-renderizações desnecessárias durante contagens regressivas de timers e ganhos de XP.
+- **Limpeza de Assets em `public/`:** Remoção de ~827 kB de imagens não utilizadas em tempo de execução (`quantora-logo.jpg`, `icon-192.png`, `icon-512.png`), transferidas para `assets-source/`.
+- **Compressão Moderna de Imagens:** Logotipo convertido para WebP de alta fidelidade (`src/assets/logo.webp`), reduzindo seu tamanho de 119 kB para **12.16 kB** (redução de 89.8%).
+- **Memoização SVG com `React.memo`:** Otimização e definição de `displayName` explícito em `PhysicsChart.tsx` e `ParabolaChart.tsx`.
+
+---
+
+## [1.2.1] — Atualização de Mecânica Avançada, Usabilidade & CI/CD (2026-09-11)
+
+### ⚛️ Física Analítica & Cinemática Avançada
+- **Velocidade Terminal com Arrasto Aerodinâmico:** Queda livre com modelo analítico diferencial integrado ($v(t) = v_t \tanh(gt/v_t)$), tempo via $\operatorname{arcosh}$ e cálculo de discrepância em relação ao vácuo ideal ($\Delta t, \Delta v$).
+- **Presets Aerodinâmicos e Astronômicos:** Presets de arrasto (paraquedista de barriga/cabeça, gota de chuva, esfera lisa) e gravidade astronômica (Terra, Lua, Marte, Júpiter e Sol).
+- **Modo Avançado no Plano Inclinado:** Força externa aplicada ao longo da rampa com análise vetorial completa, decomposição de forças, atrito estático/cinético e determinação automatizada da direção de aceleração.
+- **Correção no Cálculo de MRU:** Adicionado o parâmetro Posição Final ($S$) para resolver incógnitas $S_0$, $v$ e $t$ sem exceções de parâmetros ausentes.
+
+### 🎨 Usabilidade & Lousa Digital
+- **Lousa Mobile-Friendly (Scratchpad):** Modo sanfona recolhível de paleta (`isPaletteCollapsed`) para evitar estouro horizontal de tela em dispositivos móveis, e botão unificado de fechar/minimizar.
+- **Logotipo do Header (Navbar):** Importação estrita ESM do asset `logo.png` para compatibilidade total com empacotamento Electron (`file://`) e contingência visual via SVG estilizado.
+
+### 🤖 Automação & CI/CD
+- **Auto-Incremento de Patch:** Script `check-and-bump-version.cjs` para incrementar versões automaticamente no GitHub Actions quando a tag já existir.
+- **Publicação Automatizada de Releases:** Script `publish-release.cjs` integrado para gerar instaladores Windows (.exe NSIS/portátil) e APK Android com notas extraídas do CHANGELOG.
+
+### 🧪 Suíte de Testes & Qualidade
+- **357 Testes Unitários Aprovados:** 18 suítes de teste executando 100% verde em Vitest.
+- **Zero Avisos no Linter:** Oxlint aprovado com 0 erros e 0 avisos em 76 arquivos.
+
+---
+
 ## [1.2.0] — Módulo de Física Clássica & Gráficos Interativos (2026-09-11)
 
 ### ⚛️ Módulo de Física Clássica & Mecânica Analítica

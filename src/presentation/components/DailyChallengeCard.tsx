@@ -21,6 +21,7 @@ import {
   type TimeUntilMidnight,
 } from '../../core/daily/dailyEngine';
 import { useAppStore } from '../../store/useAppStore';
+import { useShallow } from 'zustand/react/shallow';
 
 interface DailyChallengeCardProps {
   className?: string;
@@ -31,13 +32,15 @@ export const DailyChallengeCard: React.FC<DailyChallengeCardProps> = ({
   className = '',
   onCompleted,
 }) => {
-  const store = useAppStore();
-  const profile = store.profile;
-  const streak = profile?.streakDays || 1;
-
-  // Safe access to dailyChallenge state from store
-  const dailyState = (store as unknown as { dailyChallenge?: { lastCompletedDate: string | null } })
-    .dailyChallenge;
+  const { streak, lastCompletedDate, completeDailyChallenge, addXp, checkAndUpdateStreak } = useAppStore(
+    useShallow((s) => ({
+      streak: s.profile?.streakDays || 1,
+      lastCompletedDate: (s as unknown as { dailyChallenge?: { lastCompletedDate: string | null } }).dailyChallenge?.lastCompletedDate ?? null,
+      completeDailyChallenge: (s as unknown as { completeDailyChallenge?: (dateString: string, score: number) => void }).completeDailyChallenge,
+      addXp: s.addXp,
+      checkAndUpdateStreak: (s as unknown as { checkAndUpdateStreak?: () => void }).checkAndUpdateStreak,
+    }))
+  );
 
   // Today's date string in local YYYY-MM-DD
   const todayStr = useMemo(() => getTodayDateString(), []);
@@ -59,7 +62,7 @@ export const DailyChallengeCard: React.FC<DailyChallengeCardProps> = ({
   }, []);
 
   // Completion states
-  const isAlreadyCompletedToday = dailyState?.lastCompletedDate === todayStr;
+  const isAlreadyCompletedToday = lastCompletedDate === todayStr;
   const [justCompleted, setJustCompleted] = useState(false);
   const isCompleted = isAlreadyCompletedToday || justCompleted;
 
@@ -82,24 +85,19 @@ export const DailyChallengeCard: React.FC<DailyChallengeCardProps> = ({
       setJustCompleted(true);
       if ('vibrate' in navigator) navigator.vibrate?.([40, 60, 40]);
 
-      // Call store action if available
-      const storeWithDaily = store as unknown as {
-        completeDailyChallenge?: (dateString: string, score: number) => void;
-      };
-
-      if (typeof storeWithDaily.completeDailyChallenge === 'function') {
-        storeWithDaily.completeDailyChallenge(todayStr, challenge.xpReward);
+      if (typeof completeDailyChallenge === 'function') {
+        completeDailyChallenge(todayStr, challenge.xpReward);
       } else {
         // Fallback for store compatibility
-        store.addXp?.(challenge.xpReward, 'Desafio Diário');
-        store.checkAndUpdateStreak?.();
+        addXp?.(challenge.xpReward, 'Desafio Diário');
+        checkAndUpdateStreak?.();
       }
 
       onCompleted?.();
     } else {
       if ('vibrate' in navigator) navigator.vibrate?.([80, 50, 80]);
     }
-  }, [selectedOption, isCompleted, challenge, todayStr, store, onCompleted]);
+  }, [selectedOption, isCompleted, challenge, todayStr, completeDailyChallenge, addXp, checkAndUpdateStreak, onCompleted]);
 
   // Handle sharing result to clipboard
   const handleShareResult = async () => {

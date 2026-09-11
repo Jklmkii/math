@@ -5,10 +5,21 @@ import { StepByStep } from '../components/StepByStep';
 import { calculateRegraDeTresSimples, suggestProportionality } from '../../core/math/regraDeTresSimples';
 import { calculateRegraDeTresComposta } from '../../core/math/regraDeTresComposta';
 import { useAppStore } from '../../store/useAppStore';
+import { useShallow } from 'zustand/react/shallow';
 import type { CompostaColumn, ProportionType, SimpleGridPosition } from '../../types';
 
 export const RegraDeTresModule: React.FC = () => {
-  const { settings, addHistoryItem } = useAppStore();
+  const { decimalPlaces, decimalSeparator, addHistoryItem } = useAppStore(
+    useShallow((s) => ({
+      decimalPlaces: s.settings.decimalPlaces,
+      decimalSeparator: s.settings.decimalSeparator,
+      addHistoryItem: s.addHistoryItem,
+    }))
+  );
+  const settings = React.useMemo(
+    () => ({ decimalPlaces, decimalSeparator }),
+    [decimalPlaces, decimalSeparator]
+  );
   const [mode, setMode] = useState<'simples' | 'composta'>('simples');
 
   // SIMPLES STATE

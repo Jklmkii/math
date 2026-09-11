@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Award, Flame, Zap, Shield, CheckCircle2, Trophy, Lock } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
+import { useShallow } from 'zustand/react/shallow';
 import { calculateLevelInfo, ACHIEVEMENTS } from '../../core/gamification/leveling';
 import { useTranslation } from '../../core/i18n/translations';
 import type { AchievementCategory } from '../../types';
@@ -21,13 +22,18 @@ const FILTER_TABS: Array<{ key: FilterCategory; labelPt: string; labelEn: string
 ];
 
 export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
-  const { profile, settings } = useAppStore();
+  const { profile, language } = useAppStore(
+    useShallow((s) => ({
+      profile: s.profile,
+      language: s.settings.language || 'pt',
+    }))
+  );
   const [selectedCategory, setSelectedCategory] = useState<FilterCategory>('todas');
-  const t = useTranslation(settings.language || 'pt');
+  const t = useTranslation(language);
 
   if (!isOpen) return null;
 
-  const currentLang = settings.language || 'pt';
+  const currentLang = language;
   const levelInfo = calculateLevelInfo(profile?.totalXp || 0, currentLang);
   const unlockedSet = new Set(profile?.unlockedAchievements || []);
 

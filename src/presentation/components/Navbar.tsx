@@ -14,11 +14,12 @@ import {
   Atom,
 } from 'lucide-react';
 import { useAppStore, type ActiveTab } from '../../store/useAppStore';
+import { useShallow } from 'zustand/react/shallow';
 import { useTranslation } from '../../core/i18n/translations';
 import { calculateLevelInfo } from '../../core/gamification/leveling';
 import { getTodayDateString } from '../../core/daily/dailyEngine';
 import { ProfileModal } from './ProfileModal';
-import logoImg from '../../assets/logo.png';
+import logoImg from '../../assets/logo.webp';
 
 interface NavbarProps {
   onOpenSettings: () => void;
@@ -30,11 +31,22 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings }) => {
     setActiveTab,
     settings,
     updateSettings,
-    history,
+    historyCount,
     profile,
     checkAndUpdateStreak,
-    dailyChallenge,
-  } = useAppStore();
+    isDailyCompleted,
+  } = useAppStore(
+    useShallow((s) => ({
+      activeTab: s.activeTab,
+      setActiveTab: s.setActiveTab,
+      settings: s.settings,
+      updateSettings: s.updateSettings,
+      historyCount: s.history.length,
+      profile: s.profile,
+      checkAndUpdateStreak: s.checkAndUpdateStreak,
+      isDailyCompleted: s.dailyChallenge?.lastCompletedDate === getTodayDateString(),
+    }))
+  );
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [logoError, setLogoError] = useState(false);
   const t = useTranslation(settings.language || 'pt');
@@ -44,8 +56,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings }) => {
   }, [checkAndUpdateStreak]);
 
   const levelInfo = calculateLevelInfo(profile?.totalXp || 0, settings.language || 'pt');
-  const todayDateStr = getTodayDateString();
-  const isDailyCompleted = dailyChallenge?.lastCompletedDate === todayDateStr;
 
   const tabs: { id: ActiveTab; label: string; icon: React.ReactNode; badge?: number }[] = [
     { id: 'bhaskara', label: t.nav_bhaskara, icon: <Sigma size={20} /> },
@@ -56,7 +66,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings }) => {
       id: 'history',
       label: t.nav_historico,
       icon: <History size={20} />,
-      badge: history.length > 0 ? history.length : undefined,
+      badge: historyCount > 0 ? historyCount : undefined,
     },
   ];
 

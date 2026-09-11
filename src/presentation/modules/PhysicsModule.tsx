@@ -11,6 +11,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
+import { useShallow } from 'zustand/react/shallow';
 import { useTranslation } from '../../core/i18n/translations';
 import { NumericInput } from '../components/NumericInput';
 import { StepByStep } from '../components/StepByStep';
@@ -38,8 +39,19 @@ import {
 } from '../../core/physics';
 
 export const PhysicsModule: React.FC = () => {
-  const { settings, addHistoryItem } = useAppStore();
-  const t = useTranslation(settings.language || 'pt');
+  const { language, decimalPlaces, decimalSeparator, addHistoryItem } = useAppStore(
+    useShallow((s) => ({
+      language: s.settings.language || 'pt',
+      decimalPlaces: s.settings.decimalPlaces,
+      decimalSeparator: s.settings.decimalSeparator,
+      addHistoryItem: s.addHistoryItem,
+    }))
+  );
+  const settings = React.useMemo(
+    () => ({ language, decimalPlaces, decimalSeparator }),
+    [language, decimalPlaces, decimalSeparator]
+  );
+  const t = useTranslation(language);
 
   // Category and Mode state
   const [category, setCategory] = useState<PhysicsCategory>('cinematica');

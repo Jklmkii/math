@@ -3,10 +3,11 @@ import { Sigma, Scale, ShieldCheck, ChevronRight, Check } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 
 export const OnboardingModal: React.FC = () => {
-  const { settings, completeOnboarding } = useAppStore();
+  const hasCompletedOnboarding = useAppStore((s) => s.settings.hasCompletedOnboarding);
+  const completeOnboarding = useAppStore((s) => s.completeOnboarding);
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  if (settings.hasCompletedOnboarding) return null;
+  if (hasCompletedOnboarding) return null;
 
   const slides = [
     {

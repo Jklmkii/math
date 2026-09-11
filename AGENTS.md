@@ -24,12 +24,13 @@ Welcome, Agent! This document provides an architectural map, operational convent
 | **Styling & Icons** | Tailwind CSS `^4.3.3`, `@tailwindcss/vite`, Lucide React | `src/index.css`, `src/presentation/` |
 | **State & Persistence** | Zustand `^5.0.15` (`persist` middleware, `localStorage`) | `src/store/useAppStore.ts` |
 | **Math Engines** | Pure TypeScript, `big.js ^7.0.1` | `src/core/math/` |
+| **Physics Engines** | Pure TypeScript, `big.js`, analytical classical mechanics | `src/core/physics/` |
 | **Gamification & Streak** | Pure TypeScript, deterministic algorithms | `src/core/gamification/` |
 | **Training & Mini-Games** | Pure TypeScript (Mulberry32 PRNG, Blitz, Boss Rush) | `src/core/daily/`, `src/core/quiz/` |
 | **Data Integrity** | Schema validation for history & local storage | `src/core/storage/historyValidator.ts` |
 | **Internationalization** | In-house reactive i18n (`pt` and `en`) | `src/core/i18n/translations.ts` |
-| **Test Suite** | Vitest `^5.0.0` (154 tests across 11 test suites) | `src/tests/` |
-| **Linter** | Oxlint `^1.79.0` | `.oxlintrc.json` |
+| **Test Suite** | Vitest `^5.0.0` (357 tests across 18 test suites) | `src/tests/` |
+| **Linter** | Oxlint `^1.79.0` (76 files analyzed) | `.oxlintrc.json` |
 
 ---
 
@@ -44,6 +45,9 @@ quantora/
 ├── electron/
 │   ├── main.cjs                  # Electron main process (window lifecycle, updater)
 │   └── preload.cjs               # Safe contextBridge IPC API
+├── scripts/
+│   ├── check-and-bump-version.cjs # Auto-bumps patch release if tag exists on GitHub
+│   └── publish-release.cjs       # Releases asset binaries with changelog notes
 ├── src/
 │   ├── core/
 │   │   ├── daily/
@@ -57,6 +61,17 @@ quantora/
 │   │   │   ├── regraDeTresSimples.ts   # Direct and inverse simple rule of three
 │   │   │   ├── regraDeTresComposta.ts  # Multi-column compound rule of three
 │   │   │   └── precision.ts      # Floating-point safety using big.js
+│   │   ├── physics/              # 10 Classical Mechanics calculation modules
+│   │   │   ├── mru.ts            # Uniform linear motion
+│   │   │   ├── mruv.ts           # Uniformly accelerated motion & Torricelli
+│   │   │   ├── quedaLivre.ts     # Free fall with terminal velocity & drag
+│   │   │   ├── lancamentoVertical.ts
+│   │   │   ├── lancamentoHorizontal.ts
+│   │   │   ├── lancamentoObliquo.ts
+│   │   │   ├── mcu.ts            # Uniform circular motion
+│   │   │   ├── mhs.ts            # Simple harmonic motion (pendulum & spring)
+│   │   │   ├── planoInclinado.ts # Inclined plane with static/kinetic friction & applied force
+│   │   │   └── energiaTrabalho.ts# Work, power & mechanical energy conservation
 │   │   ├── quiz/
 │   │   │   ├── quizGenerator.ts  # Arithmetic tracks (addition, sub, mult, div, survival)
 │   │   │   ├── blitzEngine.ts    # 60s Blitz mode (+2s, -3s, combos 1x-3x)
@@ -73,15 +88,17 @@ quantora/
 │   │   │   ├── BossBattle.tsx    # Boss battle gameplay screen
 │   │   │   ├── DailyChallengeCard.tsx # Daily challenge UI with sharing
 │   │   │   ├── AchievementToast.tsx   # Floating unlock animation
-│   │   │   └── ParabolaChart.tsx # SVG Cartesian graph for quadratic functions
+│   │   │   ├── ParabolaChart.tsx # SVG Cartesian graph for quadratic functions
+│   │   │   └── PhysicsChart.tsx  # 5 interactive SVG charts for classical mechanics
 │   │   └── modules/
 │   │       ├── BhaskaraModule.tsx
 │   │       ├── RegraDeTresModule.tsx
+│   │       ├── PhysicsModule.tsx # 10 physics modes with interactive UI & diagrams
 │   │       ├── QuizModule.tsx
 │   │       └── HistoryModule.tsx
 │   ├── store/
 │   │   └── useAppStore.ts        # Central Zustand store with localStorage persistence
-│   ├── tests/                    # 11 unit test files (Vitest)
+│   ├── tests/                    # 18 unit test files (Vitest - 357 tests)
 │   ├── types/
 │   │   └── index.ts              # Global TypeScript interfaces and types
 │   ├── App.tsx                   # Root component, theme provider & tab routing
