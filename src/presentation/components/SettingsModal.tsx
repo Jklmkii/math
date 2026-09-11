@@ -154,6 +154,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // 5MB limit to prevent browser crashes on JSON.parse
+    const MAX_FILE_SIZE = 5 * 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE) {
+      setImportStatus(t.file_too_large || 'File is too large (max 5MB)');
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (event) => {
       try {

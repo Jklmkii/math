@@ -45,6 +45,7 @@ export const translations = {
     backup_imported_success: 'Histórico importado com sucesso!',
     backup_invalid: 'Arquivo de backup inválido.',
     export_error: 'Erro ao salvar:',
+    file_too_large: 'Arquivo muito grande (máximo 5MB).',
 
     // Quick Actions & Navbar
     daily_completed: 'Diário Concluído',
@@ -154,6 +155,7 @@ export const translations = {
     backup_imported_success: 'History imported successfully!',
     backup_invalid: 'Invalid backup file.',
     export_error: 'Error saving:',
+    file_too_large: 'File is too large (max 5MB).',
 
     // Quick Actions & Navbar
     daily_completed: 'Daily Completed',
