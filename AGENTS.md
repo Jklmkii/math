@@ -147,7 +147,7 @@ When implementing features, fixing bugs, or refactoring code, adhere strictly to
 * **Registro Obrigatório de Prompts & Raciocínio (Prompt Logging & Analysis):**
   Cada solicitação ou mensagem do usuário referente ao projeto deve ser salva e indexada em `Obsidian-Vault/Projetos/Quantora/Historico de Prompts & Demandas.md`, contendo:
   1. `💬 Texto Original do Usuário (Ipsis Litteris)`
-  2. `🧠 Analysis and Reasoning` (seguindo rigorosamente o padrão de avaliação do Google Jules):
+  2. `🧠 Analysis and Reasoning` (redigido obrigatoriamente em Português, seguindo rigorosamente a estrutura de avaliação do Google Jules):
      * **User's Goal:** Resumo claro da intenção e expectativas do usuário.
      * **Evaluation of the Solution:**
        * **Core Functionality:** Diagnóstico aprofundado dos problemas e lógica da solução aplicada.
