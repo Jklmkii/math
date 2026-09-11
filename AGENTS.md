@@ -141,6 +141,10 @@ When implementing features, fixing bugs, or refactoring code, adhere strictly to
 * **Zero Production Mocks:** Production code must be fully implemented. Stubs, fake static returns, or mock simulations in production modules are strictly prohibited.
 * **Preserve Tests:** Do not delete or weaken existing tests in `src/tests/`. If changing business logic, update corresponding tests to reflect the new intended behavior and maintain 100% test pass rate.
 
+### F. Sincronização Obrigatória com o Obsidian (Obsidian-First)
+* **Antes de Iniciar Qualquer Tarefa:** Sempre consulte as notas do projeto em `Obsidian-Vault/Projetos/Quantora/` (`Decisoes & Estado Atual.md`, `Quantora - Visao Geral.md`, etc.) para verificar requisitos prévios, convenções de arquitetura e decisões já tomadas, minimizando retrabalho e consumo desnecessário de contexto.
+* **Ao Concluir ou Alterar Funcionalidades:** Sempre registre ou atualize o Obsidian com as novas decisões, mudanças de estado, correções de bugs em `Changelog & Historico de Bugs.md` e impactos nos módulos correspondentes.
+
 ---
 
 ## 🤖 6. Pull Request Conventions
