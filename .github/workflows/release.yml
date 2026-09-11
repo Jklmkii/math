@@ -8,8 +8,6 @@ on:
       - '**.md'
       - '.Jules/**'
       - '.jules/**'
-      - 'scripts/**'
-      - '.github/**'
   workflow_dispatch:
 
 permissions:
@@ -38,11 +36,23 @@ jobs:
       - name: Run unit tests
         run: npx vitest run
 
-      - name: Check if release already exists
+      - name: Check and auto-bump version
         id: check_release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/check-and-bump-version.cjs
+
+      - name: Commit and push bumped version
+        if: steps.check_release.outputs.bumped == 'true'
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json
+          git commit -m "chore(release): bump version to ${{ steps.check_release.outputs.version }} [skip ci]" || exit 0
+          git push origin main || echo "Push skipped or protected"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Electron application
         if: steps.check_release.outputs.should_release != 'false'

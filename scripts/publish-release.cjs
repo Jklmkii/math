@@ -7,24 +7,47 @@ if (!GITHUB_TOKEN) {
   process.exit(1);
 }
 const OWNER = 'Jklmkii';
+const { execSync } = require('child_process');
 const REPO = 'math';
 const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
 const TAG = 'v' + pkg.version;
 
+function getCommitInfo() {
+  try {
+    const hash = execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim();
+    const msg = execSync('git log -1 --pretty=%s', { encoding: 'utf8' }).trim();
+    return { hash, msg };
+  } catch {
+    return { hash: '', msg: '' };
+  }
+}
+
 function getReleaseNotes(version) {
   const appName = pkg.productName || 'Quantora';
   const changelogPath = path.join(__dirname, '..', 'CHANGELOG.md');
+  let bodyContent = '';
   if (fs.existsSync(changelogPath)) {
     const content = fs.readFileSync(changelogPath, 'utf8');
     const escaped = version.replace(/\./g, '\\.');
     const regex = new RegExp(`##\\s*\\[?v?${escaped}\\]?[^\\n]*\\n([\\s\\S]*?)(?=\\n##\\s|$)`);
     const match = content.match(regex);
     if (match && match[1].trim()) {
-      const cleanBody = match[1].replace(/\n---\s*$/, '').trim();
-      return `## O que há de novo na Versão ${version}\n\n` + cleanBody + `\n\n### Arquivos disponíveis\n- \`${appName}-Setup-${version}.exe\` (Instalador oficial com auto-update)\n- \`${appName}-${version}-portable.exe\` (Versão portátil sem instalação)\n- \`${appName}.apk\` (Aplicativo para Android)`;
+      bodyContent = match[1].replace(/\n---\s*$/, '').trim();
     }
   }
-  return `## Novidades da versão ${version}\n\n- Atualizações de desempenho, recursos e estabilidade geral.\n\n### Arquivos disponíveis\n- \`${appName}-Setup-${version}.exe\`\n- \`${appName}-${version}-portable.exe\`\n- \`${appName}.apk\``;
+
+  const commitInfo = getCommitInfo();
+  const commitLine = commitInfo.hash
+    ? `\n\n**Commit Compilado:** \`${commitInfo.hash}\` — *${commitInfo.msg}*`
+    : '';
+
+  if (!bodyContent) {
+    bodyContent = `- Atualizações, otimizações e novos recursos compilados a partir do commit mais recente.${commitLine}`;
+  } else {
+    bodyContent += commitLine;
+  }
+
+  return `## O que há de novo na Versão ${version}\n\n` + bodyContent + `\n\n### Arquivos disponíveis\n- \`${appName}-Setup-${version}.exe\` (Instalador oficial com auto-update)\n- \`${appName}-${version}-portable.exe\` (Versão portátil sem instalação)\n- \`${appName}.apk\` (Aplicativo para Android)`;
 }
 
 async function main() {
@@ -39,7 +62,14 @@ async function main() {
     ? fs.readFileSync(path.join(__dirname, '..', 'CHANGELOG.md'), 'utf8')
     : '';
   const titleMatch = changelogContent.match(new RegExp(`##\\s*\\[?v?${pkg.version.replace(/\\./g, '\\.')}\\]?\\s*—\\s*([^\\n(]*)`));
-  const subtitle = titleMatch && titleMatch[1].trim() ? titleMatch[1].trim() : 'Atualizações e melhorias';
+  const commitInfo = getCommitInfo();
+  let subtitle = titleMatch && titleMatch[1].trim() ? titleMatch[1].trim() : '';
+  if (!subtitle && commitInfo.msg && !commitInfo.msg.startsWith('chore(release)')) {
+    subtitle = commitInfo.msg;
+  }
+  if (!subtitle) {
+    subtitle = 'Atualizações e melhorias';
+  }
   const releaseTitle = `${appName} ${TAG} — ${subtitle}`;
   const releaseBody = getReleaseNotes(pkg.version);
 

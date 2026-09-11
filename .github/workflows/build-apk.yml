@@ -9,6 +9,7 @@ on:
       - 'android/**'
       - 'src/**'
       - 'capacitor.config.ts'
+      - 'package.json'
 
 permissions:
   contents: write
