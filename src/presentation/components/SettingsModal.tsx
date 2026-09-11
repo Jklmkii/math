@@ -4,6 +4,7 @@ import { useAppStore } from '../../store/useAppStore';
 import type { DecimalPlaces, DecimalSeparator, ThemeMode, UpdaterStatus, AppLanguage } from '../../types';
 import { validateHistorySchema } from '../../core/storage/historyValidator';
 import { useTranslation } from '../../core/i18n/translations';
+import { getDeviceLocalDateString } from '../../core/gamification/leveling';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -82,7 +83,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   // Export JSON (Native Electron or Web Download)
   const handleExportJSON = async () => {
     const jsonStr = JSON.stringify(history, null, 2);
-    const defaultName = `quantora-historico-${new Date().toISOString().slice(0, 10)}.json`;
+    const defaultName = `quantora-historico-${getDeviceLocalDateString()}.json`;
 
     if (window.electronAPI?.saveFile) {
       const res = await window.electronAPI.saveFile(defaultName, jsonStr, [
@@ -109,7 +110,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   // Export CSV (Native Electron or Web Download)
   const handleExportCSV = async () => {
     const csvContent = generateCSVContent();
-    const defaultName = `quantora-historico-${new Date().toISOString().slice(0, 10)}.csv`;
+    const defaultName = `quantora-historico-${getDeviceLocalDateString()}.csv`;
 
     if (window.electronAPI?.saveFile) {
       const res = await window.electronAPI.saveFile(defaultName, '\ufeff' + csvContent, [
