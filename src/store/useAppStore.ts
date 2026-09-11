@@ -1,6 +1,15 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { AppSettings, CalculationType, HistoryItem, QuizProgress, QuizTrackSelector, UserProfile } from '../types';
+import type {
+  AppSettings,
+  CalculationType,
+  HistoryItem,
+  QuizProgress,
+  QuizTrackSelector,
+  UserProfile,
+  AchievementDef,
+  DailyChallengeState,
+} from '../types';
 import { validateHistorySchema } from '../core/storage/historyValidator';
 import { calculateStreakUpdate, checkNewAchievements, ACHIEVEMENTS } from '../core/gamification/leveling';
 
@@ -16,6 +25,21 @@ interface AppState {
   addXp: (amount: number, reason?: string) => void;
   checkAndUpdateStreak: () => void;
   unlockAchievement: (id: string) => void;
+  toastQueue: AchievementDef[];
+  dismissAchievementToast: () => void;
+
+  // Scratchpad
+  isScratchpadOpen: boolean;
+  toggleScratchpad: () => void;
+  incrementScratchpadUses: () => void;
+
+  // Daily Challenge
+  dailyChallenge: DailyChallengeState;
+  completeDailyChallenge: (dateString: string, score: number) => void;
+
+  // Blitz & Boss
+  recordBlitzResult: (score: number, maxCombo: number, correctCount: number, xpEarned: number) => void;
+  recordBossVictory: (timeSeconds: number, shieldsRemaining: number, xpEarned: number) => void;
 
   // Settings
   settings: AppSettings;
@@ -61,7 +85,19 @@ const DEFAULT_PROFILE: UserProfile = {
     totalRegraDeTres: 0,
     totalQuizCorrect: 0,
     bestSurvivalRecord: 0,
+    scratchpadUses: 0,
+    dailyChallengesCompleted: 0,
+    blitzHighScore: 0,
+    blitzMaxCombo: 0,
+    bossesDefeated: 0,
+    flawlessBossVictories: 0,
+    criticalHits: 0,
   },
+};
+
+const DEFAULT_DAILY_CHALLENGE: DailyChallengeState = {
+  lastCompletedDate: null,
+  history: [],
 };
 
 const DEFAULT_QUIZ_PROGRESS: QuizProgress = {
@@ -97,18 +133,195 @@ export const useAppStore = create<AppState>()(
       setActiveTab: (tab) => set({ activeTab: tab }),
 
       profile: DEFAULT_PROFILE,
+      toastQueue: [],
+      dismissAchievementToast: () => {
+        set((state) => ({
+          toastQueue: state.toastQueue.length > 0 ? state.toastQueue.slice(1) : [],
+        }));
+      },
+
+      isScratchpadOpen: false,
+      toggleScratchpad: () => {
+        set((state) => ({ isScratchpadOpen: !state.isScratchpadOpen }));
+      },
+      incrementScratchpadUses: () => {
+        set((state) => {
+          const prevProf = state.profile || DEFAULT_PROFILE;
+          const prevStats = prevProf.stats || DEFAULT_PROFILE.stats;
+          const newStats = {
+            ...prevStats,
+            scratchpadUses: (prevStats.scratchpadUses || 0) + 1,
+          };
+          const candidate: UserProfile = { ...prevProf, stats: newStats };
+          const newlyUnlockedIds = checkNewAchievements(candidate);
+          const newlyUnlockedDefs = newlyUnlockedIds
+            .map((id) => ACHIEVEMENTS.find((a) => a.id === id))
+            .filter((a): a is AchievementDef => Boolean(a));
+          let bonusXp = 0;
+          for (const def of newlyUnlockedDefs) {
+            bonusXp += def.xpReward || 0;
+          }
+          return {
+            profile: {
+              ...candidate,
+              totalXp: (candidate.totalXp || 0) + bonusXp,
+              unlockedAchievements: [...new Set([...(prevProf.unlockedAchievements || []), ...newlyUnlockedIds])],
+            },
+            toastQueue: newlyUnlockedDefs.length > 0 ? [...state.toastQueue, ...newlyUnlockedDefs] : state.toastQueue,
+          };
+        });
+      },
+
+      dailyChallenge: DEFAULT_DAILY_CHALLENGE,
+      completeDailyChallenge: (dateString, score) => {
+        set((state) => {
+          const prevProf = state.profile || DEFAULT_PROFILE;
+          const prevStats = prevProf.stats || DEFAULT_PROFILE.stats;
+          const prevDaily = state.dailyChallenge || DEFAULT_DAILY_CHALLENGE;
+
+          const streakUpdate = calculateStreakUpdate(prevProf.lastActiveDate, prevProf.streakDays, dateString);
+          const newStats = {
+            ...prevStats,
+            dailyChallengesCompleted: (prevStats.dailyChallengesCompleted || 0) + 1,
+          };
+          const baseReward = 150;
+          const newTotalXp = (prevProf.totalXp || 0) + baseReward;
+
+          const candidate: UserProfile = {
+            ...prevProf,
+            totalXp: newTotalXp,
+            streakDays: streakUpdate.newStreak,
+            lastActiveDate: streakUpdate.newLastActiveDate,
+            stats: newStats,
+          };
+
+          const newlyUnlockedIds = checkNewAchievements(candidate);
+          const newlyUnlockedDefs = newlyUnlockedIds
+            .map((id) => ACHIEVEMENTS.find((a) => a.id === id))
+            .filter((a): a is AchievementDef => Boolean(a));
+          let bonusXp = 0;
+          for (const def of newlyUnlockedDefs) {
+            bonusXp += def.xpReward || 0;
+          }
+
+          const updatedHistory = [
+            ...prevDaily.history.filter((h) => h.date !== dateString),
+            { date: dateString, completedAt: Date.now(), score },
+          ];
+
+          return {
+            dailyChallenge: {
+              lastCompletedDate: dateString,
+              history: updatedHistory,
+            },
+            profile: {
+              ...candidate,
+              totalXp: newTotalXp + bonusXp,
+              unlockedAchievements: [...new Set([...(prevProf.unlockedAchievements || []), ...newlyUnlockedIds])],
+            },
+            toastQueue: newlyUnlockedDefs.length > 0 ? [...state.toastQueue, ...newlyUnlockedDefs] : state.toastQueue,
+          };
+        });
+      },
+
+      recordBlitzResult: (score, maxCombo, correctCount, xpEarned) => {
+        set((state) => {
+          const prevProf = state.profile || DEFAULT_PROFILE;
+          const prevStats = prevProf.stats || DEFAULT_PROFILE.stats;
+
+          const newStats = {
+            ...prevStats,
+            blitzHighScore: Math.max(prevStats.blitzHighScore || 0, score),
+            blitzMaxCombo: Math.max(prevStats.blitzMaxCombo || 0, maxCombo),
+            totalQuizCorrect: (prevStats.totalQuizCorrect || 0) + correctCount,
+          };
+
+          const newTotalXp = (prevProf.totalXp || 0) + Math.max(0, xpEarned);
+          const candidate: UserProfile = {
+            ...prevProf,
+            totalXp: newTotalXp,
+            stats: newStats,
+          };
+
+          const newlyUnlockedIds = checkNewAchievements(candidate);
+          const newlyUnlockedDefs = newlyUnlockedIds
+            .map((id) => ACHIEVEMENTS.find((a) => a.id === id))
+            .filter((a): a is AchievementDef => Boolean(a));
+          let bonusXp = 0;
+          for (const def of newlyUnlockedDefs) {
+            bonusXp += def.xpReward || 0;
+          }
+
+          return {
+            profile: {
+              ...candidate,
+              totalXp: newTotalXp + bonusXp,
+              unlockedAchievements: [...new Set([...(prevProf.unlockedAchievements || []), ...newlyUnlockedIds])],
+            },
+            toastQueue: newlyUnlockedDefs.length > 0 ? [...state.toastQueue, ...newlyUnlockedDefs] : state.toastQueue,
+          };
+        });
+      },
+
+      recordBossVictory: (_timeSeconds, shieldsRemaining, xpEarned) => {
+        set((state) => {
+          const prevProf = state.profile || DEFAULT_PROFILE;
+          const prevStats = prevProf.stats || DEFAULT_PROFILE.stats;
+
+          const isFlawless = shieldsRemaining >= 3;
+          const newStats = {
+            ...prevStats,
+            bossesDefeated: (prevStats.bossesDefeated || 0) + 1,
+            flawlessBossVictories: (prevStats.flawlessBossVictories || 0) + (isFlawless ? 1 : 0),
+          };
+
+          const newTotalXp = (prevProf.totalXp || 0) + Math.max(0, xpEarned);
+          const candidate: UserProfile = {
+            ...prevProf,
+            totalXp: newTotalXp,
+            stats: newStats,
+          };
+
+          const newlyUnlockedIds = checkNewAchievements(candidate);
+          const newlyUnlockedDefs = newlyUnlockedIds
+            .map((id) => ACHIEVEMENTS.find((a) => a.id === id))
+            .filter((a): a is AchievementDef => Boolean(a));
+          let bonusXp = 0;
+          for (const def of newlyUnlockedDefs) {
+            bonusXp += def.xpReward || 0;
+          }
+
+          return {
+            profile: {
+              ...candidate,
+              totalXp: newTotalXp + bonusXp,
+              unlockedAchievements: [...new Set([...(prevProf.unlockedAchievements || []), ...newlyUnlockedIds])],
+            },
+            toastQueue: newlyUnlockedDefs.length > 0 ? [...state.toastQueue, ...newlyUnlockedDefs] : state.toastQueue,
+          };
+        });
+      },
 
       addXp: (amount) => {
         set((state) => {
           const prevProf = state.profile || DEFAULT_PROFILE;
           const newTotalXp = Math.max(0, (prevProf.totalXp || 0) + amount);
           const candidate: UserProfile = { ...prevProf, totalXp: newTotalXp };
-          const newlyUnlocked = checkNewAchievements(candidate);
+          const newlyUnlockedIds = checkNewAchievements(candidate);
+          const newlyUnlockedDefs = newlyUnlockedIds
+            .map((id) => ACHIEVEMENTS.find((a) => a.id === id))
+            .filter((a): a is AchievementDef => Boolean(a));
+          let bonusXp = 0;
+          for (const def of newlyUnlockedDefs) {
+            bonusXp += def.xpReward || 0;
+          }
           return {
             profile: {
               ...candidate,
-              unlockedAchievements: [...new Set([...(prevProf.unlockedAchievements || []), ...newlyUnlocked])],
+              totalXp: newTotalXp + bonusXp,
+              unlockedAchievements: [...new Set([...(prevProf.unlockedAchievements || []), ...newlyUnlockedIds])],
             },
+            toastQueue: newlyUnlockedDefs.length > 0 ? [...state.toastQueue, ...newlyUnlockedDefs] : state.toastQueue,
           };
         });
       },
@@ -122,12 +335,21 @@ export const useAppStore = create<AppState>()(
             streakDays: update.newStreak,
             lastActiveDate: update.newLastActiveDate,
           };
-          const newlyUnlocked = checkNewAchievements(candidate);
+          const newlyUnlockedIds = checkNewAchievements(candidate);
+          const newlyUnlockedDefs = newlyUnlockedIds
+            .map((id) => ACHIEVEMENTS.find((a) => a.id === id))
+            .filter((a): a is AchievementDef => Boolean(a));
+          let bonusXp = 0;
+          for (const def of newlyUnlockedDefs) {
+            bonusXp += def.xpReward || 0;
+          }
           return {
             profile: {
               ...candidate,
-              unlockedAchievements: [...new Set([...(prevProf.unlockedAchievements || []), ...newlyUnlocked])],
+              totalXp: (candidate.totalXp || 0) + bonusXp,
+              unlockedAchievements: [...new Set([...(prevProf.unlockedAchievements || []), ...newlyUnlockedIds])],
             },
+            toastQueue: newlyUnlockedDefs.length > 0 ? [...state.toastQueue, ...newlyUnlockedDefs] : state.toastQueue,
           };
         });
       },
@@ -137,13 +359,14 @@ export const useAppStore = create<AppState>()(
           const prevProf = state.profile || DEFAULT_PROFILE;
           if (prevProf.unlockedAchievements?.includes(id)) return {};
           const def = ACHIEVEMENTS.find((a) => a.id === id);
-          const bonus = def ? def.xpReward : 0;
+          const bonus = def ? (def.xpReward || 0) : 0;
           return {
             profile: {
               ...prevProf,
               totalXp: (prevProf.totalXp || 0) + bonus,
               unlockedAchievements: [...(prevProf.unlockedAchievements || []), id],
             },
+            toastQueue: def ? [...state.toastQueue, def] : state.toastQueue,
           };
         });
       },
@@ -171,23 +394,28 @@ export const useAppStore = create<AppState>()(
             totalXp: newTotalXp,
             stats: newStats,
           };
-          const newlyUnlocked = checkNewAchievements(candidateProfile);
+          const newlyUnlockedIds = checkNewAchievements(candidateProfile);
+          const newlyUnlockedDefs = newlyUnlockedIds
+            .map((id) => ACHIEVEMENTS.find((a) => a.id === id))
+            .filter((a): a is AchievementDef => Boolean(a));
           let bonusXp = 0;
-          for (const achId of newlyUnlocked) {
-            const def = ACHIEVEMENTS.find((a) => a.id === achId);
-            if (def) bonusXp += def.xpReward;
+          for (const def of newlyUnlockedDefs) {
+            bonusXp += def.xpReward || 0;
           }
 
           const finalProfile: UserProfile = {
             ...candidateProfile,
             totalXp: newTotalXp + bonusXp,
-            unlockedAchievements: [...new Set([...(prevProf.unlockedAchievements || []), ...newlyUnlocked])],
+            unlockedAchievements: [...new Set([...(prevProf.unlockedAchievements || []), ...newlyUnlockedIds])],
           };
+
+          const newToastQueue = newlyUnlockedDefs.length > 0 ? [...state.toastQueue, ...newlyUnlockedDefs] : state.toastQueue;
 
           if (track === 'sobrevivencia') {
             const prevSurv = prevProgress.survival || DEFAULT_QUIZ_PROGRESS.survival;
             return {
               profile: finalProfile,
+              toastQueue: newToastQueue,
               quizProgress: {
                 ...prevProgress,
                 survival: {
@@ -216,6 +444,7 @@ export const useAppStore = create<AppState>()(
 
             return {
               profile: finalProfile,
+              toastQueue: newToastQueue,
               quizProgress: {
                 ...prevProgress,
                 tracks: {
@@ -305,22 +534,25 @@ export const useAppStore = create<AppState>()(
             totalXp: newTotalXp,
             stats: newStats,
           };
-          const newlyUnlocked = checkNewAchievements(candidateProfile);
+          const newlyUnlockedIds = checkNewAchievements(candidateProfile);
+          const newlyUnlockedDefs = newlyUnlockedIds
+            .map((id) => ACHIEVEMENTS.find((a) => a.id === id))
+            .filter((a): a is AchievementDef => Boolean(a));
           let bonusXp = 0;
-          for (const achId of newlyUnlocked) {
-            const def = ACHIEVEMENTS.find((a) => a.id === achId);
-            if (def) bonusXp += def.xpReward;
+          for (const def of newlyUnlockedDefs) {
+            bonusXp += def.xpReward || 0;
           }
 
           const finalProfile: UserProfile = {
             ...candidateProfile,
             totalXp: newTotalXp + bonusXp,
-            unlockedAchievements: [...new Set([...(prevProf.unlockedAchievements || []), ...newlyUnlocked])],
+            unlockedAchievements: [...new Set([...(prevProf.unlockedAchievements || []), ...newlyUnlockedIds])],
           };
 
           return {
             history: limited,
             profile: finalProfile,
+            toastQueue: newlyUnlockedDefs.length > 0 ? [...state.toastQueue, ...newlyUnlockedDefs] : state.toastQueue,
           };
         });
       },
@@ -364,6 +596,41 @@ export const useAppStore = create<AppState>()(
     {
       name: 'mathutils-storage',
       storage: createJSONStorage(() => localStorage),
+      version: 2,
+      migrate: (persistedState: any, version: number) => {
+        if (!version || version < 2) {
+          const state = persistedState as any;
+          if (state?.profile) {
+            state.profile.stats = {
+              totalCalculations: 0,
+              totalBhaskara: 0,
+              totalRegraDeTres: 0,
+              totalQuizCorrect: 0,
+              bestSurvivalRecord: 0,
+              scratchpadUses: 0,
+              dailyChallengesCompleted: 0,
+              blitzHighScore: 0,
+              blitzMaxCombo: 0,
+              bossesDefeated: 0,
+              flawlessBossVictories: 0,
+              criticalHits: 0,
+              ...(state.profile.stats || {}),
+            };
+          }
+          if (!state?.dailyChallenge) {
+            state.dailyChallenge = {
+              lastCompletedDate: null,
+              history: [],
+            };
+          }
+          return state;
+        }
+        return persistedState;
+      },
+      partialize: (state) => {
+        const { toastQueue: _toastQueue, isScratchpadOpen: _isScratchpadOpen, ...rest } = state;
+        return rest;
+      },
     }
   )
 );

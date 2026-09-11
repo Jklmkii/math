@@ -14,20 +14,29 @@ import {
   Scale,
   ChevronLeft,
   Trophy,
+  Zap,
+  Swords,
+  Crown,
 } from 'lucide-react';
 import { generateQuizQuestion } from '../../core/math/quizGenerator';
 import { parseBig, formatNumberSmart } from '../../core/math/precision';
 import { StepByStep } from '../components/StepByStep';
 import { useAppStore } from '../../store/useAppStore';
 import { useTranslation } from '../../core/i18n/translations';
+import { DailyChallengeCard } from '../components/DailyChallengeCard';
+import { BlitzGame } from '../components/BlitzGame';
+import { BossBattle } from '../components/BossBattle';
 import type { QuizDifficultyMode, QuizQuestion, QuizTrackSelector } from '../../types';
 
 export const QuizModule: React.FC = () => {
-  const { quizProgress, recordQuizAnswer, settings } = useAppStore();
+  const { quizProgress, recordQuizAnswer, settings, profile } = useAppStore();
   const t = useTranslation(settings.language || 'pt');
 
-  // Screen View: 'lobby' | 'playing' | 'game_over'
-  const [screen, setScreen] = useState<'lobby' | 'playing' | 'game_over'>('lobby');
+  // Screen View: 'lobby' | 'playing' | 'game_over' | 'blitz' | 'boss_rush'
+  const [screen, setScreen] = useState<'lobby' | 'playing' | 'game_over' | 'blitz' | 'boss_rush'>('lobby');
+
+  const blitzHighScore = profile?.stats?.blitzHighScore || 0;
+  const bossesDefeated = profile?.stats?.bossesDefeated || 0;
 
   // Settings & Modes
   const [selectedTrack, setSelectedTrack] = useState<QuizTrackSelector>('sobrevivencia');
@@ -330,6 +339,20 @@ export const QuizModule: React.FC = () => {
   }, [screen, isAnswered, countNumber, selectedTrack, handleConfirm, loadQuestion, handleAddDigit, handleAddDecimal, handleToggleNegative, handleBackspace]);
 
   // ==========================================
+  // SCREEN: BLITZ GAME (60 Segundos)
+  // ==========================================
+  if (screen === 'blitz') {
+    return <BlitzGame onExit={() => setScreen('lobby')} />;
+  }
+
+  // ==========================================
+  // SCREEN: BOSS BATTLE (Boss Rush)
+  // ==========================================
+  if (screen === 'boss_rush') {
+    return <BossBattle onExit={() => setScreen('lobby')} />;
+  }
+
+  // ==========================================
   // SCREEN 1: LOBBY / MENU (Estilo MatSpeed)
   // ==========================================
   if (screen === 'lobby') {
@@ -349,6 +372,83 @@ export const QuizModule: React.FC = () => {
           <p className="text-xs sm:text-sm font-semibold text-slate-400 mt-2">
             {t.matspeed_subtitle}
           </p>
+        </div>
+
+        {/* 1. Daily Challenge Card Prominently Embedded */}
+        <div className="w-full">
+          <DailyChallengeCard />
+        </div>
+
+        {/* 2. Special Game Modes Grid: Blitz & Boss Rush */}
+        <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          {/* Modo Blitz Card */}
+          <button
+            type="button"
+            onClick={() => setScreen('blitz')}
+            className="p-5 rounded-3xl bg-gradient-to-br from-amber-950/40 via-slate-900 to-slate-950 hover:from-amber-950/60 border border-amber-500/40 hover:border-amber-400 transition-all flex flex-col items-center text-center gap-2.5 group shadow-xl hover:shadow-amber-500/10 active:scale-[0.98] touch-target cursor-pointer relative overflow-hidden"
+          >
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center group-hover:scale-110 transition-transform shadow-md shadow-amber-500/20">
+              <Zap size={26} className="fill-amber-400" />
+            </div>
+            <div>
+              <div className="flex items-center justify-center gap-1.5">
+                <h3 className="text-lg font-black text-white">Modo Blitz</h3>
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  60s
+                </span>
+              </div>
+              <p className="text-xs font-medium text-slate-400 mt-0.5">
+                Agilidade mental contra o relógio (+2s acerto / -3s erro)
+              </p>
+            </div>
+            <div className="w-full flex items-center justify-between text-xs font-bold pt-2 border-t border-slate-800/80 px-1 text-slate-400">
+              <span className="flex items-center gap-1 text-orange-400">
+                <Flame size={14} className="fill-orange-400" /> Combo até 3x XP
+              </span>
+              <span className="font-mono text-amber-300">
+                Recorde: {blitzHighScore} pts
+              </span>
+            </div>
+          </button>
+
+          {/* Batalha de Chefe (Boss Rush) Card */}
+          <button
+            type="button"
+            onClick={() => setScreen('boss_rush')}
+            className="p-5 rounded-3xl bg-gradient-to-br from-purple-950/40 via-slate-900 to-slate-950 hover:from-purple-950/60 border border-purple-500/40 hover:border-purple-400 transition-all flex flex-col items-center text-center gap-2.5 group shadow-xl hover:shadow-purple-500/10 active:scale-[0.98] touch-target cursor-pointer relative overflow-hidden"
+          >
+            <div className="w-12 h-12 rounded-2xl bg-purple-500/20 text-purple-400 border border-purple-500/30 flex items-center justify-center group-hover:scale-110 transition-transform shadow-md shadow-purple-500/20">
+              <Swords size={26} />
+            </div>
+            <div>
+              <div className="flex items-center justify-center gap-1.5">
+                <h3 className="text-lg font-black text-white">Batalha de Chefe</h3>
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/30">
+                  Boss Rush
+                </span>
+              </div>
+              <p className="text-xs font-medium text-slate-400 mt-0.5">
+                Derrote Lord Mathgoth com acertos críticos em &lt;3s
+              </p>
+            </div>
+            <div className="w-full flex items-center justify-between text-xs font-bold pt-2 border-t border-slate-800/80 px-1 text-slate-400">
+              <span className="flex items-center gap-1 text-rose-400">
+                <Crown size={14} /> 100 HP · 3 Escudos
+              </span>
+              <span className="font-mono text-purple-300">
+                Derrotados: {bossesDefeated}
+              </span>
+            </div>
+          </button>
+        </div>
+
+        {/* Section Divider / MatSpeed header */}
+        <div className="w-full flex items-center gap-3 pt-2">
+          <div className="h-px flex-1 bg-slate-800" />
+          <span className="text-xs font-bold uppercase tracking-widest text-slate-500">
+            Trilhas de Prática
+          </span>
+          <div className="h-px flex-1 bg-slate-800" />
         </div>
 
         {/* Difficulty Selectors (Pills) */}

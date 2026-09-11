@@ -133,18 +133,65 @@ export interface QuizQuestion {
   timeLimitSeconds?: number;
 }
 
+export type AchievementCategory = 'habilidade' | 'consistencia' | 'mestria' | 'desafios';
+
+export interface AchievementDef {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  category: AchievementCategory;
+  condition: (profile: UserProfile) => boolean;
+  xpReward?: number;
+  titlePt?: string;
+  titleEn?: string;
+  descriptionPt?: string;
+  descriptionEn?: string;
+}
+
+export interface UserProfileStats {
+  totalCalculations: number;
+  totalBhaskara: number;
+  totalRegraDeTres: number;
+  totalQuizCorrect: number;
+  bestSurvivalRecord: number;
+  scratchpadUses?: number;
+  dailyChallengesCompleted?: number;
+  blitzHighScore?: number;
+  blitzMaxCombo?: number;
+  bossesDefeated?: number;
+  flawlessBossVictories?: number;
+  criticalHits?: number;
+}
+
+export interface DailyChallengeState {
+  lastCompletedDate: string | null;
+  history: Array<{
+    date: string;
+    completedAt: number;
+    score: number;
+  }>;
+}
+
+export interface BlitzStats {
+  highScore: number;
+  maxCombo: number;
+  totalGames: number;
+  totalCorrect: number;
+}
+
+export interface BossRushStats {
+  bossesDefeated: number;
+  bestTimeSeconds: number;
+  flawlessVictories: number;
+}
+
 export interface UserProfile {
   totalXp: number;
   streakDays: number;
   lastActiveDate: string;
   unlockedAchievements: string[];
-  stats: {
-    totalCalculations: number;
-    totalBhaskara: number;
-    totalRegraDeTres: number;
-    totalQuizCorrect: number;
-    bestSurvivalRecord: number;
-  };
+  stats: UserProfileStats;
 }
 
 export interface UpdaterStatus {

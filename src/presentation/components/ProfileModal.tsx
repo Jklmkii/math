@@ -1,16 +1,28 @@
-import React from 'react';
-import { X, Award, Flame, Zap, Shield, CheckCircle2, Trophy } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Award, Flame, Zap, Shield, CheckCircle2, Trophy, Lock } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { calculateLevelInfo, ACHIEVEMENTS } from '../../core/gamification/leveling';
 import { useTranslation } from '../../core/i18n/translations';
+import type { AchievementCategory } from '../../types';
 
 interface ProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+type FilterCategory = 'todas' | AchievementCategory;
+
+const FILTER_TABS: Array<{ key: FilterCategory; labelPt: string; labelEn: string }> = [
+  { key: 'todas', labelPt: 'Todas', labelEn: 'All' },
+  { key: 'habilidade', labelPt: 'Habilidade', labelEn: 'Skill' },
+  { key: 'consistencia', labelPt: 'Consistência', labelEn: 'Consistency' },
+  { key: 'mestria', labelPt: 'Mestria', labelEn: 'Mastery' },
+  { key: 'desafios', labelPt: 'Desafios', labelEn: 'Challenges' },
+];
+
 export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
   const { profile, settings } = useAppStore();
+  const [selectedCategory, setSelectedCategory] = useState<FilterCategory>('todas');
   const t = useTranslation(settings.language || 'pt');
 
   if (!isOpen) return null;
@@ -149,45 +161,135 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
             </div>
           </div>
 
-          {/* Achievements List */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                <Award size={16} className="text-amber-500" />
-                {t.achievements_title} ({unlockedSet.size}/{ACHIEVEMENTS.length})
-              </h4>
+          {/* Achievements Showcase Section */}
+          <div className="space-y-4 pt-1">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
+                  <Award size={16} className="text-amber-500" />
+                  {t.achievements_title}
+                </h4>
+                <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
+                  {unlockedSet.size}/{ACHIEVEMENTS.length} Conquistas Desbloqueadas
+                </span>
+              </div>
+
+              {/* Graphic Progress Bar */}
+              <div className="w-full h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden border border-slate-200/70 dark:border-slate-800 p-0.5">
+                <div
+                  className="h-full bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 rounded-full transition-all duration-500 shadow-xs"
+                  style={{
+                    width: `${Math.min(100, Math.round((unlockedSet.size / ACHIEVEMENTS.length) * 100))}%`,
+                  }}
+                />
+              </div>
             </div>
 
+            {/* Filter Tabs */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+              {FILTER_TABS.map((tab) => {
+                const isSelected = selectedCategory === tab.key;
+                const tabLabel = currentLang === 'en' ? tab.labelEn : tab.labelPt;
+                const categoryTotal =
+                  tab.key === 'todas'
+                    ? ACHIEVEMENTS.length
+                    : ACHIEVEMENTS.filter((a) => a.category === tab.key).length;
+                const categoryUnlocked =
+                  tab.key === 'todas'
+                    ? unlockedSet.size
+                    : ACHIEVEMENTS.filter((a) => a.category === tab.key && unlockedSet.has(a.id)).length;
+
+                return (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => setSelectedCategory(tab.key)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer touch-target ${
+                      isSelected
+                        ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
+                        : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700/80'
+                    }`}
+                  >
+                    <span>{tabLabel}</span>
+                    <span
+                      className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                        isSelected
+                          ? 'bg-white/20 text-white'
+                          : 'bg-slate-200/80 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
+                      }`}
+                    >
+                      {categoryUnlocked}/{categoryTotal}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Badges Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {ACHIEVEMENTS.map((ach) => {
+              {ACHIEVEMENTS.filter(
+                (ach) => selectedCategory === 'todas' || ach.category === selectedCategory
+              ).map((ach) => {
                 const isUnlocked = unlockedSet.has(ach.id);
-                const title = currentLang === 'en' ? ach.titleEn : ach.titlePt;
-                const desc = currentLang === 'en' ? ach.descriptionEn : ach.descriptionPt;
+                const title = currentLang === 'en' ? ach.titleEn || ach.title : ach.titlePt || ach.title;
+                const desc =
+                  currentLang === 'en'
+                    ? ach.descriptionEn || ach.description
+                    : ach.descriptionPt || ach.description;
 
                 return (
                   <div
                     key={ach.id}
-                    className={`p-3 rounded-2xl border transition-all flex items-start gap-3 ${
+                    className={`p-3.5 rounded-2xl border transition-all flex items-start gap-3 ${
                       isUnlocked
-                        ? 'bg-amber-50/40 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/50 shadow-xs'
-                        : 'bg-slate-50/50 dark:bg-slate-800/30 border-slate-100 dark:border-slate-800 opacity-60'
+                        ? 'bg-gradient-to-br from-amber-500/10 via-amber-400/5 to-white dark:to-slate-900 border-2 border-amber-400/80 dark:border-amber-500/60 shadow-md shadow-amber-500/10'
+                        : 'bg-slate-100/40 dark:bg-slate-800/20 border-slate-200 dark:border-slate-800 opacity-50 grayscale hover:grayscale-0 hover:opacity-85'
                     }`}
                   >
-                    <div className="text-2xl shrink-0 select-none">
-                      {isUnlocked ? ach.icon : '🔒'}
+                    {/* Badge Icon / Lock */}
+                    <div
+                      className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 select-none shadow-xs ${
+                        isUnlocked
+                          ? 'bg-gradient-to-tr from-amber-400 to-amber-500 text-white text-2xl shadow-amber-500/20'
+                          : 'bg-slate-200 dark:bg-slate-800 text-slate-400 text-lg'
+                      }`}
+                    >
+                      {isUnlocked ? ach.icon : <Lock size={18} />}
                     </div>
+
+                    {/* Badge Details */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-1">
-                        <span className={`text-xs font-bold truncate ${isUnlocked ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>
+                      <div className="flex items-center justify-between gap-1 mb-0.5">
+                        <span
+                          className={`text-xs font-black truncate ${
+                            isUnlocked
+                              ? 'text-slate-900 dark:text-white'
+                              : 'text-slate-500 dark:text-slate-400'
+                          }`}
+                        >
                           {title}
                         </span>
-                        <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 shrink-0">
-                          +{ach.xpReward} XP
+                        <span
+                          className={`text-[10px] font-black shrink-0 ${
+                            isUnlocked
+                              ? 'text-amber-600 dark:text-amber-400'
+                              : 'text-slate-400 dark:text-slate-500'
+                          }`}
+                        >
+                          +{ach.xpReward || 50} XP
                         </span>
                       </div>
+
                       <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 mt-0.5 leading-relaxed">
                         {desc}
                       </p>
+
+                      {isUnlocked && (
+                        <div className="mt-1.5 flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400">
+                          <CheckCircle2 size={12} />
+                          <span>Desbloqueada</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 );

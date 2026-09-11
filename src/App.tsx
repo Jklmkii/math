@@ -8,6 +8,8 @@ import { QuizModule } from './presentation/modules/QuizModule';
 import { SettingsModal } from './presentation/components/SettingsModal';
 import { OnboardingModal } from './presentation/components/OnboardingModal';
 import { UpdateBanner } from './presentation/components/UpdateBanner';
+import { AchievementToast } from './presentation/components/AchievementToast';
+import { Scratchpad } from './presentation/components/Scratchpad';
 
 export function App() {
   const { activeTab, settings } = useAppStore();
@@ -42,6 +44,12 @@ export function App() {
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 selection:bg-indigo-500 selection:text-white transition-colors duration-200">
       {/* Updater Toast Banner */}
       <UpdateBanner />
+
+      {/* Achievement Toast with Confetti */}
+      <AchievementToast />
+
+      {/* Floating Scratchpad Board */}
+      <Scratchpad />
 
       {/* Navigation Bar */}
       <Navbar onOpenSettings={() => setIsSettingsOpen(true)} />

@@ -9,10 +9,13 @@ import {
   Moon,
   Laptop,
   Trophy,
+  Calendar,
+  CheckCircle2,
 } from 'lucide-react';
 import { useAppStore, type ActiveTab } from '../../store/useAppStore';
 import { useTranslation } from '../../core/i18n/translations';
 import { calculateLevelInfo } from '../../core/gamification/leveling';
+import { getTodayDateString } from '../../core/daily/dailyEngine';
 import { ProfileModal } from './ProfileModal';
 
 interface NavbarProps {
@@ -20,7 +23,16 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings }) => {
-  const { activeTab, setActiveTab, settings, updateSettings, history, profile, checkAndUpdateStreak } = useAppStore();
+  const {
+    activeTab,
+    setActiveTab,
+    settings,
+    updateSettings,
+    history,
+    profile,
+    checkAndUpdateStreak,
+    dailyChallenge,
+  } = useAppStore();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const t = useTranslation(settings.language || 'pt');
 
@@ -29,6 +41,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings }) => {
   }, [checkAndUpdateStreak]);
 
   const levelInfo = calculateLevelInfo(profile?.totalXp || 0, settings.language || 'pt');
+  const todayDateStr = getTodayDateString();
+  const isDailyCompleted = dailyChallenge?.lastCompletedDate === todayDateStr;
 
   const tabs: { id: ActiveTab; label: string; icon: React.ReactNode; badge?: number }[] = [
     { id: 'bhaskara', label: t.nav_bhaskara, icon: <Sigma size={20} /> },
@@ -98,6 +112,37 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings }) => {
 
           {/* Quick Actions (Profile, Theme & Settings) */}
           <div className="flex items-center gap-2">
+            {/* Daily Challenge Status Badge */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('quiz')}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-all touch-target shadow-xs ${
+                isDailyCompleted
+                  ? 'border-emerald-300 dark:border-emerald-800/60 bg-emerald-50/80 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100/70'
+                  : 'border-amber-300 dark:border-amber-800/60 bg-amber-50/80 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 hover:bg-amber-100/70'
+              }`}
+              title={
+                isDailyCompleted
+                  ? 'Desafio Diário Concluído! (+150 XP)'
+                  : 'Desafio Diário Pendente! Clique para jogar (+150 XP)'
+              }
+              aria-label="Desafio Diário"
+            >
+              {isDailyCompleted ? (
+                <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />
+              ) : (
+                <Calendar size={14} className="text-amber-500 shrink-0 animate-bounce" />
+              )}
+              <span className="hidden sm:inline">
+                {isDailyCompleted ? 'Diário Concluído' : 'Diário Pendente'}
+              </span>
+              {!isDailyCompleted && (
+                <span className="sm:hidden text-[11px] font-extrabold text-amber-500">
+                  !
+                </span>
+              )}
+            </button>
+
             {/* Profile Level Chip */}
             <button
               type="button"
