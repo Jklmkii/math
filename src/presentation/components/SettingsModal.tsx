@@ -19,6 +19,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const showTemporaryStatus = (msg: string) => {
+    setImportStatus(msg);
+    setTimeout(() => setImportStatus(null), 3000);
+  };
+
   useEffect(() => {
     if (!window.electronAPI?.onUpdateStatus) return;
     const cleanup = window.electronAPI.onUpdateStatus((status) => {
@@ -81,8 +86,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
         { name: 'Arquivos JSON', extensions: ['json'] },
       ]);
       if (res.success) {
-        setImportStatus(t.backup_saved_success);
-        setTimeout(() => setImportStatus(null), 3000);
+        showTemporaryStatus(t.backup_saved_success);
       } else if (res.error) {
         setImportStatus(`${t.export_error} ${res.error}`);
       }
@@ -109,8 +113,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
         { name: 'Arquivos CSV', extensions: ['csv'] },
       ]);
       if (res.success) {
-        setImportStatus(t.backup_saved_success);
-        setTimeout(() => setImportStatus(null), 3000);
+        showTemporaryStatus(t.backup_saved_success);
       } else if (res.error) {
         setImportStatus(`${t.export_error} ${res.error}`);
       }
@@ -137,8 +140,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
       if (res.canceled) return;
       if (res.success && res.data) {
         importHistory(res.data);
-        setImportStatus(t.backup_imported_success);
-        setTimeout(() => setImportStatus(null), 3000);
+        showTemporaryStatus(t.backup_imported_success);
       } else {
         setImportStatus(res.error || t.backup_invalid);
       }
@@ -160,8 +162,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
         if (validation.valid && validation.data) {
           importHistory(validation.data);
-          setImportStatus(t.backup_imported_success);
-          setTimeout(() => setImportStatus(null), 3000);
+          showTemporaryStatus(t.backup_imported_success);
         } else {
           setImportStatus(validation.error || t.backup_invalid);
         }
