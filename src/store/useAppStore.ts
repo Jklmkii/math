@@ -11,7 +11,13 @@ import type {
   DailyChallengeState,
 } from '../types';
 import { validateHistorySchema } from '../core/storage/historyValidator';
-import { calculateStreakUpdate, checkNewAchievements, ACHIEVEMENTS } from '../core/gamification/leveling';
+import {
+  calculateStreakUpdate,
+  checkStreakMaintenance,
+  getDeviceLocalDateString,
+  checkNewAchievements,
+  ACHIEVEMENTS,
+} from '../core/gamification/leveling';
 
 export type ActiveTab = 'bhaskara' | 'regra_simples' | 'regra_composta' | 'quiz' | 'history' | 'settings';
 
@@ -77,7 +83,7 @@ interface AppState {
 const DEFAULT_PROFILE: UserProfile = {
   totalXp: 0,
   streakDays: 1,
-  lastActiveDate: new Date().toISOString().split('T')[0],
+  lastActiveDate: getDeviceLocalDateString(),
   unlockedAchievements: [],
   stats: {
     totalCalculations: 0,
@@ -329,27 +335,16 @@ export const useAppStore = create<AppState>()(
       checkAndUpdateStreak: () => {
         set((state) => {
           const prevProf = state.profile || DEFAULT_PROFILE;
-          const update = calculateStreakUpdate(prevProf.lastActiveDate, prevProf.streakDays);
-          const candidate: UserProfile = {
-            ...prevProf,
-            streakDays: update.newStreak,
-            lastActiveDate: update.newLastActiveDate,
-          };
-          const newlyUnlockedIds = checkNewAchievements(candidate);
-          const newlyUnlockedDefs = newlyUnlockedIds
-            .map((id) => ACHIEVEMENTS.find((a) => a.id === id))
-            .filter((a): a is AchievementDef => Boolean(a));
-          let bonusXp = 0;
-          for (const def of newlyUnlockedDefs) {
-            bonusXp += def.xpReward || 0;
+          const today = getDeviceLocalDateString();
+          const maintenance = checkStreakMaintenance(prevProf.lastActiveDate, prevProf.streakDays, today);
+          if (maintenance.streakDays === prevProf.streakDays) {
+            return {};
           }
           return {
             profile: {
-              ...candidate,
-              totalXp: (candidate.totalXp || 0) + bonusXp,
-              unlockedAchievements: [...new Set([...(prevProf.unlockedAchievements || []), ...newlyUnlockedIds])],
+              ...prevProf,
+              streakDays: maintenance.streakDays,
             },
-            toastQueue: newlyUnlockedDefs.length > 0 ? [...state.toastQueue, ...newlyUnlockedDefs] : state.toastQueue,
           };
         });
       },

@@ -304,55 +304,103 @@ export function calculateLevelInfo(totalXp: number, lang: AppLanguage = 'pt'): L
 }
 
 /**
- * Calcula a atualização de streak diário dado a última data ativa (YYYY-MM-DD) e a data atual.
+ * Retorna a data local do dispositivo no formato YYYY-MM-DD.
+ * Sempre baseada no fuso horário do aparelho do usuário (não UTC).
+ */
+export function getDeviceLocalDateString(date: Date = new Date()): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Calcula a atualização de streak diário dado a última data ativa (YYYY-MM-DD) e a data atual do dispositivo.
+ * Chamada quando o usuário realiza uma atividade (desafio diário, quiz, etc).
  */
 export function calculateStreakUpdate(
   lastActiveDate: string | null | undefined,
   currentStreak: number = 0,
-  todayIso: string = new Date().toISOString().split('T')[0]
+  todayIso: string = getDeviceLocalDateString()
 ): { newStreak: number; newLastActiveDate: string; isStreakIncremented: boolean } {
+  const safeToday = (todayIso && todayIso.trim().length >= 8) ? todayIso.trim() : getDeviceLocalDateString();
+
   if (!lastActiveDate) {
     return {
       newStreak: 1,
-      newLastActiveDate: todayIso,
+      newLastActiveDate: safeToday,
       isStreakIncremented: true,
     };
   }
 
-  if (lastActiveDate === todayIso) {
+  if (lastActiveDate === safeToday) {
     return {
       newStreak: Math.max(1, currentStreak),
-      newLastActiveDate: todayIso,
+      newLastActiveDate: safeToday,
       isStreakIncremented: false,
     };
   }
 
-  const lastDate = new Date(lastActiveDate + 'T00:00:00Z');
-  const currentDate = new Date(todayIso + 'T00:00:00Z');
+  // Parse no fuso horário local do dispositivo (sem forçar Z/UTC)
+  const lastDate = new Date(lastActiveDate + 'T00:00:00');
+  const currentDate = new Date(safeToday + 'T00:00:00');
   const diffTime = currentDate.getTime() - lastDate.getTime();
   const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
   if (diffDays === 1) {
-    // Dia consecutivo perfeito
+    // Dia consecutivo perfeito: usuário realizou atividade no dia seguinte
     return {
       newStreak: (currentStreak || 0) + 1,
-      newLastActiveDate: todayIso,
+      newLastActiveDate: safeToday,
       isStreakIncremented: true,
     };
   } else if (diffDays > 1) {
-    // Perdeu o streak, recomeça em 1
+    // Perdeu o streak (mais de 1 dia sem atividade), recomeça em 1 com a nova atividade
     return {
       newStreak: 1,
-      newLastActiveDate: todayIso,
+      newLastActiveDate: safeToday,
       isStreakIncremented: false,
     };
   }
 
   return {
     newStreak: Math.max(1, currentStreak),
-    newLastActiveDate: todayIso,
+    newLastActiveDate: safeToday,
     isStreakIncremented: false,
   };
+}
+
+/**
+ * Verifica a manutenção do streak ao abrir ou recarregar o aplicativo.
+ * NUNCA incrementa a ofensiva por apenas abrir ou dar refresh na tela.
+ * Apenas verifica se a ofensiva expirou por inatividade (mais de 1 dia sem atividade).
+ */
+export function checkStreakMaintenance(
+  lastActiveDate: string | null | undefined,
+  currentStreak: number = 0,
+  todayIso: string = getDeviceLocalDateString()
+): { streakDays: number; isExpired: boolean } {
+  if (!lastActiveDate || currentStreak <= 0) {
+    return { streakDays: currentStreak || 0, isExpired: false };
+  }
+
+  const safeToday = (todayIso && todayIso.trim().length >= 8) ? todayIso.trim() : getDeviceLocalDateString();
+  if (lastActiveDate === safeToday) {
+    return { streakDays: currentStreak, isExpired: false };
+  }
+
+  const lastDate = new Date(lastActiveDate + 'T00:00:00');
+  const currentDate = new Date(safeToday + 'T00:00:00');
+  const diffTime = currentDate.getTime() - lastDate.getTime();
+  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays > 1) {
+    // Passou mais de 1 dia inteiro sem atividade: streak zerado
+    return { streakDays: 0, isExpired: true };
+  }
+
+  // diffDays === 1 (ontem foi o último dia ativo): streak continua preservado aguardando hoje
+  return { streakDays: currentStreak, isExpired: false };
 }
 
 /**

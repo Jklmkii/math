@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest';
 import {
   calculateLevelInfo,
   calculateStreakUpdate,
+  checkStreakMaintenance,
+  getDeviceLocalDateString,
   checkNewAchievements,
   getXpRequiredForLevel,
   getTitleForLevel,
@@ -82,6 +84,37 @@ describe('Gamificação & Nível de Perfil', () => {
       const res = calculateStreakUpdate('2026-09-07', 5, '2026-09-10');
       expect(res.newStreak).toBe(1);
       expect(res.isStreakIncremented).toBe(false);
+    });
+
+    it('formata a data local do dispositivo corretamente no formato YYYY-MM-DD', () => {
+      const customDate = new Date(2026, 8, 11, 23, 30); // 11 de Setembro de 2026, 23:30 local
+      expect(getDeviceLocalDateString(customDate)).toBe('2026-09-11');
+    });
+
+    describe('Manutenção de Streak ao Abrir/Atualizar App (checkStreakMaintenance)', () => {
+      it('não altera o streak se recarregar a tela no mesmo dia', () => {
+        const res = checkStreakMaintenance('2026-09-11', 4, '2026-09-11');
+        expect(res.streakDays).toBe(4);
+        expect(res.isExpired).toBe(false);
+      });
+
+      it('preserva o streak sem incrementar ao recarregar a tela no dia seguinte (aguardando atividade)', () => {
+        const res = checkStreakMaintenance('2026-09-10', 4, '2026-09-11');
+        expect(res.streakDays).toBe(4); // Permanece 4, NÃO vira 5 só por recarregar
+        expect(res.isExpired).toBe(false);
+      });
+
+      it('zera o streak se passar 2 ou mais dias sem atividade', () => {
+        const res = checkStreakMaintenance('2026-09-08', 5, '2026-09-11');
+        expect(res.streakDays).toBe(0);
+        expect(res.isExpired).toBe(true);
+      });
+
+      it('lida graciosamente com perfil sem lastActiveDate', () => {
+        const res = checkStreakMaintenance(null, 0, '2026-09-11');
+        expect(res.streakDays).toBe(0);
+        expect(res.isExpired).toBe(false);
+      });
     });
   });
 
