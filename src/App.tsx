@@ -81,7 +81,7 @@ export function App() {
       <Navbar onOpenSettings={() => setIsSettingsOpen(true)} />
 
       {/* Main Content Area */}
-      <main className="flex-1 w-full max-w-5xl mx-auto px-4 pt-6 md:pt-8">
+      <main className="flex-1 w-full max-w-5xl mx-auto px-4 pt-6 md:pt-8 pb-24 md:pb-12">
         <Suspense fallback={<ModuleSkeleton />}>
           {activeTab === 'bhaskara' && <BhaskaraModule />}
           {(activeTab === 'regra_simples' || activeTab === 'regra_composta') && (

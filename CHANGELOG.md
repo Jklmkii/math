@@ -4,6 +4,22 @@ Todas as alterações notáveis deste projeto são documentadas neste arquivo.
 
 ---
 
+## [1.2.3] — HUD Mobile Flutuante, Botão Satélite de Rascunho & Pipeline Unificada do APK (2026-09-11)
+
+### 📱 Experiência Mobile & HUD Flutuante
+- **Dock de Navegação em Cápsula Flutuante:** Nova barra de navegação móvel centralizada em estilo cápsula (dock) com visual translúcido *glassmorphism* (`backdrop-blur-xl`), destaque na aba ativa com fundo pílula e rótulo, e microinterações táteis otimizadas.
+- **Botão Satélite Circular da Lousa:** O botão de acionamento da Lousa de Rascunho (Scratchpad) foi transformado em um satélite circular perfeitamente alinhado ao dock móvel, com indicador pulsante de traços salvos e rotação suave do ícone do lápis.
+- **Remoção de Sobreposição no Mobile:** O botão flutuante antigo do desktop foi ocultado no mobile (`hidden md:flex`), eliminando interferências sobre os campos de entrada dos módulos.
+- **Cabeçalho Compacto:** Título e subtítulo do app otimizados para evitar quebra de linha em telas pequenas (`hidden sm:block`), garantindo que os botões de ação rápida permaneçam visíveis e confortáveis.
+- **Espaçamento de Rolagem Seguro (`pb-24`):** Adicionado padding inferior ao contêiner principal para que nenhum botão ou resultado fique oculto atrás do dock móvel.
+
+### 🤖 Pipeline Unificada de CI/CD (GitHub Actions)
+- **Correção de Condição de Corrida no Release:** Unificação dos jobs de release em `.github/workflows/release.yml` com dependência sequencial (`release-android` aguardando `needs: release-windows`).
+- **Garantia de Presença do APK:** O aplicativo nativo Android (`Quantora.apk`) agora é anexado de forma perene e garantida a todos os releases do GitHub via `gh release upload`, eliminando falhas silenciosas causadas por execuções paralelas assíncronas.
+- **Disparo Manual Opcional:** O workflow avulso `build-apk.yml` foi reconfigurado para `workflow_dispatch`, evitando duplicações concorrentes.
+
+---
+
 ## [1.2.2] — Otimização de Performance, Code-Splitting & Seletores Reativos (2026-09-11)
 
 ### ⚡ Performance, Bundle Slimming & Code-Splitting

@@ -12,6 +12,7 @@ import {
   Calendar,
   CheckCircle2,
   Atom,
+  Pencil,
 } from 'lucide-react';
 import { useAppStore, type ActiveTab } from '../../store/useAppStore';
 import { useShallow } from 'zustand/react/shallow';
@@ -35,6 +36,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings }) => {
     profile,
     checkAndUpdateStreak,
     isDailyCompleted,
+    isScratchpadOpen,
+    toggleScratchpad,
+    hasScratchpadStrokes,
   } = useAppStore(
     useShallow((s) => ({
       activeTab: s.activeTab,
@@ -45,6 +49,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings }) => {
       profile: s.profile,
       checkAndUpdateStreak: s.checkAndUpdateStreak,
       isDailyCompleted: s.dailyChallenge?.lastCompletedDate === getTodayDateString(),
+      isScratchpadOpen: s.isScratchpadOpen,
+      toggleScratchpad: s.toggleScratchpad,
+      hasScratchpadStrokes: s.hasScratchpadStrokes,
     }))
   );
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -82,8 +89,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings }) => {
       <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 dark:border-slate-800/80 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md pt-safe">
         <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
           {/* Brand */}
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-slate-900/90 dark:bg-slate-900 border border-indigo-500/30 overflow-hidden flex items-center justify-center shadow-md shadow-indigo-500/20 shrink-0">
+          <div className="flex items-center gap-2.5 min-w-0 shrink-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-900/90 dark:bg-slate-900 border border-indigo-500/30 overflow-hidden flex items-center justify-center shadow-md shadow-indigo-500/20 shrink-0">
               {logoError ? (
                 <span className="text-base font-black bg-gradient-to-tr from-cyan-400 via-indigo-400 to-fuchsia-400 bg-clip-text text-transparent select-none">
                   Q
@@ -98,11 +105,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings }) => {
                 />
               )}
             </div>
-            <div>
-              <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white leading-none">
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-lg font-bold tracking-tight text-slate-900 dark:text-white leading-none truncate">
                 Quantora
               </h1>
-              <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+              <p className="hidden sm:block text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate">
                 {t.app_subtitle}
               </p>
             </div>
@@ -137,12 +144,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings }) => {
           </nav>
 
           {/* Quick Actions (Profile, Theme & Settings) */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {/* Daily Challenge Status Badge */}
             <button
               type="button"
               onClick={() => setActiveTab('quiz')}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-all touch-target shadow-xs ${
+              className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-all touch-target shadow-xs ${
                 isDailyCompleted
                   ? 'border-emerald-300 dark:border-emerald-800/60 bg-emerald-50/80 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100/70'
                   : 'border-amber-300 dark:border-amber-800/60 bg-amber-50/80 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 hover:bg-amber-100/70'
@@ -173,11 +180,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings }) => {
             <button
               type="button"
               onClick={() => setIsProfileOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-200/80 dark:border-amber-800/60 bg-amber-50/60 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 font-bold text-xs hover:bg-amber-100/70 transition-all touch-target shadow-xs"
+              className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border border-amber-200/80 dark:border-amber-800/60 bg-amber-50/60 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 font-bold text-xs hover:bg-amber-100/70 transition-all touch-target shadow-xs"
               title={`${levelInfo.title} • ${profile?.totalXp || 0} XP (${t.profile_title})`}
               aria-label={t.profile_title}
             >
-              <Trophy size={15} className="text-amber-500" />
+              <Trophy size={14} className="text-amber-500 shrink-0" />
               <span>{t.level_prefix} {levelInfo.level}</span>
               {(profile?.streakDays || 1) > 1 && (
                 <span className="flex items-center text-orange-500 font-extrabold text-[11px] ml-0.5">
@@ -190,24 +197,24 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings }) => {
             <button
               type="button"
               onClick={cycleTheme}
-              className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100/70 dark:bg-slate-900/70 text-slate-700 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors touch-target flex items-center justify-center"
+              className="p-2 sm:p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100/70 dark:bg-slate-900/70 text-slate-700 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors touch-target flex items-center justify-center"
               title={`${t.theme_prefix}: ${settings.theme} (${t.theme_cycle_tooltip})`}
               aria-label={t.theme}
             >
-              {settings.theme === 'light' && <Sun size={18} />}
-              {settings.theme === 'dark' && <Moon size={18} />}
-              {settings.theme === 'system' && <Laptop size={18} />}
+              {settings.theme === 'light' && <Sun size={17} />}
+              {settings.theme === 'dark' && <Moon size={17} />}
+              {settings.theme === 'system' && <Laptop size={17} />}
             </button>
 
             {/* Settings Modal Button */}
             <button
               type="button"
               onClick={onOpenSettings}
-              className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100/70 dark:bg-slate-900/70 text-slate-700 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors touch-target flex items-center justify-center"
+              className="p-2 sm:p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100/70 dark:bg-slate-900/70 text-slate-700 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors touch-target flex items-center justify-center"
               title={t.settings_title}
               aria-label={t.settings_title}
             >
-              <Settings size={18} />
+              <Settings size={17} />
             </button>
           </div>
         </div>
@@ -216,9 +223,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings }) => {
       {/* Profile Modal */}
       <ProfileModal isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} />
 
-      {/* Mobile Bottom Navigation Bar */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/90 dark:bg-slate-950/90 border-t border-slate-200/80 dark:border-slate-800/80 backdrop-blur-lg pb-safe">
-        <nav className="flex items-center justify-around px-2 py-1">
+      {/* Mobile Floating HUD Navigation Dock */}
+      <div className="md:hidden fixed bottom-4 inset-x-0 z-40 flex items-center justify-center gap-2.5 px-3 pb-safe pointer-events-none select-none">
+        {/* Main Floating Pill Dock */}
+        <nav
+          className="pointer-events-auto flex items-center gap-1 p-1.5 rounded-full bg-slate-900/90 dark:bg-slate-900/95 border border-white/15 dark:border-slate-800/90 backdrop-blur-xl shadow-2xl shadow-black/40"
+          aria-label="Navegação móvel"
+        >
           {tabs.map((tab) => {
             const isActive =
               activeTab === tab.id ||
@@ -227,25 +238,51 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings }) => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex flex-col items-center justify-center py-2 px-3 rounded-xl touch-target transition-colors relative ${
+                className={`relative flex items-center justify-center transition-all duration-200 touch-target ${
                   isActive
-                    ? 'text-indigo-600 dark:text-indigo-400 font-bold'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                    ? 'px-3.5 py-2 rounded-full bg-indigo-600/30 text-indigo-300 border border-indigo-500/40 shadow-inner'
+                    : 'p-2.5 rounded-full text-slate-400 hover:text-white active:scale-95'
                 }`}
+                title={tab.label}
+                aria-label={tab.label}
               >
-                <div className="relative">
-                  {tab.icon}
+                <div className="relative flex items-center justify-center">
+                  <span className={isActive ? 'text-indigo-300' : 'text-slate-400'}>
+                    {tab.icon}
+                  </span>
                   {tab.badge !== undefined && (
-                    <span className="absolute -top-1 -right-2 px-1 text-[9px] rounded-full bg-indigo-600 text-white font-bold leading-tight">
+                    <span className="absolute -top-1 -right-2 px-1 text-[9px] rounded-full bg-indigo-500 text-white font-bold leading-tight shadow-xs">
                       {tab.badge}
                     </span>
                   )}
                 </div>
-                <span className="text-[11px] mt-1">{tab.label}</span>
+                {isActive && (
+                  <span className="ml-1.5 text-xs font-semibold text-indigo-200 whitespace-nowrap">
+                    {tab.label}
+                  </span>
+                )}
               </button>
             );
           })}
         </nav>
+
+        {/* Satellite Floating Action Button (Scratchpad) */}
+        <button
+          type="button"
+          onClick={toggleScratchpad}
+          className={`pointer-events-auto relative w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-xl shadow-2xl transition-all duration-200 touch-target shrink-0 ${
+            isScratchpadOpen
+              ? 'bg-amber-500 text-slate-950 border border-amber-300 shadow-amber-500/30 scale-105'
+              : 'bg-slate-900/90 dark:bg-slate-900/95 border border-white/15 dark:border-slate-800/90 text-amber-400 hover:scale-105 active:scale-95'
+          }`}
+          title="Lousa de Rascunho"
+          aria-label="Lousa de Rascunho"
+        >
+          <Pencil size={19} className={isScratchpadOpen ? 'rotate-12' : ''} />
+          {hasScratchpadStrokes && !isScratchpadOpen && (
+            <span className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+          )}
+        </button>
       </div>
     </>
   );

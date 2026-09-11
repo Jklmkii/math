@@ -36,7 +36,9 @@ interface AppState {
 
   // Scratchpad
   isScratchpadOpen: boolean;
+  hasScratchpadStrokes: boolean;
   toggleScratchpad: () => void;
+  setHasScratchpadStrokes: (has: boolean) => void;
   incrementScratchpadUses: () => void;
 
   // Daily Challenge
@@ -159,8 +161,12 @@ export const useAppStore = create<AppState>()(
       },
 
       isScratchpadOpen: false,
+      hasScratchpadStrokes: false,
       toggleScratchpad: () => {
         set((state) => ({ isScratchpadOpen: !state.isScratchpadOpen }));
+      },
+      setHasScratchpadStrokes: (has) => {
+        set({ hasScratchpadStrokes: has });
       },
       incrementScratchpadUses: () => {
         set((state) => {

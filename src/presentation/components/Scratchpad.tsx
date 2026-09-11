@@ -93,6 +93,11 @@ export const Scratchpad: React.FC<ScratchpadProps> = ({
     return () => unsub();
   }, [isOpen]);
 
+  // Sync active strokes presence to global store for satellite button indicator
+  useEffect(() => {
+    useAppStore.getState().setHasScratchpadStrokes(strokesCount > 0);
+  }, [strokesCount]);
+
   // Redraw all strokes from memory onto canvas
   const redrawAll = useCallback(() => {
     const canvas = canvasRef.current;
@@ -411,7 +416,7 @@ export const Scratchpad: React.FC<ScratchpadProps> = ({
         onClick={handleToggle}
         aria-label={isOpen ? 'Minimizar Lousa de Rascunho' : 'Abrir Lousa de Rascunho'}
         title="Lousa de Rascunho (abrir / minimizar)"
-        className={`fixed bottom-20 right-4 md:bottom-6 md:right-6 z-40 flex items-center justify-center p-3.5 md:p-4 rounded-full shadow-2xl transition-all duration-200 group focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 ${
+        className={`fixed bottom-6 right-6 z-40 hidden md:flex items-center justify-center p-3.5 md:p-4 rounded-full shadow-2xl transition-all duration-200 group focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 ${
           isOpen
             ? 'bg-slate-800 text-amber-400 hover:bg-slate-700 ring-2 ring-amber-400/60 shadow-amber-500/10'
             : 'bg-gradient-to-tr from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 hover:scale-105 hover:shadow-amber-500/25 active:scale-95'

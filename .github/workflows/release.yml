@@ -14,8 +14,12 @@ permissions:
   contents: write
 
 jobs:
-  release:
+  release-windows:
     runs-on: windows-latest
+    outputs:
+      tag: ${{ steps.check_release.outputs.tag }}
+      version: ${{ steps.check_release.outputs.version }}
+      should_release: ${{ steps.check_release.outputs.should_release }}
 
     steps:
       - name: Checkout repository
@@ -66,3 +70,68 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/publish-release.cjs
+
+  release-android:
+    needs: release-windows
+    if: needs.release-windows.outputs.should_release != 'false'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept Android licenses and install platform 36
+        run: |
+          yes | sdkmanager --licenses || true
+          sdkmanager "platforms;android-36" || true
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build web assets and sync Capacitor
+        run: npm run cap:sync
+
+      - name: Build Android APK with Gradle
+        run: |
+          cd android
+          chmod +x ./gradlew
+          ./gradlew assembleRelease
+
+      - name: Prepare APK outputs
+        run: |
+          mkdir -p release
+          cp android/app/build/outputs/apk/release/app-release.apk release/Quantora.apk
+          echo "APK generated at release/Quantora.apk"
+
+      - name: Upload APK as Workflow Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Quantora-Android-APK
+          path: release/Quantora.apk
+          retention-days: 30
+
+      - name: Upload APK to GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ needs.release-windows.outputs.tag }}"
+          if [ -z "$TAG" ]; then
+            TAG="v$(node -p "require('./package.json').version")"
+          fi
+          echo "Uploading Quantora.apk to release $TAG..."
+          gh release upload "$TAG" release/Quantora.apk --clobber

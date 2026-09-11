@@ -65,6 +65,36 @@ Este documento registra a evolução do **Quantora**, detalhando as versões pub
 
 ---
 
+
+
+### 7. 🐛 Ausência do APK Android no Release do GitHub (Condição de Corrida no CI/CD)
+* **Sintoma Relatado:** No release publicado `v1.2.3`, apenas os executáveis de Windows (`Quantora-Setup-1.2.3.exe`, `Quantora-1.2.3-portable.exe`) estavam presentes; o arquivo `Quantora.apk` não aparecia nos assets do release.
+* **Diagnóstico Forense & Causa Raiz:**
+  1. O repositório continha dois workflows paralelos e independentes: `release.yml` (no Windows para Electron) e `build-apk.yml` (no Ubuntu para Android).
+  2. Ao receber um commit na `main`, ambos os workflows iniciavam simultaneamente.
+  3. O job do Android no Ubuntu concluía a compilação do APK antes do job do Windows finalizar a suíte de testes, bump de versão e criação do release no GitHub.
+  4. O comando `gh release upload "vX.X.X" release/Quantora.apk` falhava com erro de "Release não encontrado", e a diretiva `continue-on-error: true` silenciava a falha.
+  5. Quando o job do Windows finalmente criava o release, o commit automático de bump continha `[skip ci]`, impedindo qualquer novo acionamento do workflow do APK.
+* **Solução Definitiva:**
+  * Unificação da pipeline em um único arquivo `.github/workflows/release.yml` multi-job coordenado.
+  * O job `release-android` possui a diretiva `needs: release-windows` e só é iniciado após a criação confirmada do release pelo Job 1.
+  * O `TAG` do release criado é repassado diretamente via output entre os jobs, e o APK é anexado via `gh release upload "$TAG" release/Quantora.apk --clobber`.
+
+---
+
+### 8. 🐛 HUD Mobile Desalinhado e Botão Flutuante Sobrepondo Entradas em Telas Pequenas
+* **Sintoma Relatado:** Em smartphones, a barra de navegação inferior ocupava toda a largura da tela de forma pesada, o botão flutuante da lousa de rascunho ficava posicionado acima dos campos numéricos bloqueando cliques, e o cabeçalho sofria quebra de linha comprimindo as ações de perfil e configurações.
+* **Diagnóstico & Causa Raiz:**
+  1. A navegação móvel usava layout plano retangular fixo (`fixed bottom-0 left-0 right-0`) que competia com a barra de gestos do sistema operacional e apresentava baixa ergonomia para alcance do polegar.
+  2. O botão do Scratchpad tinha posicionamento absoluto desvinculado (`bottom-20 right-4`) no mobile, sobrepondo-se aos inputs dos módulos.
+  3. O subtítulo no cabeçalho ocupava largura excessiva em resoluções inferiores a 380px.
+* **Solução Definitiva:**
+  * Implementação do HUD flutuante moderno inspirado no padrão de design mobile: cápsula translúcida centralizada com `backdrop-blur-xl`, sombra de alta elevação e indicador em formato de pílula para a aba ativa.
+  * Acoplamento da Lousa de Rascunho como um botão satélite circular dedicado (`w-12 h-12 rounded-full`) adjacente à cápsula, mantendo alcance tátil imediato sem nunca sobrepor campos de dados.
+  * Ocultamento do botão de desktop no mobile (`hidden md:flex`) e otimização do cabeçalho com `hidden sm:block` no subtítulo e espaçamento seguro de rolagem no rodapé (`pb-24`).
+
+---
+
 ## 🔗 Links Relacionados
 * [[Quantora - Visao Geral]]
 * [[Gamificacao & Niveis]]
