@@ -1,0 +1,156 @@
+# 🤖 AGENTS.md — MathUtils Architecture & Guidelines for Autonomous Agents
+
+Welcome, Agent! This document provides an architectural map, operational conventions, and technical constraints for autonomous agents (such as **Google Jules**) working on the **MathUtils** repository.
+
+---
+
+## 🧭 1. Repository Overview & Mission
+
+**MathUtils** is an offline-first, cross-platform educational application designed for didactic step-by-step mathematical problem solving, rapid arithmetic mental training, and gamified challenges.
+
+* **Primary Targets:**
+  * **Web Application:** React 19 + TypeScript + Vite + Tailwind CSS v4.
+  * **Desktop Windows App:** Electron 44 (NSIS installer & portable `.exe`).
+  * **Mobile Android App:** Capacitor 8 (SDK 36, Java 21, Gradle).
+* **Core Philosophy:** 100% offline capability, zero external telemetry/backend dependency, arbitrary arithmetic precision, and high-performance local state management.
+
+---
+
+## 🛠️ 2. Tech Stack & Key Subsystems
+
+| Subsystem | Technologies / Libraries | Directory Path |
+| :--- | :--- | :--- |
+| **Frontend Framework** | React `^19.2.8`, TypeScript `~6.0.2`, Vite `^8.2.2` | `src/` |
+| **Styling & Icons** | Tailwind CSS `^4.3.3`, `@tailwindcss/vite`, Lucide React | `src/index.css`, `src/presentation/` |
+| **State & Persistence** | Zustand `^5.0.15` (`persist` middleware, `localStorage`) | `src/store/useAppStore.ts` |
+| **Math Engines** | Pure TypeScript, `big.js ^7.0.1` | `src/core/math/` |
+| **Gamification & Streak** | Pure TypeScript, deterministic algorithms | `src/core/gamification/` |
+| **Training & Mini-Games** | Pure TypeScript (Mulberry32 PRNG, Blitz, Boss Rush) | `src/core/daily/`, `src/core/quiz/` |
+| **Data Integrity** | Schema validation for history & local storage | `src/core/storage/historyValidator.ts` |
+| **Internationalization** | In-house reactive i18n (`pt` and `en`) | `src/core/i18n/translations.ts` |
+| **Test Suite** | Vitest `^5.0.0` (154 tests across 11 test suites) | `src/tests/` |
+| **Linter** | Oxlint `^1.79.0` | `.oxlintrc.json` |
+
+---
+
+## 📂 3. Directory Layout & Key Files
+
+```
+matematica-app/
+├── .github/workflows/
+│   ├── release.yml               # Windows Electron build & GitHub release
+│   ├── build-apk.yml             # Android Capacitor APK build via Gradle
+│   └── auto-merge-jules.yml      # CI that tests and auto-merges Jules PRs
+├── electron/
+│   ├── main.cjs                  # Electron main process (window lifecycle, updater)
+│   └── preload.cjs               # Safe contextBridge IPC API
+├── src/
+│   ├── core/
+│   │   ├── daily/
+│   │   │   └── dailyEngine.ts    # Deterministic FNV-1a + Mulberry32 daily challenge
+│   │   ├── gamification/
+│   │   │   └── leveling.ts       # XP formula, titles, 16 achievements & local streak
+│   │   ├── i18n/
+│   │   │   └── translations.ts   # Complete Portuguese and English dictionaries
+│   │   ├── math/
+│   │   │   ├── bhaskara.ts       # Quadratic equations, delta, complex roots & vertex
+│   │   │   ├── regraDeTresSimples.ts   # Direct and inverse simple rule of three
+│   │   │   ├── regraDeTresComposta.ts  # Multi-column compound rule of three
+│   │   │   └── precision.ts      # Floating-point safety using big.js
+│   │   ├── quiz/
+│   │   │   ├── quizGenerator.ts  # Arithmetic tracks (addition, sub, mult, div, survival)
+│   │   │   ├── blitzEngine.ts    # 60s Blitz mode (+2s, -3s, combos 1x-3x)
+│   │   │   └── bossEngine.ts     # Boss Battle (100 HP, 3 shields, critical hits <3s)
+│   │   └── storage/
+│   │       └── historyValidator.ts # Schema validation and corrupted data recovery
+│   ├── presentation/
+│   │   ├── components/
+│   │   │   ├── Navbar.tsx        # Top navigation, streak & level badges
+│   │   │   ├── Scratchpad.tsx    # Transparent HTML5 canvas floating whiteboard
+│   │   │   ├── ProfileModal.tsx  # Trophy showcase (16 achievements) & statistics
+│   │   │   ├── SettingsModal.tsx # Theme, language, precision, export/import
+│   │   │   ├── BlitzGame.tsx     # Blitz 60s gameplay screen
+│   │   │   ├── BossBattle.tsx    # Boss battle gameplay screen
+│   │   │   ├── DailyChallengeCard.tsx # Daily challenge UI with sharing
+│   │   │   ├── AchievementToast.tsx   # Floating unlock animation
+│   │   │   └── ParabolaChart.tsx # SVG Cartesian graph for quadratic functions
+│   │   └── modules/
+│   │       ├── BhaskaraModule.tsx
+│   │       ├── RegraDeTresModule.tsx
+│   │       ├── QuizModule.tsx
+│   │       └── HistoryModule.tsx
+│   ├── store/
+│   │   └── useAppStore.ts        # Central Zustand store with localStorage persistence
+│   ├── tests/                    # 11 unit test files (Vitest)
+│   ├── types/
+│   │   └── index.ts              # Global TypeScript interfaces and types
+│   ├── App.tsx                   # Root component, theme provider & tab routing
+│   └── main.tsx                  # React entry point
+├── package.json
+└── vite.config.ts
+```
+
+---
+
+## ⚡ 4. Verification & Testing Commands
+
+Before submitting any Pull Request or proposing code changes, run and verify the following commands:
+
+```bash
+# 1. Run the entire automated unit test suite (Must be 100% passing)
+npx vitest run
+
+# 2. Verify TypeScript types and production bundle build (Must exit with code 0)
+npm run build
+
+# 3. Check for code smells, dead code, and linter errors
+npm run lint
+```
+
+---
+
+## 📏 5. Rules & Conventions for Agents
+
+When implementing features, fixing bugs, or refactoring code, adhere strictly to these rules:
+
+### A. Date, Time & Streak Calculation
+* **NEVER use raw `new Date().toISOString()` for daily resets, streaks, or calendar days.**
+  * In UTC-negative timezones (e.g. UTC-3 in Brazil), `toISOString()` enters tomorrow at 21:00, corrupting user streaks.
+* **Always use `getDeviceLocalDateString(date)`** from `src/core/gamification/leveling.ts`, which extracts the device's local calendar year, month, and day (`YYYY-MM-DD`).
+* **Passive Mount vs. Active Action:**
+  * Opening or refreshing the app must **never** increment streak days. Use `checkStreakMaintenance()` to preserve the streak or expire it if inactive for $> 1$ day.
+  * Only real user completions (e.g., `completeDailyChallenge`) may trigger `calculateStreakUpdate()`.
+
+### B. Mathematical Accuracy & Precision
+* Never perform raw floating-point operations where IEEE 754 precision issues may produce artifacts like `0.30000000000000004`.
+* Use `big.js` and the helper functions in `src/core/math/precision.ts` for divisions, multiplications, and decimal formatting.
+* When handling quadratic equations ($\Delta < 0$), generate valid complex roots formatted as `p ± qi`. Do not throw errors or return `NaN`.
+
+### C. Gamification & Progression Formula
+* **Level Progression:** Formula is $XP_{req}(L) = 50 \cdot L \cdot (L - 1)$.
+* **Achievements:** All 16 achievements are defined in `ACHIEVEMENTS` inside `src/core/gamification/leveling.ts`. Any new achievement must include:
+  * Unique ID, Icon, Category, XP Reward, Title & Description in both PT and EN, and an evaluation condition.
+
+### D. UI, Themes & Internationalization
+* **Tailwind CSS v4:** Use standard utility classes. Dynamic styling must be handled with `clsx` and `tailwind-merge`.
+* **Dark / Light Theme:** Ensure every component renders correctly in both `.dark` mode and default light mode. Do not hardcode dark backgrounds without specifying light alternatives.
+* **i18n:** All user-facing strings must be mapped in `src/core/i18n/translations.ts` in both `pt` (Portuguese) and `en` (English).
+
+### E. Code Quality & Test Integrity
+* **Strict Typing:** Avoid `any`. Define or reuse interfaces in `src/types/index.ts`.
+* **Zero Production Mocks:** Production code must be fully implemented. Stubs, fake static returns, or mock simulations in production modules are strictly prohibited.
+* **Preserve Tests:** Do not delete or weaken existing tests in `src/tests/`. If changing business logic, update corresponding tests to reflect the new intended behavior and maintain 100% test pass rate.
+
+---
+
+## 🤖 6. Pull Request Conventions
+
+* Use **Conventional Commits**:
+  * `feat:` for new capabilities or math modes.
+  * `fix:` for bug fixes.
+  * `test:` for expanding unit or stress tests.
+  * `refactor:` for code restructuring without behavior changes.
+* Provide a concise, bulleted summary of:
+  1. What was changed.
+  2. Why the change was made.
+  3. Commands executed to verify the change (`vitest`, `npm run build`, `lint`).
