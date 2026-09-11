@@ -13,7 +13,7 @@ createRoot(document.getElementById('root')!).render(
 if ('serviceWorker' in navigator && import.meta.env.PROD && !window.electronAPI) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch((err) => {
-      console.log('SW registration failed: ', err);
+      console.error('SW registration failed: ', err);
     });
   });
 }
