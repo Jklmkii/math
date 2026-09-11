@@ -95,6 +95,25 @@ Este documento registra a evolução do **Quantora**, detalhando as versões pub
 
 ---
 
+
+### 9. 🐛 Retenção de Tarefas Git por Janela Interativa do Git Credential Manager em Subshells Headless
+* **Sintoma Relatado:** Ao executar tarefas automatizadas envolvendo `git push` pelo assistente/agente, o processo entrava em estado de execução indefinido em segundo plano (`RUNNING`), com arquivo de log vazio (0 bytes) e sem emitir retorno.
+* **Diagnóstico Forense & Causa Raiz:**
+  1. No Windows, o Git é configurado com `credential.helper=manager` (`git-credential-manager.exe`).
+  2. Quando a URL remota foi alterada de `https://github.com/Jklmkii/math.git` para `https://github.com/Jklmkii/quantora.git`, o GCM invalidou os tokens previamente armazenados no cache da sessão para aquele endpoint específico.
+  3. O GCM tentou iniciar um fluxo de autenticação interativa (disparando uma janela modal ou abrindo o navegador padrão via OAuth no desktop do usuário).
+  4. Como as ferramentas do assistente executam comandos em processos filhos desacoplados de TTY interativo, o processo ficou suspenso no aguardo de entrada do usuário via interface gráfica.
+* **Solução Aplicada:**
+  1. Cancelado o processo bloqueado com `task kill` (PID 32756).
+  2. Confirmado que o commit principal (`ea3adb2`) já havia sido enviado com sucesso e o release `v1.2.4` já havia sido gerado no GitHub Actions.
+  3. Restaurada a URL remota estável com redirecionamento automático do GitHub e rebaseada a árvore local de forma limpa.
+* **Forma de Prevenção Definitiva:**
+  1. **Evitar Alterações Bruscas de Endpoint em Runtime:** Não alterar a URL de remotos Git em tempo de execução sem antes verificar se o ambiente local possui credenciais pré-armazenadas ou suporte a credenciais não-interativas.
+  2. **Monitoramento e Timeouts Agressivos:** Para comandos Git executados via automação, monitorar ativamente se o `git-credential-manager.exe` foi spawnado e impor verificação imediata para evitar tarefas fantasmas em segundo plano.
+  3. **Diagnóstico Imediato:** Diante de qualquer retenção de comando em background, inspecionar a árvore de processos do sistema (`Get-Process -Name *git*`) antes de presumir lentidão de rede.
+
+---
+
 ## 🔗 Links Relacionados
 * [[Quantora - Visao Geral]]
 * [[Gamificacao & Niveis]]
