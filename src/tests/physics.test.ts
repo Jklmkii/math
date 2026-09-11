@@ -145,15 +145,48 @@ describe('Physics Module - Unit Tests', () => {
   });
 
   describe('3. Queda Livre', () => {
-    it('calculates fall time and impact speed accurately', () => {
+    it('calculates fall time and impact speed accurately in vacuum', () => {
       const res = calculateQuedaLivre({
         h0: '45',
         g: '10',
       });
       expect(res.tQueda).toBe(3);
       expect(res.vImpacto).toBe(30);
+      expect(res.hasAirResistance).toBe(false);
       expect(res.chartData.type).toBe('temporal');
       expect(res.chartData.points.length).toBeGreaterThan(0);
+    });
+
+    it('calculates free fall with air resistance (terminal velocity)', () => {
+      const res = calculateQuedaLivre({
+        h0: '500',
+        g: '9.8',
+        enableAirResistance: true,
+        vTerminal: '50',
+      });
+
+      expect(res.hasAirResistance).toBe(true);
+      expect(res.vTerminal).toBe(50);
+      // Com resistência do ar, o tempo de queda é maior que no vácuo
+      expect(res.tQueda).toBeGreaterThan(res.vacuumTQueda!);
+      // A velocidade de impacto é menor que no vácuo
+      expect(res.vImpacto).toBeLessThan(res.vacuumVImpacto!);
+      // A velocidade de impacto nunca ultrapassa a velocidade terminal
+      expect(res.vImpacto).toBeLessThanOrEqual(50);
+      expect(res.percentageOfVTerminal).toBeGreaterThan(90);
+      expect(res.formattedVTerminal).toBe('50');
+    });
+
+    it('approaches terminal velocity asymptotically from high drops', () => {
+      const res = calculateQuedaLivre({
+        h0: '3000',
+        g: '10',
+        enableAirResistance: true,
+        vTerminal: '40',
+      });
+
+      expect(res.vImpacto).toBeCloseTo(40, 1);
+      expect(res.percentageOfVTerminal).toBeCloseTo(100, 0);
     });
   });
 
@@ -273,6 +306,35 @@ describe('Physics Module - Unit Tests', () => {
       });
       expect(res.isStatic).toBe(true);
       expect(res.aceleracao).toBe(0);
+    });
+
+    it('supports external applied force pulling up the ramp', () => {
+      // Massa 10 kg, ângulo 30°, g=10 m/s² -> Px = 50 N, Py = 86.6 N, FatMax = 8.66 N
+      // Força aplicada F = 50 N equilibra exatamente Px -> estático, a = 0
+      const resBalanced = calculatePlanoInclinado({
+        mass: '10',
+        angleDeg: '30',
+        frictionCoef: '0.1',
+        appliedForce: '50',
+        g: '10',
+      });
+      expect(resBalanced.isStatic).toBe(true);
+      expect(resBalanced.aceleracao).toBe(0);
+      expect(resBalanced.appliedForce).toBe(50);
+      expect(resBalanced.chartData.appliedForce).toBe(50);
+
+      // Força aplicada F = 100 N vence Px (50 N) e FatMax (8.66 N) -> acelera subindo
+      const resPullingUp = calculatePlanoInclinado({
+        mass: '10',
+        angleDeg: '30',
+        frictionCoef: '0.1',
+        appliedForce: '100',
+        g: '10',
+      });
+      expect(resPullingUp.isStatic).toBe(false);
+      // F_res = (100 - 50) - 8.66025 = 41.33975 N -> a = 4.133975 m/s²
+      expect(resPullingUp.aceleracao).toBeCloseTo(4.134, 2);
+      expect(resPullingUp.formattedValues.status).toContain('Subindo');
     });
   });
 

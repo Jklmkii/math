@@ -45,8 +45,11 @@ export const PhysicsModule: React.FC = () => {
   const [category, setCategory] = useState<PhysicsCategory>('cinematica');
   const [mode, setMode] = useState<PhysicsMode>('mru');
 
-  // Global Gravity Setting
-  const [gravity, setGravity] = useState<'9.8' | '10'>('9.8');
+  // Advanced Mode Toggle
+  const [isAdvancedMode, setIsAdvancedMode] = useState(false);
+
+  // Global Gravity Setting (defaults to '9.8', supports planetary bodies & custom in advanced mode)
+  const [gravity, setGravity] = useState('9.8');
 
   // Speed Converter Widget State
   const [showConverter, setShowConverter] = useState(false);
@@ -74,6 +77,8 @@ export const PhysicsModule: React.FC = () => {
 
   // Queda Livre Inputs
   const [qlH0, setQlH0] = useState('45');
+  const [qlEnableAir, setQlEnableAir] = useState(false);
+  const [qlVt, setQlVt] = useState('55');
 
   // Lançamento Vertical Inputs
   const [lvV0, setLvV0] = useState('25');
@@ -103,6 +108,7 @@ export const PhysicsModule: React.FC = () => {
   const [piMass, setPiMass] = useState('5');
   const [piAngle, setPiAngle] = useState('30');
   const [piMu, setPiMu] = useState('0.15');
+  const [piAppliedForce, setPiAppliedForce] = useState('');
 
   // Energia & Trabalho Inputs
   const [etSubmode, setEtSubmode] = useState<'energia' | 'trabalho'>('energia');
@@ -147,7 +153,18 @@ export const PhysicsModule: React.FC = () => {
             err: null,
           };
         case 'queda_livre':
-          return { res: calculateQuedaLivre({ h0: qlH0, g }, opts), err: null };
+          return {
+            res: calculateQuedaLivre(
+              {
+                h0: qlH0,
+                g,
+                enableAirResistance: isAdvancedMode ? qlEnableAir : false,
+                vTerminal: isAdvancedMode && qlEnableAir ? qlVt : undefined,
+              },
+              opts
+            ),
+            err: null,
+          };
         case 'lancamento_vertical':
           return { res: calculateLancamentoVertical({ v0: lvV0, y0: lvY0, g }, opts), err: null };
         case 'lancamento_horizontal':
@@ -181,7 +198,19 @@ export const PhysicsModule: React.FC = () => {
             err: null,
           };
         case 'plano_inclinado':
-          return { res: calculatePlanoInclinado({ mass: piMass, angleDeg: piAngle, frictionCoef: piMu, g }, opts), err: null };
+          return {
+            res: calculatePlanoInclinado(
+              {
+                mass: piMass,
+                angleDeg: piAngle,
+                frictionCoef: piMu,
+                appliedForce: isAdvancedMode && piAppliedForce.trim() !== '' ? piAppliedForce : undefined,
+                g,
+              },
+              opts
+            ),
+            err: null,
+          };
         case 'energia_trabalho':
           return {
             res: calculateEnergiaTrabalho(
@@ -209,6 +238,7 @@ export const PhysicsModule: React.FC = () => {
   }, [
     mode,
     gravity,
+    isAdvancedMode,
     settings.decimalPlaces,
     settings.decimalSeparator,
     mruS0,
@@ -226,6 +256,8 @@ export const PhysicsModule: React.FC = () => {
     torrDeltaS,
     torrTarget,
     qlH0,
+    qlEnableAir,
+    qlVt,
     lvV0,
     lvY0,
     lhV0,
@@ -243,6 +275,7 @@ export const PhysicsModule: React.FC = () => {
     piMass,
     piAngle,
     piMu,
+    piAppliedForce,
     etSubmode,
     etMass,
     etVelocity,
@@ -269,6 +302,10 @@ export const PhysicsModule: React.FC = () => {
     if (anyRes.formattedV) res['Velocidade (v)'] = `${anyRes.formattedV} m/s`;
     if (anyRes.formattedTQueda) res['Tempo de Queda'] = `${anyRes.formattedTQueda} s`;
     if (anyRes.formattedVImpacto) res['Velocidade de Impacto'] = `${anyRes.formattedVImpacto} m/s`;
+    if (anyRes.formattedVTerminal) res['Velocidade Terminal (vt)'] = `${anyRes.formattedVTerminal} m/s`;
+    if (anyRes.vacuumTQueda !== undefined) res['Tempo no Vácuo'] = `${anyRes.vacuumTQueda} s`;
+    if (anyRes.vacuumVImpacto !== undefined) res['Impacto no Vácuo'] = `${anyRes.vacuumVImpacto} m/s`;
+    if (anyRes.percentageOfVTerminal !== undefined) res['% Atingida de vt'] = `${anyRes.percentageOfVTerminal}%`;
     if (anyRes.formattedHMax) res['Altura Máxima'] = `${anyRes.formattedHMax} m`;
     if (anyRes.formattedAlcance) res['Alcance Horizontal'] = `${anyRes.formattedAlcance} m`;
     if (anyRes.formattedTSubida) res['Tempo de Subida'] = `${anyRes.formattedTSubida} s`;
@@ -280,6 +317,7 @@ export const PhysicsModule: React.FC = () => {
     if (anyRes.normal !== undefined) res['Força Normal'] = `${anyRes.normal} N`;
     if (anyRes.fat !== undefined) res['Força de Atrito'] = `${anyRes.fat} N`;
     if (anyRes.peso !== undefined) res['Força Peso'] = `${anyRes.peso} N`;
+    if (anyRes.appliedForce !== undefined) res['Força Aplicada (F)'] = `${anyRes.appliedForce} N`;
 
     return res;
   }, [activeResult]);
@@ -330,32 +368,71 @@ export const PhysicsModule: React.FC = () => {
           </div>
         </div>
 
-        {/* Controls: Gravity & Converter */}
+        {/* Controls: Advanced Mode, Gravity & Converter */}
         <div className="flex flex-wrap items-center gap-2">
+          {/* Advanced Mode Toggle */}
+          <button
+            onClick={() => setIsAdvancedMode(!isAdvancedMode)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl border transition-all ${
+              isAdvancedMode
+                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-purple-500 shadow-sm shadow-purple-500/25 ring-2 ring-purple-400/30'
+                : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-400'
+            }`}
+            title="Alternar Modo Avançado (resistência do ar, gravidades planetárias, forças externas)"
+          >
+            <Sparkles className={`w-3.5 h-3.5 ${isAdvancedMode ? 'text-amber-300 animate-pulse' : ''}`} />
+            {t.physics_advanced_mode}
+          </button>
+
           {/* Gravity Selector */}
-          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-            <span className="text-[11px] font-semibold text-slate-500 px-2">g:</span>
-            <button
-              onClick={() => setGravity('9.8')}
-              className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all ${
-                gravity === '9.8'
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-indigo-500'
-              }`}
-            >
-              9,8 m/s²
-            </button>
-            <button
-              onClick={() => setGravity('10')}
-              className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all ${
-                gravity === '10'
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-indigo-500'
-              }`}
-            >
-              10 m/s²
-            </button>
-          </div>
+          {!isAdvancedMode ? (
+            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+              <span className="text-[11px] font-semibold text-slate-500 px-2">g:</span>
+              <button
+                onClick={() => setGravity('9.8')}
+                className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all ${
+                  gravity === '9.8'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-indigo-500'
+                }`}
+              >
+                9,8 m/s²
+              </button>
+              <button
+                onClick={() => setGravity('10')}
+                className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all ${
+                  gravity === '10'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-indigo-500'
+                }`}
+              >
+                10 m/s²
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1 p-1 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800">
+              <span className="text-[11px] font-bold text-purple-600 dark:text-purple-400 px-1.5">🪐 g:</span>
+              {[
+                { id: '9.8', label: '🌍 9.8' },
+                { id: '10', label: '🎯 10' },
+                { id: '1.62', label: '🌕 Lua 1.62' },
+                { id: '3.71', label: '🔴 Marte 3.71' },
+                { id: '24.79', label: '🪐 Júpiter 24.8' },
+              ].map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => setGravity(p.id)}
+                  className={`px-2 py-1 text-[11px] font-bold rounded-lg transition-all ${
+                    gravity === p.id
+                      ? 'bg-purple-600 text-white shadow-sm'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-300'
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Speed Converter Toggle */}
           <button
@@ -598,6 +675,61 @@ export const PhysicsModule: React.FC = () => {
             {mode === 'queda_livre' && (
               <div className="space-y-3">
                 <NumericInput label="Altura Inicial H₀ (m)" value={qlH0} onChange={setQlH0} />
+
+                {isAdvancedMode && (
+                  <div className="p-3.5 rounded-xl bg-purple-50/60 dark:bg-purple-950/30 border border-purple-200/70 dark:border-purple-800/70 space-y-3 mt-3 animate-in fade-in duration-200">
+                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={qlEnableAir}
+                        onChange={(e) => setQlEnableAir(e.target.checked)}
+                        className="rounded text-purple-600 focus:ring-purple-500 w-4 h-4 cursor-pointer"
+                      />
+                      <span className="text-xs font-bold text-purple-800 dark:text-purple-300">
+                        {t.physics_air_resistance_toggle}
+                      </span>
+                    </label>
+
+                    {qlEnableAir && (
+                      <div className="space-y-2.5 pt-1">
+                        <NumericInput
+                          label={t.physics_terminal_velocity}
+                          value={qlVt}
+                          onChange={setQlVt}
+                          helperText={t.physics_terminal_velocity_helper}
+                        />
+
+                        {/* Presets rápidos */}
+                        <div className="space-y-1">
+                          <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                            Presets Comuns de Velocidade Terminal:
+                          </span>
+                          <div className="grid grid-cols-2 gap-1.5">
+                            {[
+                              { label: '🪂 Paraquedista', vt: '55' },
+                              { label: '💧 Gota de chuva', vt: '9' },
+                              { label: '🎾 Bola de tênis', vt: '40' },
+                              { label: '🚀 Projétil', vt: '150' },
+                            ].map((preset) => (
+                              <button
+                                key={preset.vt}
+                                type="button"
+                                onClick={() => setQlVt(preset.vt)}
+                                className={`text-[11px] px-2 py-1.5 rounded-lg border text-left transition-all ${
+                                  qlVt === preset.vt
+                                    ? 'bg-purple-600 text-white border-purple-600 font-bold shadow-xs'
+                                    : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-purple-400'
+                                }`}
+                              >
+                                {preset.label} ({preset.vt} m/s)
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
@@ -690,6 +822,44 @@ export const PhysicsModule: React.FC = () => {
                 <NumericInput label="Massa do Bloco m (kg)" value={piMass} onChange={setPiMass} />
                 <NumericInput label="Ângulo de Inclinação θ (°)" value={piAngle} onChange={setPiAngle} />
                 <NumericInput label="Coeficiente de Atrito μ" value={piMu} onChange={setPiMu} />
+
+                {isAdvancedMode && (
+                  <div className="p-3.5 rounded-xl bg-purple-50/60 dark:bg-purple-950/30 border border-purple-200/70 dark:border-purple-800/70 space-y-3 mt-3 animate-in fade-in duration-200">
+                    <div className="space-y-1">
+                      <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                        Presets de Coeficiente de Atrito (μ):
+                      </span>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {[
+                          { label: '🧊 Gelo no Gelo', mu: '0.03' },
+                          { label: '🪵 Madeira na Madeira', mu: '0.3' },
+                          { label: '🚗 Borracha no Asfalto', mu: '0.8' },
+                          { label: '✨ Sem Atrito', mu: '0' },
+                        ].map((preset) => (
+                          <button
+                            key={preset.mu}
+                            type="button"
+                            onClick={() => setPiMu(preset.mu)}
+                            className={`text-[11px] px-2 py-1.5 rounded-lg border text-left transition-all ${
+                              piMu === preset.mu
+                                ? 'bg-purple-600 text-white border-purple-600 font-bold shadow-xs'
+                                : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-purple-400'
+                            }`}
+                          >
+                            {preset.label} (μ={preset.mu})
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <NumericInput
+                      label={t.physics_applied_force_label}
+                      value={piAppliedForce}
+                      onChange={setPiAppliedForce}
+                      helperText={t.physics_applied_force_helper}
+                    />
+                  </div>
+                )}
               </div>
             )}
 

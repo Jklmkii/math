@@ -321,75 +321,163 @@ export const PhysicsChart: React.FC<PhysicsChartProps> = React.memo(({
   // -------------------------------------------------------------
   // 4. Renderizador de Plano Inclinado & Forças de Newton
   // -------------------------------------------------------------
+  // -------------------------------------------------------------
+  // 4. Renderizador de Plano Inclinado & Forças de Newton
+  // -------------------------------------------------------------
   if (chartData.type === 'inclined_plane') {
     const data = chartData as InclinedPlaneChartData;
     const angleRad = (data.angleDeg * Math.PI) / 180;
 
-    const rampBase = 380;
-    const rampHeight = Math.min(Math.tan(angleRad) * rampBase, 180);
-    const startX = 80;
-    const groundY = 270;
+    const fmt = (val: number | undefined, dec = 2): string => {
+      if (val === undefined || val === null || isNaN(val)) return '0';
+      if (Number.isInteger(val)) return val.toString();
+      return Number(val.toFixed(dec)).toString();
+    };
 
-    const blockDist = rampBase * 0.55;
-    const blockX = startX + blockDist;
-    const blockY = groundY - Math.tan(angleRad) * blockDist;
+    const rampBase = 380;
+    const rawHeight = Math.tan(angleRad) * rampBase;
+    const rampHeight = Math.min(Math.max(rawHeight, 45), 180);
+    const startX = 75;
+    const groundY = 270;
+    const endX = startX + rampBase;
+
+    // Ângulo visual real do triângulo desenhado em SVG
+    const visualAngle = Math.atan2(rampHeight, rampBase);
+    const visualAngleDeg = (visualAngle * 180) / Math.PI;
+
+    // Ponto sobre a hipotenusa para assentar o bloco (no meio da rampa)
+    const t = 0.50;
+    const xSurf = startX + t * rampBase;
+    const ySurf = (groundY - rampHeight) + t * rampHeight;
+
+    const blockW = 46;
+    const blockH = 32;
+
+    // Vetores diretores normal e tangencial
+    const sinV = Math.sin(visualAngle);
+    const cosV = Math.cos(visualAngle);
+
+    // Centro do bloco (C_x, C_y) elevado por metade da sua altura na direção perpendicular à rampa
+    const blockCenterX = xSurf + (blockH / 2) * sinV;
+    const blockCenterY = ySurf - (blockH / 2) * cosV;
+
+    // Arco do ângulo θ na base direita da rampa
+    const arcR = 55;
+    const arcStartX = endX - arcR;
+    const arcStartY = groundY;
+    const arcEndX = endX - arcR * cosV;
+    const arcEndY = groundY - arcR * sinV;
 
     return (
       <div className={`w-full overflow-hidden rounded-2xl bg-white/70 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 p-3 shadow-inner ${className}`}>
         <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-auto select-none font-sans">
-          <line x1="30" y1={groundY} x2="570" y2={groundY} stroke="currentColor" className="text-slate-300 dark:text-slate-700" strokeWidth="2" />
+          {/* Linha do Solo */}
+          <line x1="25" y1={groundY} x2="575" y2={groundY} stroke="currentColor" className="text-slate-300 dark:text-slate-700" strokeWidth="2" />
 
+          {/* Triângulo do Plano Inclinado */}
           <polygon
-            points={`${startX},${groundY} ${startX + rampBase},${groundY} ${startX},${groundY - rampHeight}`}
-            className="fill-indigo-50/60 dark:fill-indigo-950/40 stroke-indigo-400 dark:stroke-indigo-600"
-            strokeWidth="2"
+            points={`${startX},${groundY} ${endX},${groundY} ${startX},${groundY - rampHeight}`}
+            className="fill-indigo-50/70 dark:fill-indigo-950/40 stroke-indigo-500 dark:stroke-indigo-500"
+            strokeWidth="2.5"
+            strokeLinejoin="round"
           />
 
+          {/* Arco do ângulo θ no vértice da base com o solo */}
           <path
-            d={`M ${startX + 50} ${groundY} A 50 50 0 0 0 ${startX + 50 * Math.cos(angleRad)} ${groundY - 50 * Math.sin(angleRad)}`}
+            d={`M ${arcStartX} ${arcStartY} A ${arcR} ${arcR} 0 0 0 ${arcEndX} ${arcEndY}`}
             fill="none"
             stroke="#6366f1"
-            strokeWidth="1.5"
+            strokeWidth="2"
           />
-          <text x={startX + 60} y={groundY - 12} className="fill-indigo-600 dark:fill-indigo-400 font-bold text-xs">
-            θ = {data.angleDeg}°
+          <text x={endX - arcR - 22} y={groundY - 14} className="fill-indigo-600 dark:fill-indigo-400 font-bold text-xs">
+            θ = {fmt(data.angleDeg)}°
           </text>
 
-          <g transform={`translate(${blockX}, ${blockY}) rotate(${-data.angleDeg})`}>
-            <rect x="-22" y="-35" width="44" height="35" rx="4" className="fill-amber-500/90 stroke-amber-600" strokeWidth="2" />
-            <text x="0" y="-14" textAnchor="middle" className="fill-white font-bold text-[11px]">
-              {data.mass} kg
+          {/* Bloco assentado diretamente na superfície da hipotenusa */}
+          <g transform={`translate(${xSurf}, ${ySurf}) rotate(${visualAngleDeg})`}>
+            <rect
+              x={-blockW / 2}
+              y={-blockH}
+              width={blockW}
+              height={blockH}
+              rx="4"
+              className="fill-amber-500 stroke-amber-600 dark:stroke-amber-400"
+              strokeWidth="2"
+            />
+            <text x="0" y={-blockH / 2 + 4} textAnchor="middle" className="fill-white font-bold text-[11px]">
+              {fmt(data.mass)} kg
             </text>
           </g>
 
-          <line x1={blockX} y1={blockY} x2={blockX} y2={blockY + 55} stroke="#ef4444" strokeWidth="2.5" markerEnd="url(#arrowRed)" />
-          <text x={blockX + 8} y={blockY + 45} className="fill-red-500 font-bold text-xs">
-            P = {data.peso} N
+          {/* Vetor Peso (P): vertical para baixo a partir do centro */}
+          <line
+            x1={blockCenterX}
+            y1={blockCenterY}
+            x2={blockCenterX}
+            y2={blockCenterY + 52}
+            stroke="#ef4444"
+            strokeWidth="2.5"
+            markerEnd="url(#arrowRed)"
+          />
+          <text x={blockCenterX + 8} y={blockCenterY + 45} className="fill-red-500 font-bold text-xs">
+            P = {fmt(data.peso)} N
           </text>
 
+          {/* Vetor Normal (N): perpendicular à rampa para cima */}
           {(() => {
-            const nLen = 45;
-            const nx = blockX + nLen * Math.sin(angleRad);
-            const ny = blockY - nLen * Math.cos(angleRad);
+            const nLen = 46;
+            const nx = blockCenterX + nLen * sinV;
+            const ny = blockCenterY - nLen * cosV;
             return (
               <>
-                <line x1={blockX} y1={blockY} x2={nx} y2={ny} stroke="#3b82f6" strokeWidth="2.5" markerEnd="url(#arrowBlue)" />
-                <text x={nx + 5} y={ny} className="fill-blue-500 font-bold text-xs">
-                  N = {data.normal} N
+                <line x1={blockCenterX} y1={blockCenterY} x2={nx} y2={ny} stroke="#3b82f6" strokeWidth="2.5" markerEnd="url(#arrowBlue)" />
+                <text x={nx + 6} y={ny - 2} className="fill-blue-500 font-bold text-xs">
+                  N = {fmt(data.normal)} N
                 </text>
               </>
             );
           })()}
 
-          {(() => {
-            const aLen = 40;
-            const ax = blockX + aLen * Math.cos(angleRad);
-            const ay = blockY + aLen * Math.sin(angleRad);
+          {/* Vetor Aceleração (a): paralelo à rampa descendo */}
+          {data.aceleracao > 0 && (() => {
+            const aLen = 44;
+            const ax = blockCenterX + aLen * cosV;
+            const ay = blockCenterY + aLen * sinV;
             return (
               <>
-                <line x1={blockX} y1={blockY} x2={ax} y2={ay} stroke="#10b981" strokeWidth="2.5" markerEnd="url(#arrowGreen)" />
+                <line x1={blockCenterX} y1={blockCenterY} x2={ax} y2={ay} stroke="#10b981" strokeWidth="2.5" markerEnd="url(#arrowGreen)" />
                 <text x={ax + 6} y={ay + 14} className="fill-emerald-500 font-bold text-xs">
-                  a = {data.aceleracao} m/s²
+                  a = {fmt(data.aceleracao)} m/s²
+                </text>
+              </>
+            );
+          })()}
+
+          {/* Vetor Força de Atrito (Fat): paralelo à rampa subindo (se houver) */}
+          {data.fat > 0 && (() => {
+            const fLen = 38;
+            const fx = blockCenterX - fLen * cosV;
+            const fy = blockCenterY - fLen * sinV;
+            return (
+              <>
+                <line x1={blockCenterX} y1={blockCenterY} x2={fx} y2={fy} stroke="#f59e0b" strokeWidth="2.5" markerEnd="url(#arrowOrange)" />
+                <text x={fx - 12} y={fy - 8} className="fill-amber-500 font-bold text-xs text-end">
+                  Fat = {fmt(data.fat)} N
+                </text>
+              </>
+            );
+          })()}
+
+          {/* Vetor Força Aplicada (F): paralelo à rampa subindo (se houver) */}
+          {data.appliedForce !== undefined && data.appliedForce > 0 && (() => {
+            const appLen = 42;
+            const fx = blockCenterX - appLen * cosV;
+            const fy = blockCenterY - appLen * sinV - 10;
+            return (
+              <>
+                <line x1={blockCenterX} y1={blockCenterY - 10} x2={fx} y2={fy} stroke="#a855f7" strokeWidth="2.5" markerEnd="url(#arrowPurple)" />
+                <text x={fx - 10} y={fy - 6} className="fill-purple-500 font-bold text-xs text-end">
+                  F = {fmt(data.appliedForce)} N
                 </text>
               </>
             );
@@ -401,6 +489,15 @@ export const PhysicsChart: React.FC<PhysicsChartProps> = React.memo(({
             </marker>
             <marker id="arrowBlue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto">
               <path d="M 0 1 L 8 5 L 0 9 z" fill="#3b82f6" />
+            </marker>
+            <marker id="arrowGreen" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M 0 1 L 8 5 L 0 9 z" fill="#10b981" />
+            </marker>
+            <marker id="arrowOrange" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M 0 1 L 8 5 L 0 9 z" fill="#f59e0b" />
+            </marker>
+            <marker id="arrowPurple" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M 0 1 L 8 5 L 0 9 z" fill="#a855f7" />
             </marker>
           </defs>
         </svg>

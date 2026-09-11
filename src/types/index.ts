@@ -307,6 +307,7 @@ export interface InclinedPlaneChartData {
   fat: number;
   aceleracao: number;
   frictionCoef?: number;
+  appliedForce?: number;
   isStatic?: boolean;
 }
 
@@ -412,6 +413,8 @@ export interface MRUVResult extends PhysicsCalculationBaseResult {
 export interface QuedaLivreInput {
   h0: string; // m
   g?: string; // m/s² (default '9.8' ou '10')
+  vTerminal?: string; // m/s (opcional: velocidade terminal por arrasto aerodinâmico)
+  enableAirResistance?: boolean;
 }
 
 export interface QuedaLivreResult extends PhysicsCalculationBaseResult {
@@ -424,6 +427,12 @@ export interface QuedaLivreResult extends PhysicsCalculationBaseResult {
   formattedVImpacto: string;
   trajectoryPoints: Array<{ t: number; y: number; v: number }>;
   chartData: TemporalChartData;
+  vTerminal?: number;
+  formattedVTerminal?: string;
+  hasAirResistance?: boolean;
+  vacuumTQueda?: number;
+  vacuumVImpacto?: number;
+  percentageOfVTerminal?: number;
 }
 
 // 4. Lançamento Vertical
@@ -548,6 +557,7 @@ export interface PlanoInclinadoInput {
   angleDeg: string;      // graus (0 a 90)
   frictionCoef?: string; // μ (default '0')
   g?: string;            // m/s²
+  appliedForce?: string; // N (opcional: força externa paralela ao plano)
 }
 
 export interface PlanoInclinadoResult extends PhysicsCalculationBaseResult {
@@ -556,6 +566,7 @@ export interface PlanoInclinadoResult extends PhysicsCalculationBaseResult {
   angleDeg: number;
   g: number;
   frictionCoef: number;
+  appliedForce?: number;
   peso: number;
   px: number;
   py: number;

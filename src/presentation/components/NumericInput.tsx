@@ -10,6 +10,7 @@ interface NumericInputProps {
   prefix?: string;
   suffix?: string;
   error?: string | null;
+  helperText?: string;
   className?: string;
   allowNegative?: boolean;
 }
@@ -29,6 +30,7 @@ export const NumericInput: React.FC<NumericInputProps> = ({
   prefix,
   suffix,
   error,
+  helperText,
   className = '',
   allowNegative = true,
 }) => {
@@ -118,6 +120,12 @@ export const NumericInput: React.FC<NumericInputProps> = ({
       {error && (
         <span className="text-xs font-medium text-red-500 dark:text-red-400 animate-pulse">
           {error}
+        </span>
+      )}
+
+      {helperText && !error && (
+        <span className="text-[11px] font-normal text-slate-500 dark:text-slate-400">
+          {helperText}
         </span>
       )}
     </div>

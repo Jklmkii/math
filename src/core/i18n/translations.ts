@@ -126,12 +126,22 @@ export const translations = {
     physics_unknown_to_find: 'Incógnita a Calcular',
 
     // Gravity & Converter Controls
+    physics_advanced_mode: 'Modo Avançado',
     physics_gravity_label: 'Gravidade (g)',
-    physics_gravity_earth_standard: 'Padrão (9,8 m/s²)',
+    physics_gravity_earth_standard: 'Terra (9,8 m/s²)',
     physics_gravity_earth_didactic: 'Didático (10 m/s²)',
+    physics_gravity_moon: 'Lua (1,62 m/s²)',
+    physics_gravity_mars: 'Marte (3,71 m/s²)',
+    physics_gravity_jupiter: 'Júpiter (24,79 m/s²)',
+    physics_gravity_custom: 'Personalizada',
     physics_converter_title: 'Conversor Rápido de Velocidade',
     physics_to_ms: 'km/h → m/s (÷ 3,6)',
     physics_to_kmh: 'm/s → km/h (× 3,6)',
+    physics_air_resistance_toggle: 'Considerar Resistência do Ar (Velocidade Terminal)',
+    physics_terminal_velocity: 'Velocidade Terminal v_t (m/s)',
+    physics_terminal_velocity_helper: 'Velocidade máxima assintótica atingida quando Força de Arrasto = Peso',
+    physics_applied_force_label: 'Força Externa Aplicada F (N)',
+    physics_applied_force_helper: 'Força externa puxando/empurrando paralela à rampa',
 
     // Categories
     physics_cat_cinematica: 'Cinemática Linear & Balística',
@@ -372,12 +382,22 @@ export const translations = {
     physics_unknown_to_find: 'Variable to Solve',
 
     // Gravity & Converter Controls
+    physics_advanced_mode: 'Advanced Mode',
     physics_gravity_label: 'Gravity (g)',
-    physics_gravity_earth_standard: 'Standard (9.8 m/s²)',
+    physics_gravity_earth_standard: 'Earth (9.8 m/s²)',
     physics_gravity_earth_didactic: 'Didactic (10 m/s²)',
+    physics_gravity_moon: 'Moon (1.62 m/s²)',
+    physics_gravity_mars: 'Mars (3.71 m/s²)',
+    physics_gravity_jupiter: 'Jupiter (24.79 m/s²)',
+    physics_gravity_custom: 'Custom',
     physics_converter_title: 'Speed Quick Converter',
     physics_to_ms: 'km/h → m/s (÷ 3.6)',
     physics_to_kmh: 'm/s → km/h (× 3.6)',
+    physics_air_resistance_toggle: 'Account for Air Resistance (Terminal Velocity)',
+    physics_terminal_velocity: 'Terminal Velocity v_t (m/s)',
+    physics_terminal_velocity_helper: 'Maximum asymptotic speed when Weight equals Drag force',
+    physics_applied_force_label: 'Applied External Force F (N)',
+    physics_applied_force_helper: 'External force pulling/pushing along the inclined plane',
 
     // Categories
     physics_cat_cinematica: 'Linear Kinematics & Ballistics',

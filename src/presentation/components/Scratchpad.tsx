@@ -4,10 +4,11 @@ import {
   Eraser,
   RotateCcw,
   Trash2,
-  Minimize2,
   X,
   Grid,
   Layers,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 
@@ -57,6 +58,7 @@ export const Scratchpad: React.FC<ScratchpadProps> = ({
   const [bgMode, setBgMode] = useState<ScratchpadBackgroundMode>('translucent');
   const [strokesCount, setStrokesCount] = useState(0);
   const [canRestoreClear, setCanRestoreClear] = useState(false);
+  const [isPaletteCollapsed, setIsPaletteCollapsed] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -472,53 +474,76 @@ export const Scratchpad: React.FC<ScratchpadProps> = ({
             </div>
           </div>
 
-          {/* Color Palette & Stroke Width */}
-          <div className="flex items-center gap-2 md:gap-4">
-            {/* Colors */}
-            <div className="flex items-center gap-1 bg-slate-800/70 p-1 rounded-lg border border-slate-700/70">
-              {COLOR_PALETTE.map((c) => {
-                const isSelected = tool === 'pen' && selectedColor === c.value;
-                return (
-                  <button
-                    key={c.value}
-                    type="button"
-                    onClick={() => {
-                      setSelectedColor(c.value);
-                      setTool('pen');
-                    }}
-                    title={`Cor: ${c.name}`}
-                    aria-label={`Cor ${c.name}`}
-                    className={`w-5 h-5 md:w-6 md:h-6 rounded-full ${c.bgClass} transition-transform ${
-                      isSelected
-                        ? 'ring-2 ring-amber-400 ring-offset-2 ring-offset-slate-900 scale-110'
-                        : 'opacity-80 hover:opacity-100 hover:scale-105'
-                    }`}
-                  />
-                );
-              })}
-            </div>
+          {/* Color Palette & Stroke Width with Collapse/Expand Toggle */}
+          <div className="flex items-center gap-1.5 md:gap-2">
+            {/* Collapse / Expand Button */}
+            <button
+              type="button"
+              onClick={() => setIsPaletteCollapsed((prev) => !prev)}
+              title={isPaletteCollapsed ? "Expandir paleta de cores e traço" : "Recolher paleta de cores e traço"}
+              className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-slate-800/90 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-700 transition-colors"
+            >
+              <div
+                className="w-3.5 h-3.5 rounded-full border border-white/30 shadow-inner"
+                style={{ backgroundColor: tool === 'pen' ? selectedColor : '#94a3b8' }}
+              />
+              {isPaletteCollapsed ? (
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+              ) : (
+                <ChevronUp className="w-3.5 h-3.5 text-slate-400" />
+              )}
+            </button>
 
-            {/* Stroke Width Selector */}
-            <div className="flex items-center gap-1 bg-slate-800/70 px-1.5 py-1 rounded-lg border border-slate-700/70">
-              {STROKE_WIDTH_OPTIONS.map((opt) => (
-                <button
-                  key={opt.width}
-                  type="button"
-                  onClick={() => setStrokeWidth(opt.width)}
-                  title={`Espessura ${opt.label} (${opt.width}px)`}
-                  className={`px-1.5 py-1 rounded flex items-center justify-center transition-colors ${
-                    strokeWidth === opt.width
-                      ? 'bg-amber-500/20 text-amber-400 ring-1 ring-amber-500/50'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
-                  }`}
-                >
-                  <span className={`${opt.dotSize} rounded-full bg-current block`} />
-                </button>
-              ))}
-            </div>
+            {/* Colors and Stroke Width (hidden when collapsed) */}
+            {!isPaletteCollapsed && (
+              <div className="flex items-center gap-1.5 md:gap-3 animate-in fade-in zoom-in-95 duration-150">
+                {/* Colors */}
+                <div className="flex items-center gap-1 bg-slate-800/70 p-1 rounded-lg border border-slate-700/70">
+                  {COLOR_PALETTE.map((c) => {
+                    const isSelected = tool === 'pen' && selectedColor === c.value;
+                    return (
+                      <button
+                        key={c.value}
+                        type="button"
+                        onClick={() => {
+                          setSelectedColor(c.value);
+                          setTool('pen');
+                        }}
+                        title={`Cor: ${c.name}`}
+                        aria-label={`Cor ${c.name}`}
+                        className={`w-5 h-5 md:w-6 md:h-6 rounded-full ${c.bgClass} transition-transform ${
+                          isSelected
+                            ? 'ring-2 ring-amber-400 ring-offset-2 ring-offset-slate-900 scale-110'
+                            : 'opacity-80 hover:opacity-100 hover:scale-105'
+                        }`}
+                      />
+                    );
+                  })}
+                </div>
+
+                {/* Stroke Width Selector */}
+                <div className="flex items-center gap-1 bg-slate-800/70 px-1.5 py-1 rounded-lg border border-slate-700/70">
+                  {STROKE_WIDTH_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.width}
+                      type="button"
+                      onClick={() => setStrokeWidth(opt.width)}
+                      title={`Espessura ${opt.label} (${opt.width}px)`}
+                      className={`px-1.5 py-1 rounded flex items-center justify-center transition-colors ${
+                        strokeWidth === opt.width
+                          ? 'bg-amber-500/20 text-amber-400 ring-1 ring-amber-500/50'
+                          : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                      }`}
+                    >
+                      <span className={`${opt.dotSize} rounded-full bg-current block`} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Action Buttons: Undo, Clear, Background Mode, Minimize, Close */}
+          {/* Action Buttons: Undo, Clear, Background Mode, Close */}
           <div className="flex items-center gap-1 md:gap-1.5">
             {/* Undo */}
             <button
@@ -558,22 +583,11 @@ export const Scratchpad: React.FC<ScratchpadProps> = ({
 
             <div className="h-5 w-px bg-slate-700 mx-1 hidden sm:block" />
 
-            {/* Minimize */}
+            {/* Close / Minimize (Deduplicated single action) */}
             <button
               type="button"
               onClick={handleClose}
-              title="Minimizar (mantém o rascunho salvo)"
-              className="flex items-center gap-1 px-2 py-1.5 md:px-2.5 md:py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs md:text-sm font-medium transition-colors border border-slate-700"
-            >
-              <Minimize2 className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Minimizar</span>
-            </button>
-
-            {/* Close */}
-            <button
-              type="button"
-              onClick={handleClose}
-              title="Fechar lousa"
+              title="Fechar / Minimizar lousa (mantém o rascunho salvo)"
               className="p-1.5 md:p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
             >
               <X className="w-4 h-4 md:w-5 md:h-5" />
