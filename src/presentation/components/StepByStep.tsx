@@ -7,6 +7,8 @@ interface StepByStepProps {
   summaryText?: string;
 }
 
+const BOLD_REGEX = /(\*\*.*?\*\*)/g;
+
 export const StepByStep: React.FC<StepByStepProps> = ({
   title = 'Passo a Passo da Resolução',
   steps,
@@ -99,7 +101,7 @@ export const StepByStep: React.FC<StepByStepProps> = ({
             // Render markdown-like bolding for readability
             const formatted = step.split('\n').map((line, lIdx) => {
               // Convert **text** into <strong>text</strong>
-              const parts = line.split(/(\*\*.*?\*\*)/g);
+              const parts = line.split(BOLD_REGEX);
               return (
                 <div key={lIdx} className="py-0.5">
                   {parts.map((p, pIdx) => {
