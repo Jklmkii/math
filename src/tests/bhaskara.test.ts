@@ -75,5 +75,10 @@ describe('Motor Matemático: Bhaskara', () => {
       const parsed = parseQuadraticEquation('3x² = 27');
       expect(parsed).toEqual({ a: '3', b: '0', c: '-27' });
     });
+
+    it('deve retornar null ao falhar no parse de números (catch block)', () => {
+      const parsed = parseQuadraticEquation('x² + .x = 0');
+      expect(parsed).toBeNull();
+    });
   });
 });
