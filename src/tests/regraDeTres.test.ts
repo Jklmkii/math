@@ -63,6 +63,58 @@ describe('Motor Matemático: Regra de Três Simples', () => {
     const sug = suggestProportionality('Velocidade (km/h)', 'Tempo (horas)');
     expect(sug).toBe('inverse');
   });
+
+  it('deve lançar erro de divisão por zero se o divisor (a1) for 0', () => {
+    expect(() =>
+      calculateRegraDeTresSimples({
+        a1: '0',
+        b1: '10',
+        a2: '5',
+        b2: '',
+        unknownPos: 'b2',
+        type: 'direct',
+      })
+    ).toThrow('Divisão por zero: o valor de A₁ não pode ser 0.');
+  });
+
+  it('deve lançar erro de divisão por zero se o divisor (b1) for 0', () => {
+    expect(() =>
+      calculateRegraDeTresSimples({
+        a1: '5',
+        b1: '0',
+        a2: '',
+        b2: '10',
+        unknownPos: 'a2',
+        type: 'direct',
+      })
+    ).toThrow('Divisão por zero: o valor de B₁ não pode ser 0.');
+  });
+
+  it('deve lançar erro de divisão por zero se o divisor (a2) for 0', () => {
+    expect(() =>
+      calculateRegraDeTresSimples({
+        a1: '5',
+        b1: '',
+        a2: '0',
+        b2: '10',
+        unknownPos: 'b1',
+        type: 'direct',
+      })
+    ).toThrow('Divisão por zero: o valor de A₂ não pode ser 0.');
+  });
+
+  it('deve lançar erro de divisão por zero se o divisor (b2) for 0', () => {
+    expect(() =>
+      calculateRegraDeTresSimples({
+        a1: '',
+        b1: '10',
+        a2: '5',
+        b2: '0',
+        unknownPos: 'a1',
+        type: 'direct',
+      })
+    ).toThrow('Divisão por zero: o valor de B₂ não pode ser 0.');
+  });
 });
 
 describe('Motor Matemático: Regra de Três Composta', () => {
