@@ -158,4 +158,35 @@ describe('Motor Matemático: Regra de Três Composta', () => {
     expect(res.x).toBe(15);
     expect(res.formattedX).toBe('15');
   });
+
+  it('deve lançar erro se o valor conhecido da grandeza alvo for zero', () => {
+    const cols = [
+      {
+        id: '1',
+        name: 'Operários',
+        val1: '6',
+        val2: '8',
+        isTarget: false,
+        proportionWithTarget: 'inverse' as const,
+      },
+      {
+        id: '2',
+        name: 'Metros',
+        val1: '120',
+        val2: '300',
+        isTarget: false,
+        proportionWithTarget: 'direct' as const,
+      },
+      {
+        id: '3',
+        name: 'Dias (Tempo)',
+        val1: '0',
+        val2: '',
+        isTarget: true,
+        proportionWithTarget: 'direct' as const,
+      },
+    ];
+
+    expect(() => calculateRegraDeTresComposta(cols)).toThrow('O valor conhecido da grandeza alvo não pode ser zero.');
+  });
 });
