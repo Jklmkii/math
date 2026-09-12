@@ -40,7 +40,7 @@ Disponível como **Web App (PWA)**, **Executável Nativo do Windows (.exe)** e *
 - **Resolução Passo a Passo:** Demonstração do produto das frações até o isolamento de $x$.
 
 ### 4. 🎮 Modos de Treino, Jogos & Desafios
-- **Treino Aritmético (MatSpeed):** Trilhas de Adição, Subtração, Multiplicação, Divisão e Regra de Três, além do Modo Sobrevivência progressivo.
+- **Treino Mental & Sobrevivência:** Modo Sobrevivência progressivo full-mix e Caderno de Erros com Repetição Espaçada adaptativa (algoritmo Leitner amortecido com gatilho dual).
 - **Desafio Diário (Daily Challenge):** Questão determinística única mundial gerada a partir da data via hash FNV-1a e PRNG Mulberry32, concedendo +150 XP e avanço de ofensiva (*streak*).
 - **Modo Blitz (60 Segundos):** Corrida contra o relógio (+2s acerto / -3s erro) com multiplicadores de combo ($1\times \to 2\times \to 3\times$).
 - **Batalha de Chefe (Boss Rush):** Chefe com 100 HP, 3 escudos para o jogador, acertos críticos em respostas rápidas (<3s) e bônus de vitória perfeita (*Flawless*).

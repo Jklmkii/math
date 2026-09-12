@@ -74,9 +74,16 @@ export const translations = {
     unlocked_badge: 'Conquistada',
     locked_badge: 'Bloqueada',
 
-    // MatSpeed / Treino
-    matspeed_title: 'MAT SPEED',
-    matspeed_subtitle: 'Escolha sua trilha: 100 níveis em cada modo.',
+    // Treino Mental / Sobrevivência
+    quiz_lobby_title: 'TREINO MENTAL',
+    quiz_lobby_subtitle: 'Desafie seu raciocínio com operações dinâmicas e sobrevivência progressiva.',
+    spaced_notebook_title: 'Caderno de Erros',
+    spaced_notebook_subtitle: 'Fatos matemáticos em repetição espaçada adaptativa',
+    spaced_due_badge: 'Para Revisar',
+    spaced_all_caught_up: 'Nenhum erro pendente! Todas as contas estão em dia.',
+    spaced_practice_btn: 'Prática Focada',
+    spaced_active_recall: 'Fixação Ativa',
+    spaced_mastery_congrats: '🎯 Fato Matemático Dominado! (+50 XP de Maestria)',
     diff_casual: 'Tranquilo',
     diff_speed: 'Velocidade',
     diff_brutal: 'Brutal',
@@ -330,9 +337,16 @@ export const translations = {
     unlocked_badge: 'Unlocked',
     locked_badge: 'Locked',
 
-    // MatSpeed / Treino
-    matspeed_title: 'MAT SPEED',
-    matspeed_subtitle: 'Choose your track: 100 levels in each mode.',
+    // Treino Mental / Sobrevivência
+    quiz_lobby_title: 'MENTAL TRAINING',
+    quiz_lobby_subtitle: 'Challenge your reasoning with dynamic operations and progressive survival.',
+    spaced_notebook_title: 'Mistake Notebook',
+    spaced_notebook_subtitle: 'Math facts with adaptive spaced repetition',
+    spaced_due_badge: 'Due for Review',
+    spaced_all_caught_up: 'All caught up! Zero pending mistakes.',
+    spaced_practice_btn: 'Focused Practice',
+    spaced_active_recall: 'Active Recall',
+    spaced_mastery_congrats: '🎯 Math Fact Mastered! (+50 XP Mastery)',
     diff_casual: 'Casual',
     diff_speed: 'Speed',
     diff_brutal: 'Brutal',

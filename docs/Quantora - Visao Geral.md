@@ -15,7 +15,7 @@ Toda a documentação técnica, fórmulas, arquitetura de software e guias opera
 
 1. [[Quantora - Visao Geral]] — Esta nota (painel geral e índice).
 2. [[Nucleo Matematico & Calculadoras]] — Resolução passo a passo de Bhaskara, Regra de Três Simples e Composta, raízes complexas e precisão com `big.js`.
-3. [[Modos de Treino & Jogos]] — Modo Treino (MatSpeed e Sobrevivência), Desafio Diário determinístico, Modo Blitz 60s e Batalha de Chefe Matemático.
+3. [[Modos de Treino & Jogos]] — Modo Sobrevivência, Repetição Espaçada (Caderno de Erros), Desafio Diário determinístico, Modo Blitz 60s e Batalha de Chefe Matemático.
 4. [[Lousa de Rascunho (Scratchpad)]] — Camada de desenho digital em HTML5 Canvas transparente com suporte a touch e mouse.
 5. [[Gamificacao & Niveis]] — Fórmulas matemáticas de XP por nível, 6 patentes (PT/EN), catálogo das 16 Conquistas e motor de Ofensiva Diária (Streak) atrelado à data local do dispositivo.
 6. [[Arquitetura de Estado & Persistencia]] — Gerenciamento de estado global com Zustand, persistência em `localStorage`, validador de schema (`historyValidator`) e integridade de dados.

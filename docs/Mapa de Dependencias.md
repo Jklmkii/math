@@ -19,7 +19,7 @@ graph TD
         BossUI["BossBattle.tsx (Batalha de Chefe)"]
         BhaskaraUI["BhaskaraModule.tsx + ParabolaChart.tsx"]
         RegraTresUI["RegraDeTresModule.tsx"]
-        QuizUI["QuizModule.tsx (MatSpeed & Sobrevivência)"]
+        QuizUI["QuizModule.tsx (Sobrevivência & Repetição Espaçada)"]
         HistoryUI["HistoryModule.tsx (Histórico de Cálculos)"]
         Toasts["AchievementToast.tsx + ConfettiCanvas.tsx"]
     end

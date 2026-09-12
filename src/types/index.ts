@@ -119,6 +119,28 @@ export interface QuizProgress {
   tracks: Record<QuizTrack, QuizTrackProgress>;
 }
 
+export type SpacedBox = 1 | 2 | 3 | 4 | 5;
+
+export interface SpacedCard {
+  id: string; // itemKey normalizado, ex: "mult:7x8"
+  track: QuizTrack;
+  operands: [number, number];
+  box: SpacedBox;
+  consecutiveCorrect: number;
+  lastReviewedAt: number;
+  lastQuestionCounter: number;
+  nextReviewTimestamp: number;
+  nextReviewQuestions: number;
+  hasGraduated: boolean; // Previne re-farm de bônus de graduação (+50 XP)
+  totalMistakes: number;
+  totalReviews: number;
+}
+
+export interface SpacedRepetitionState {
+  cards: Record<string, SpacedCard>;
+  globalQuestionsAnswered: number;
+}
+
 export interface QuizQuestion {
   id: string;
   type: QuizTrack;
@@ -132,6 +154,10 @@ export interface QuizQuestion {
   options?: number[];
   explanation: string[];
   timeLimitSeconds?: number;
+  isSpacedReview?: boolean;
+  spacedBox?: SpacedBox;
+  spacedCardId?: string;
+  operands?: [number, number];
 }
 
 export type AchievementCategory = 'habilidade' | 'consistencia' | 'mestria' | 'desafios';

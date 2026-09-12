@@ -3,7 +3,7 @@ import { generateQuizQuestion } from '../core/math/quizGenerator';
 import { parseBig } from '../core/math/precision';
 import { useAppStore } from '../store/useAppStore';
 
-describe('Modo Treino (MatSpeed) - Gerador e Validação', () => {
+describe('Modo Treino Mental e Sobrevivência - Gerador e Validação', () => {
   it('gera perguntas válidas para todas as trilhas', () => {
     const tracks = ['soma', 'subtracao', 'multiplicacao', 'divisao', 'regra_simples', 'sobrevivencia'] as const;
 
@@ -88,5 +88,57 @@ describe('Modo Treino (MatSpeed) - Gerador e Validação', () => {
     expect(somaProgress.recordCount).toBe(25);
     expect(somaProgress.bestStreak).toBe(8);
     expect(somaProgress.currentLevel).toBeGreaterThanOrEqual(5);
+  });
+
+  it('gera pergunta didática precisa a partir de uma carta de repetição espaçada', () => {
+    const card = {
+      id: 'mult:7x8',
+      track: 'multiplicacao' as const,
+      operands: [7, 8] as [number, number],
+      box: 2 as const,
+      consecutiveCorrect: 1,
+      lastReviewedAt: 1000,
+      lastQuestionCounter: 5,
+      nextReviewTimestamp: 2000,
+      nextReviewQuestions: 10,
+      hasGraduated: false,
+      totalMistakes: 1,
+      totalReviews: 2,
+    };
+
+    const q = generateQuizQuestion('sobrevivencia', 12, card);
+    expect(q.isSpacedReview).toBe(true);
+    expect(q.spacedBox).toBe(2);
+    expect(q.spacedCardId).toBe('mult:7x8');
+    expect(q.displayExpression).toBe('7 × 8');
+    expect(q.correctAnswer).toBe(56);
+    expect(q.operands).toEqual([7, 8]);
+  });
+
+  it('armazena erros e atualiza repetição espaçada na store Zustand', () => {
+    const store = useAppStore.getState();
+    store.resetSpacedRepetition();
+
+    // Erro em 7x8
+    const r1 = store.recordSpacedAnswer({
+      track: 'multiplicacao',
+      operands: [7, 8],
+      isCorrect: false,
+    });
+    expect(r1.xpEarned).toBe(0);
+
+    const cardsAfterError = useAppStore.getState().spacedRepetition.cards;
+    expect(cardsAfterError['mult:7x8']).toBeDefined();
+    expect(cardsAfterError['mult:7x8'].box).toBe(1);
+
+    // Acerto subsequente na Caixa 1
+    const r2 = store.recordSpacedAnswer({
+      track: 'multiplicacao',
+      operands: [7, 8],
+      isCorrect: true,
+    });
+    expect(r2.xpEarned).toBe(15); // 10 base + 5 resiliência
+    expect(r2.isResilienceBonus).toBe(true);
+    expect(useAppStore.getState().spacedRepetition.cards['mult:7x8'].box).toBe(2);
   });
 });

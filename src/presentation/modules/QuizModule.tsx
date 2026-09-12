@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   Skull,
   Flame,
@@ -7,16 +7,13 @@ import {
   ArrowRight,
   Sparkles,
   Delete,
-  Plus,
-  Minus,
-  X,
-  Divide,
-  Scale,
   ChevronLeft,
   Trophy,
   Zap,
   Swords,
   Crown,
+  BookOpen,
+  CheckCircle2,
 } from 'lucide-react';
 import { generateQuizQuestion } from '../../core/math/quizGenerator';
 import { parseBig, formatNumberSmart } from '../../core/math/precision';
@@ -25,7 +22,8 @@ import { useAppStore } from '../../store/useAppStore';
 import { useShallow } from 'zustand/react/shallow';
 import { useTranslation } from '../../core/i18n/translations';
 import { DailyChallengeCard } from '../components/DailyChallengeCard';
-import type { QuizDifficultyMode, QuizQuestion, QuizTrackSelector } from '../../types';
+import { selectNextDueCard, getDueCards } from '../../core/quiz/spacedRepetition';
+import type { QuizDifficultyMode, QuizQuestion, QuizTrackSelector, SpacedCard } from '../../types';
 
 // Code-splitting: Lazy load heavy game modes on demand
 const BlitzGame = React.lazy(() =>
@@ -36,7 +34,17 @@ const BossBattle = React.lazy(() =>
 );
 
 export const QuizModule: React.FC = () => {
-  const { quizProgress, recordQuizAnswer, decimalPlaces, decimalSeparator, language, blitzHighScore, bossesDefeated } = useAppStore(
+  const {
+    quizProgress,
+    recordQuizAnswer,
+    decimalPlaces,
+    decimalSeparator,
+    language,
+    blitzHighScore,
+    bossesDefeated,
+    spacedRepetition,
+    recordSpacedAnswer,
+  } = useAppStore(
     useShallow((s) => ({
       quizProgress: s.quizProgress,
       recordQuizAnswer: s.recordQuizAnswer,
@@ -45,6 +53,8 @@ export const QuizModule: React.FC = () => {
       language: s.settings.language || 'pt',
       blitzHighScore: s.profile?.stats?.blitzHighScore || 0,
       bossesDefeated: s.profile?.stats?.bossesDefeated || 0,
+      spacedRepetition: s.spacedRepetition,
+      recordSpacedAnswer: s.recordSpacedAnswer,
     }))
   );
   const settings = React.useMemo(
@@ -55,6 +65,20 @@ export const QuizModule: React.FC = () => {
 
   // Screen View: 'lobby' | 'playing' | 'game_over' | 'blitz' | 'boss_rush'
   const [screen, setScreen] = useState<'lobby' | 'playing' | 'game_over' | 'blitz' | 'boss_rush'>('lobby');
+
+  // Repetição Espaçada / Prática Focada State
+  const [isFocusedPractice, setIsFocusedPractice] = useState<boolean>(false);
+  const [masteryUnlocked, setMasteryUnlocked] = useState<boolean>(false);
+  const [mountTime] = useState<number>(() => Date.now());
+
+  const dueCards = useMemo(() => {
+    return getDueCards(
+      spacedRepetition?.cards || {},
+      spacedRepetition?.globalQuestionsAnswered || 0,
+      mountTime
+    );
+  }, [spacedRepetition, mountTime]);
+  const dueCount = dueCards.length;
 
   // Settings & Modes
   const [selectedTrack, setSelectedTrack] = useState<QuizTrackSelector>('sobrevivencia');
@@ -93,7 +117,7 @@ export const QuizModule: React.FC = () => {
   // Compute total time based on difficulty and count number
   const computeTimeLimit = useCallback((mode: QuizDifficultyMode, count: number): number => {
     if (mode === 'tranquilo') return Infinity;
-    if (mode === 'velocidade') return 20; // 20s por conta como no MatSpeed
+    if (mode === 'velocidade') return 20; // 20s por conta
     // Brutal mode: 8s base, reduz gradualmente até 5s
     const reduction = Math.min(3, Math.floor(count / 25) * 0.5);
     return Math.max(5, 8 - reduction);
@@ -101,8 +125,18 @@ export const QuizModule: React.FC = () => {
 
   // Initialize or Advance Question
   const loadQuestion = useCallback(
-    (nextCount: number, track: QuizTrackSelector) => {
-      const q = generateQuizQuestion(track, nextCount);
+    (nextCount: number, track: QuizTrackSelector, forceSpaced: boolean = false) => {
+      let dueCard: SpacedCard | null = null;
+      const stateSpaced = useAppStore.getState().spacedRepetition;
+      if (forceSpaced || isFocusedPractice || (track === 'sobrevivencia' && Math.random() < 0.3)) {
+        dueCard = selectNextDueCard(
+          stateSpaced?.cards || {},
+          stateSpaced?.globalQuestionsAnswered || 0,
+          Date.now()
+        );
+      }
+
+      const q = generateQuizQuestion(track, nextCount, dueCard || undefined);
       const time = computeTimeLimit(difficultyMode, nextCount);
 
       setCountNumber(nextCount);
@@ -112,28 +146,45 @@ export const QuizModule: React.FC = () => {
       setIsCorrect(null);
       setIsTimedOut(false);
       setShowAgileBadge(false);
+      setMasteryUnlocked(false);
       setFlashColor(null);
       setTotalTime(time);
       setTimeLeft(time);
     },
-    [difficultyMode, computeTimeLimit]
+    [difficultyMode, computeTimeLimit, isFocusedPractice]
   );
 
   // Start game from Lobby
   const handleStartTrack = (track: QuizTrackSelector) => {
+    setIsFocusedPractice(false);
     setSelectedTrack(track);
     setCountNumber(1);
     setScore(0);
     setStreak(0);
     setMaxStreakThisRun(0);
     setIsNewRecord(false);
-    loadQuestion(1, track);
+    loadQuestion(1, track, false);
+    setScreen('playing');
+  };
+
+  // Start Focused Practice (Caderno de Erros)
+  const handleStartFocusedPractice = () => {
+    setIsFocusedPractice(true);
+    setSelectedTrack('sobrevivencia');
+    setCountNumber(1);
+    setScore(0);
+    setStreak(0);
+    setMaxStreakThisRun(0);
+    setIsNewRecord(false);
+    loadQuestion(1, 'sobrevivencia', true);
     setScreen('playing');
   };
 
   // Exit to Lobby
   const handleExitToLobby = () => {
     if (timerRef.current) clearInterval(timerRef.current);
+    setIsFocusedPractice(false);
+    setMasteryUnlocked(false);
     setScreen('lobby');
   };
 
@@ -144,7 +195,8 @@ export const QuizModule: React.FC = () => {
     setStreak(0);
     setMaxStreakThisRun(0);
     setIsNewRecord(false);
-    loadQuestion(1, selectedTrack);
+    setMasteryUnlocked(false);
+    loadQuestion(1, selectedTrack, isFocusedPractice);
     setScreen('playing');
   };
 
@@ -155,6 +207,14 @@ export const QuizModule: React.FC = () => {
     setIsTimedOut(true);
     setFlashColor('red');
     setStreak(0);
+
+    if (currentQuestion?.operands) {
+      recordSpacedAnswer({
+        track: currentQuestion.type,
+        operands: currentQuestion.operands,
+        isCorrect: false,
+      });
+    }
 
     recordQuizAnswer({
       track: selectedTrack,
@@ -171,7 +231,7 @@ export const QuizModule: React.FC = () => {
         setScreen('game_over');
       }, 1000);
     }
-  }, [selectedTrack, countNumber, score, currentRecord, recordQuizAnswer]);
+  }, [selectedTrack, countNumber, score, currentRecord, recordQuizAnswer, recordSpacedAnswer, currentQuestion]);
 
   // Timer Countdown Effect
   useEffect(() => {
@@ -180,20 +240,16 @@ export const QuizModule: React.FC = () => {
       return;
     }
 
-    const intervalMs = 100;
-    const decrement = intervalMs / 1000;
-
     timerRef.current = window.setInterval(() => {
       setTimeLeft((prev) => {
-        const next = prev - decrement;
-        if (next <= 0) {
-          clearInterval(timerRef.current!);
+        if (prev <= 0.1) {
+          if (timerRef.current) clearInterval(timerRef.current);
           handleTimeout();
           return 0;
         }
-        return next;
+        return Math.max(0, Number((prev - 0.1).toFixed(1)));
       });
-    }, intervalMs);
+    }, 100);
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
@@ -222,7 +278,22 @@ export const QuizModule: React.FC = () => {
       const ratio = totalTime === Infinity ? 0 : timeLeft / totalTime;
       const isAgile = totalTime !== Infinity && ratio >= 0.6;
       const bonus = isAgile ? Math.max(5, Math.floor(ratio * 15)) : 0;
-      const earnedXp = 10 + Math.min(streak * 2, 20) + bonus;
+
+      let spacedBonus = 0;
+      if (currentQuestion.operands) {
+        const spacedRes = recordSpacedAnswer({
+          track: currentQuestion.type,
+          operands: currentQuestion.operands,
+          isCorrect: true,
+        });
+        if (spacedRes.isResilienceBonus) spacedBonus += 5;
+        if (spacedRes.graduatedNow) {
+          spacedBonus += 50;
+          setMasteryUnlocked(true);
+        }
+      }
+
+      const earnedXp = 10 + Math.min(streak * 2, 20) + bonus + spacedBonus;
 
       const nextScore = score + earnedXp;
       const nextStreak = streak + 1;
@@ -250,7 +321,7 @@ export const QuizModule: React.FC = () => {
 
       // Quick advance to next count
       setTimeout(() => {
-        loadQuestion(countNumber + 1, selectedTrack);
+        loadQuestion(countNumber + 1, selectedTrack, isFocusedPractice);
       }, isAgile ? 850 : 500);
     } else {
       // Incorreto
@@ -260,6 +331,14 @@ export const QuizModule: React.FC = () => {
       setIsCorrect(false);
       setFlashColor('red');
       setStreak(0);
+
+      if (currentQuestion.operands) {
+        recordSpacedAnswer({
+          track: currentQuestion.type,
+          operands: currentQuestion.operands,
+          isCorrect: false,
+        });
+      }
 
       recordQuizAnswer({
         track: selectedTrack,
@@ -289,8 +368,10 @@ export const QuizModule: React.FC = () => {
     selectedTrack,
     countNumber,
     currentRecord,
+    isFocusedPractice,
     loadQuestion,
     recordQuizAnswer,
+    recordSpacedAnswer,
   ]);
 
   // Keypad Handlers
@@ -397,33 +478,148 @@ export const QuizModule: React.FC = () => {
   }
 
   // ==========================================
-  // SCREEN 1: LOBBY / MENU (Estilo MatSpeed)
+  // SCREEN 1: LOBBY / MENU
   // ==========================================
   if (screen === 'lobby') {
-    const somaNivel = quizProgress.tracks?.soma?.currentLevel || 1;
-    const subNivel = quizProgress.tracks?.subtracao?.currentLevel || 1;
-    const multNivel = quizProgress.tracks?.multiplicacao?.currentLevel || 1;
-    const divNivel = quizProgress.tracks?.divisao?.currentLevel || 1;
     const sobrevRecorde = quizProgress.survival?.recordCount || 0;
 
     return (
       <div className="flex flex-col items-center gap-6 max-w-xl mx-auto pb-24 md:pb-12 select-none animate-in fade-in">
         {/* Title & Subtitle */}
         <div className="flex flex-col items-center text-center mt-2">
-          <h1 className="text-4xl sm:text-5xl font-black tracking-widest text-amber-400 font-mono drop-shadow-[0_4px_10px_rgba(251,191,36,0.3)]">
-            {t.matspeed_title}
+          <h1 className="text-4xl sm:text-5xl font-black tracking-widest bg-gradient-to-r from-cyan-400 via-indigo-300 to-fuchsia-400 bg-clip-text text-transparent font-mono drop-shadow-[0_4px_12px_rgba(99,102,241,0.25)]">
+            {t.quiz_lobby_title}
           </h1>
-          <p className="text-xs sm:text-sm font-semibold text-slate-400 mt-2">
-            {t.matspeed_subtitle}
+          <p className="text-xs sm:text-sm font-semibold text-slate-400 mt-2 max-w-md">
+            {t.quiz_lobby_subtitle}
           </p>
         </div>
 
-        {/* 1. Daily Challenge Card Prominently Embedded */}
+        {/* Difficulty Selectors (Pills) */}
+        <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-inner">
+          <button
+            type="button"
+            onClick={() => setDifficultyMode('tranquilo')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 touch-target ${
+              difficultyMode === 'tranquilo'
+                ? 'bg-slate-800 text-emerald-400 border border-emerald-500/50 shadow-sm'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <span>🌱</span> {t.diff_casual}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setDifficultyMode('velocidade')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 touch-target ${
+              difficultyMode === 'velocidade'
+                ? 'bg-amber-400/10 text-amber-400 border border-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.25)]'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <span>⚡</span> {t.diff_speed}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setDifficultyMode('brutal')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 touch-target ${
+              difficultyMode === 'brutal'
+                ? 'bg-red-500/10 text-red-400 border border-red-500 shadow-[0_0_12px_rgba(239,68,68,0.25)]'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <span>🔥</span> {t.diff_brutal}
+          </button>
+        </div>
+
+        {/* 1. HERO CARD: Modo Sobrevivência (Full-Width, Central e Imponente) */}
+        <button
+          type="button"
+          onClick={() => handleStartTrack('sobrevivencia')}
+          className="w-full p-7 rounded-3xl bg-gradient-to-br from-indigo-950/70 via-slate-900 to-purple-950/60 hover:from-indigo-900/70 hover:to-purple-900/70 border border-indigo-500/40 hover:border-cyan-400/80 transition-all flex flex-col items-center text-center gap-3.5 group shadow-2xl hover:shadow-indigo-500/20 active:scale-[0.99] touch-target cursor-pointer relative overflow-hidden"
+        >
+          <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none group-hover:bg-cyan-500/20 transition-all" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-fuchsia-500/10 rounded-full blur-2xl pointer-events-none group-hover:bg-fuchsia-500/20 transition-all" />
+
+          <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 text-white flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg shadow-indigo-500/30">
+            <Skull size={34} className="stroke-[2.5]" />
+          </div>
+
+          <div>
+            <div className="flex items-center justify-center gap-2">
+              <h2 className="text-2xl sm:text-3xl font-black text-white tracking-wide">
+                {t.track_survival}
+              </h2>
+              <span className="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-cyan-300 border border-indigo-500/30">
+                Full-Mix
+              </span>
+            </div>
+            <p className="text-xs sm:text-sm font-semibold text-slate-300 mt-1 max-w-md">
+              {t.track_survival_sub}
+            </p>
+          </div>
+
+          <div className="w-full flex items-center justify-between text-xs font-bold pt-3 border-t border-slate-800/80 px-2 text-slate-300">
+            <span className="flex items-center gap-1.5 text-indigo-300">
+              <Trophy size={15} className="text-amber-400" /> {t.record_prefix}: {t.account_prefix} #{sobrevRecorde}
+            </span>
+            <span className="font-mono text-cyan-300">
+              {quizProgress.survival?.highScore || 0} {t.xp_survival}
+            </span>
+          </div>
+        </button>
+
+        {/* 2. CARD DO CADERNO DE ERROS (Repetição Espaçada & Active Recall) */}
+        <div className="w-full p-5 rounded-3xl bg-slate-900/80 border border-slate-800 hover:border-slate-700 transition-all flex flex-col gap-3 shadow-xl">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 flex items-center justify-center shrink-0">
+                <BookOpen size={20} />
+              </div>
+              <div className="text-left">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-base font-black text-white">
+                    {t.spaced_notebook_title}
+                  </h3>
+                  {dueCount > 0 ? (
+                    <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-mono font-bold animate-pulse">
+                      {dueCount} {t.spaced_due_badge}
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-mono font-bold flex items-center gap-1">
+                      <CheckCircle2 size={10} /> 100% em dia
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11px] font-medium text-slate-400 mt-0.5">
+                  {dueCount > 0
+                    ? `${dueCount} fatos matemáticos aguardando fixação`
+                    : t.spaced_all_caught_up}
+                </p>
+              </div>
+            </div>
+
+            {dueCount > 0 && (
+              <button
+                type="button"
+                onClick={handleStartFocusedPractice}
+                className="px-4 py-2 rounded-2xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs transition-all shadow-md shadow-cyan-500/20 active:scale-95 touch-target flex items-center gap-1.5 shrink-0"
+              >
+                <Zap size={14} className="fill-slate-950" />
+                {t.spaced_practice_btn}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* 3. Daily Challenge Card Prominently Embedded */}
         <div className="w-full">
           <DailyChallengeCard />
         </div>
 
-        {/* 2. Special Game Modes Grid: Blitz & Boss Rush */}
+        {/* 4. Special Game Modes Grid: Blitz & Boss Rush */}
         <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           {/* Modo Blitz Card */}
           <button
@@ -483,162 +679,6 @@ export const QuizModule: React.FC = () => {
                 Derrotados: {bossesDefeated}
               </span>
             </div>
-          </button>
-        </div>
-
-        {/* Section Divider / MatSpeed header */}
-        <div className="w-full flex items-center gap-3 pt-2">
-          <div className="h-px flex-1 bg-slate-800" />
-          <span className="text-xs font-bold uppercase tracking-widest text-slate-500">
-            Trilhas de Prática
-          </span>
-          <div className="h-px flex-1 bg-slate-800" />
-        </div>
-
-        {/* Difficulty Selectors (Pills) */}
-        <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-inner">
-          <button
-            type="button"
-            onClick={() => setDifficultyMode('tranquilo')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 touch-target ${
-              difficultyMode === 'tranquilo'
-                ? 'bg-slate-800 text-emerald-400 border border-emerald-500/50 shadow-sm'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <span>🌱</span> {t.diff_casual}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setDifficultyMode('velocidade')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 touch-target ${
-              difficultyMode === 'velocidade'
-                ? 'bg-amber-400/10 text-amber-400 border border-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.25)]'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <span>⚡</span> {t.diff_speed}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setDifficultyMode('brutal')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 touch-target ${
-              difficultyMode === 'brutal'
-                ? 'bg-red-500/10 text-red-400 border border-red-500 shadow-[0_0_12px_rgba(239,68,68,0.25)]'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <span>🔥</span> {t.diff_brutal}
-          </button>
-        </div>
-
-        {/* 2x2 Grid of Tracks */}
-        <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-          {/* Card Soma */}
-          <button
-            type="button"
-            onClick={() => handleStartTrack('soma')}
-            className="p-5 rounded-3xl bg-slate-900/80 hover:bg-slate-900 border border-slate-800/80 hover:border-indigo-500/80 transition-all flex flex-col items-center text-center gap-2 group shadow-lg hover:shadow-indigo-500/10 active:scale-[0.98] touch-target"
-          >
-            <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Plus size={24} className="stroke-[2.5]" />
-            </div>
-            <h3 className="text-lg font-black text-white">{t.track_addition}</h3>
-            <p className="text-[11px] font-medium text-slate-400">
-              {t.track_addition_sub}
-            </p>
-            <span className="mt-1 px-3 py-0.5 rounded-full bg-emerald-950/60 text-emerald-400 border border-emerald-800/60 font-mono text-xs font-bold">
-              {t.level_badge} {somaNivel}/100
-            </span>
-          </button>
-
-          {/* Card Subtração */}
-          <button
-            type="button"
-            onClick={() => handleStartTrack('subtracao')}
-            className="p-5 rounded-3xl bg-slate-900/80 hover:bg-slate-900 border border-slate-800/80 hover:border-rose-500/80 transition-all flex flex-col items-center text-center gap-2 group shadow-lg hover:shadow-rose-500/10 active:scale-[0.98] touch-target"
-          >
-            <div className="w-10 h-10 rounded-2xl bg-rose-500/10 text-rose-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Minus size={24} className="stroke-[2.5]" />
-            </div>
-            <h3 className="text-lg font-black text-white">{t.track_subtraction}</h3>
-            <p className="text-[11px] font-medium text-slate-400">
-              {t.track_subtraction_sub}
-            </p>
-            <span className="mt-1 px-3 py-0.5 rounded-full bg-rose-950/60 text-rose-400 border border-rose-800/60 font-mono text-xs font-bold">
-              {t.level_badge} {subNivel}/100
-            </span>
-          </button>
-
-          {/* Card Multiplicação */}
-          <button
-            type="button"
-            onClick={() => handleStartTrack('multiplicacao')}
-            className="p-5 rounded-3xl bg-slate-900/80 hover:bg-slate-900 border border-slate-800/80 hover:border-amber-500/80 transition-all flex flex-col items-center text-center gap-2 group shadow-lg hover:shadow-amber-500/10 active:scale-[0.98] touch-target"
-          >
-            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <X size={24} className="stroke-[2.5]" />
-            </div>
-            <h3 className="text-lg font-black text-white">{t.track_multiplication}</h3>
-            <p className="text-[11px] font-medium text-slate-400">
-              {t.track_multiplication_sub}
-            </p>
-            <span className="mt-1 px-3 py-0.5 rounded-full bg-amber-950/60 text-amber-400 border border-amber-800/60 font-mono text-xs font-bold">
-              {t.level_badge} {multNivel}/100
-            </span>
-          </button>
-
-          {/* Card Divisão */}
-          <button
-            type="button"
-            onClick={() => handleStartTrack('divisao')}
-            className="p-5 rounded-3xl bg-slate-900/80 hover:bg-slate-900 border border-slate-800/80 hover:border-cyan-500/80 transition-all flex flex-col items-center text-center gap-2 group shadow-lg hover:shadow-cyan-500/10 active:scale-[0.98] touch-target"
-          >
-            <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Divide size={24} className="stroke-[2.5]" />
-            </div>
-            <h3 className="text-lg font-black text-white">{t.track_division}</h3>
-            <p className="text-[11px] font-medium text-slate-400">
-              {t.track_division_sub}
-            </p>
-            <span className="mt-1 px-3 py-0.5 rounded-full bg-cyan-950/60 text-cyan-400 border border-cyan-800/60 font-mono text-xs font-bold">
-              {t.level_badge} {divNivel}/100
-            </span>
-          </button>
-        </div>
-
-        {/* Card Inferior: Sobrevivência (Full Width) */}
-        <button
-          type="button"
-          onClick={() => handleStartTrack('sobrevivencia')}
-          className="w-full p-6 rounded-3xl bg-gradient-to-b from-purple-950/40 to-slate-950 border border-purple-900/60 hover:border-purple-500 transition-all flex flex-col items-center text-center gap-2 group shadow-xl hover:shadow-purple-500/20 active:scale-[0.98] touch-target"
-        >
-          <div className="w-12 h-12 rounded-2xl bg-purple-500/20 text-purple-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-            <Skull size={28} className="stroke-[2.5]" />
-          </div>
-          <h2 className="text-xl font-black text-white tracking-wide">
-            {t.track_survival}
-          </h2>
-          <p className="text-xs font-semibold text-slate-400 max-w-sm">
-            {t.track_survival_sub}
-          </p>
-          <div className="flex items-center gap-3 mt-1 text-xs font-bold text-purple-300">
-            <span>{t.record_prefix}: {t.account_prefix} #{sobrevRecorde}</span>
-            <span>•</span>
-            <span>{quizProgress.survival?.highScore || 0} {t.xp_survival}</span>
-          </div>
-        </button>
-
-        {/* Extra option: Regra de Três Simples */}
-        <div className="w-full flex justify-center">
-          <button
-            type="button"
-            onClick={() => handleStartTrack('regra_simples')}
-            className="text-xs font-semibold text-slate-400 hover:text-indigo-400 flex items-center gap-1.5 transition-colors py-1 px-3 rounded-xl hover:bg-slate-900"
-          >
-            <Scale size={14} /> {t.track_rule_three}
           </button>
         </div>
       </div>
@@ -765,7 +805,11 @@ export const QuizModule: React.FC = () => {
         </button>
 
         <span className="text-xs font-bold uppercase tracking-wider text-slate-500 font-mono">
-          {selectedTrack === 'sobrevivencia' ? `${t.track_survival} 💀` : `${t.level_badge}: ${selectedTrack}`}
+          {isFocusedPractice
+            ? `${t.spaced_practice_btn} ⚡`
+            : selectedTrack === 'sobrevivencia'
+            ? `${t.track_survival} 💀`
+            : `${t.level_badge}: ${selectedTrack}`}
         </span>
       </div>
 
@@ -841,6 +885,17 @@ export const QuizModule: React.FC = () => {
 
         {/* Math Display Area */}
         <div className="w-full flex flex-col items-center justify-center my-2 text-center z-10">
+          {currentQuestion.isSpacedReview && (
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-black uppercase tracking-wider mb-2 animate-pulse">
+              <Zap size={13} className="fill-cyan-400 text-cyan-400" />
+              <span>{t.spaced_active_recall} · Caixa {currentQuestion.spacedBox || 1}</span>
+            </div>
+          )}
+          {masteryUnlocked && (
+            <div className="w-full max-w-sm py-1.5 px-3 mb-2 rounded-xl bg-gradient-to-r from-amber-500/20 via-yellow-500/20 to-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-black animate-bounce">
+              {t.spaced_mastery_congrats}
+            </div>
+          )}
           {currentQuestion.context && (
             <span className="text-xs font-semibold text-indigo-400 uppercase tracking-widest mb-1">
               {currentQuestion.context}

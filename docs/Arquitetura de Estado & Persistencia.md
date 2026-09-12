@@ -21,7 +21,7 @@ graph LR
         NavState["Navegação (activeTab)"]
         HistState["Histórico de Cálculos"]
         ProfState["Perfil & Gamificação"]
-        QuizState["Progresso MatSpeed & Blitz"]
+        QuizState["Progresso Treino & Repetição Espaçada"]
         DailyState["Desafio Diário"]
         SetState["Configurações & Temas"]
         ToastState["Fila de Notificações (Toasts)"]

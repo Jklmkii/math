@@ -9,6 +9,8 @@ import type {
   UserProfile,
   AchievementDef,
   DailyChallengeState,
+  SpacedRepetitionState,
+  QuizTrack,
 } from '../types';
 import { validateHistorySchema } from '../core/storage/historyValidator';
 import {
@@ -18,6 +20,11 @@ import {
   checkNewAchievements,
   ACHIEVEMENTS,
 } from '../core/gamification/leveling';
+import {
+  createItemKey,
+  createInitialCard,
+  processCardAnswer,
+} from '../core/quiz/spacedRepetition';
 
 export type ActiveTab = 'bhaskara' | 'regra_simples' | 'regra_composta' | 'physics' | 'quiz' | 'history' | 'settings';
 
@@ -78,6 +85,15 @@ interface AppState {
   }) => void;
   resetQuizProgress: (track?: QuizTrackSelector) => void;
 
+  // Repetição Espaçada / Caderno de Erros
+  spacedRepetition: SpacedRepetitionState;
+  recordSpacedAnswer: (params: {
+    track: QuizTrack;
+    operands: [number, number];
+    isCorrect: boolean;
+  }) => { xpEarned: number; graduatedNow: boolean; isResilienceBonus: boolean };
+  resetSpacedRepetition: () => void;
+
   // Onboarding
   completeOnboarding: () => void;
 }
@@ -123,6 +139,11 @@ const DEFAULT_QUIZ_PROGRESS: QuizProgress = {
     divisao: { currentLevel: 1, bestStreak: 0, recordCount: 0, totalCorrect: 0, totalAnswered: 0 },
     regra_simples: { currentLevel: 1, bestStreak: 0, recordCount: 0, totalCorrect: 0, totalAnswered: 0 },
   },
+};
+
+const DEFAULT_SPACED_REPETITION: SpacedRepetitionState = {
+  cards: {},
+  globalQuestionsAnswered: 0,
 };
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -499,6 +520,47 @@ export const useAppStore = create<AppState>()(
         });
       },
 
+      spacedRepetition: DEFAULT_SPACED_REPETITION,
+      recordSpacedAnswer: ({ track, operands, isCorrect }) => {
+        let resultXp = 0;
+        let graduated = false;
+        let resilience = false;
+
+        set((state) => {
+          const prevSpaced = state.spacedRepetition || DEFAULT_SPACED_REPETITION;
+          const currentGlobal = (prevSpaced.globalQuestionsAnswered || 0) + 1;
+          const key = createItemKey(track, operands[0], operands[1]);
+          const existingCard = prevSpaced.cards[key];
+
+          const updatedCards = { ...prevSpaced.cards };
+
+          if (existingCard) {
+            const res = processCardAnswer(existingCard, isCorrect, currentGlobal);
+            updatedCards[key] = res.updatedCard;
+            resultXp = res.xpEarned;
+            graduated = res.graduatedNow;
+            resilience = res.isResilienceBonus;
+          } else if (!isCorrect) {
+            const newCard = createInitialCard(track, operands[0], operands[1], currentGlobal);
+            updatedCards[key] = newCard;
+          }
+
+          return {
+            spacedRepetition: {
+              cards: updatedCards,
+              globalQuestionsAnswered: currentGlobal,
+            },
+          };
+        });
+
+        return { xpEarned: resultXp, graduatedNow: graduated, isResilienceBonus: resilience };
+      },
+      resetSpacedRepetition: () => {
+        set({
+          spacedRepetition: DEFAULT_SPACED_REPETITION,
+        });
+      },
+
       settings: DEFAULT_SETTINGS,
       updateSettings: (partial) =>
         set((state) => ({
@@ -609,10 +671,10 @@ export const useAppStore = create<AppState>()(
     {
       name: 'quantora-storage',
       storage: createJSONStorage(() => localStorage),
-      version: 2,
+      version: 3,
       migrate: (persistedState: any, version: number) => {
+        const state = persistedState as any;
         if (!version || version < 2) {
-          const state = persistedState as any;
           if (state?.profile) {
             state.profile.stats = {
               totalCalculations: 0,
@@ -636,9 +698,16 @@ export const useAppStore = create<AppState>()(
               history: [],
             };
           }
-          return state;
         }
-        return persistedState;
+        if (!version || version < 3) {
+          if (!state?.spacedRepetition) {
+            state.spacedRepetition = {
+              cards: {},
+              globalQuestionsAnswered: 0,
+            };
+          }
+        }
+        return state;
       },
       partialize: (state) => {
         const { toastQueue: _toastQueue, isScratchpadOpen: _isScratchpadOpen, ...rest } = state;

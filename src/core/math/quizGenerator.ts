@@ -1,5 +1,5 @@
 import Big from 'big.js';
-import type { QuizQuestion, QuizTrack, QuizTrackSelector } from '../../types';
+import type { QuizQuestion, QuizTrack, QuizTrackSelector, SpacedCard } from '../../types';
 import { calculateRegraDeTresSimples } from './regraDeTresSimples';
 import { formatNumberSmart } from './precision';
 
@@ -15,10 +15,101 @@ function pickRandom<T>(arr: T[]): T {
 const FINITE_DECIMAL_DIVISORS_1_DECIMAL = [2, 5, 10];
 const FINITE_DECIMAL_DIVISORS_2_DECIMALS = [4, 20, 25, 50];
 
-export function generateQuizQuestion(
-  trackSelector: QuizTrackSelector = 'sobrevivencia',
+export function generateQuizQuestionFromCard(
+  card: SpacedCard,
   countNumber: number = 1
 ): QuizQuestion {
+  const id = `spaced_${card.id}_${Date.now()}`;
+  const [a, b] = card.operands;
+  const track = card.track;
+
+  let questionText = 'Resolva o cálculo mental:';
+  let displayExpression = '';
+  let correctAnswer = 0;
+  let formattedCorrectAnswer = '';
+  let explanation: string[] = [];
+
+  switch (track) {
+    case 'soma': {
+      questionText = 'Resolva a soma (Fixação):';
+      displayExpression = `${a} + ${b}`;
+      correctAnswer = a + b;
+      formattedCorrectAnswer = correctAnswer.toString();
+      explanation = [
+        `Fixação Ativa: ${a} + ${b}`,
+        `Decomposição: ${Math.floor(a / 10) * 10} + ${Math.floor(b / 10) * 10} = ${Math.floor(a / 10) * 10 + Math.floor(b / 10) * 10}`,
+        `Unidades: ${a % 10} + ${b % 10} = ${(a % 10) + (b % 10)}`,
+        `Resultado final: ${correctAnswer}`,
+      ];
+      break;
+    }
+    case 'subtracao': {
+      questionText = 'Resolva a subtração (Fixação):';
+      displayExpression = `${a} - ${b}`;
+      correctAnswer = a - b;
+      formattedCorrectAnswer = correctAnswer.toString();
+      explanation = [
+        `Fixação Ativa: ${a} - ${b}`,
+        `Resultado final: ${correctAnswer}`,
+      ];
+      break;
+    }
+    case 'multiplicacao': {
+      questionText = 'Multiplicação mental (Fixação):';
+      displayExpression = `${a} × ${b}`;
+      correctAnswer = a * b;
+      formattedCorrectAnswer = correctAnswer.toString();
+      explanation = [
+        `Fixação Ativa: ${a} × ${b}`,
+        `Resultado: ${correctAnswer}`,
+      ];
+      break;
+    }
+    case 'divisao': {
+      questionText = 'Divisão mental (Fixação):';
+      displayExpression = `${a} ÷ ${b}`;
+      correctAnswer = a / b;
+      formattedCorrectAnswer = formatNumberSmart(new Big(correctAnswer), 2, ',');
+      explanation = [
+        `Fixação Ativa: ${a} ÷ ${b}`,
+        `Resultado: ${formattedCorrectAnswer}`,
+      ];
+      break;
+    }
+    default: {
+      questionText = 'Resolva a operação:';
+      displayExpression = `${a} + ${b}`;
+      correctAnswer = a + b;
+      formattedCorrectAnswer = correctAnswer.toString();
+      explanation = [`Resultado: ${correctAnswer}`];
+    }
+  }
+
+  return {
+    id,
+    type: track,
+    countNumber,
+    totalGoal: 200,
+    question: questionText,
+    displayExpression,
+    correctAnswer,
+    formattedCorrectAnswer,
+    explanation,
+    isSpacedReview: true,
+    spacedBox: card.box,
+    spacedCardId: card.id,
+    operands: [a, b],
+  };
+}
+
+export function generateQuizQuestion(
+  trackSelector: QuizTrackSelector = 'sobrevivencia',
+  countNumber: number = 1,
+  dueCard?: SpacedCard
+): QuizQuestion {
+  if (dueCard) {
+    return generateQuizQuestionFromCard(dueCard, countNumber);
+  }
   let track: QuizTrack;
 
   if (trackSelector === 'sobrevivencia') {
@@ -59,6 +150,7 @@ export function generateQuizQuestion(
             `Unidades: ${a % 10} + ${b % 10} = ${(a % 10) + (b % 10)}`,
             `Resultado final: ${correct}`,
           ],
+          operands: [a, b],
         };
       } else if (countNumber <= 50) {
         // 3 números (como na referência: 200 + 180 + 59) ou 2 números de centenas
@@ -100,6 +192,7 @@ export function generateQuizQuestion(
               `Dezenas e unidades: ${a % 100} + ${b % 100} = ${(a % 100) + (b % 100)}`,
               `Resultado: ${correct}`,
             ],
+            operands: [a, b],
           };
         }
       } else if (countNumber <= 100) {
@@ -171,6 +264,7 @@ export function generateQuizQuestion(
             `Decompondo: ${a} - ${Math.floor(b / 10) * 10} = ${a - Math.floor(b / 10) * 10}`,
             `${a - Math.floor(b / 10) * 10} - ${b % 10} = ${correct}`,
           ],
+          operands: [a, b],
         };
       } else if (countNumber <= 70) {
         // Números maiores de 2 a 3 dígitos (resultado positivo)
@@ -190,6 +284,7 @@ export function generateQuizQuestion(
             `Subtração: ${a} - ${b}`,
             `Resultado: ${correct}`,
           ],
+          operands: [a, b],
         };
       } else if (countNumber <= 110) {
         // Permite resultados negativos (a < b)
@@ -209,6 +304,7 @@ export function generateQuizQuestion(
             `Como ${a} é menor que ${b}, o resultado é negativo.`,
             `-(${b} - ${a}) = -${b - a} = ${correct}`,
           ],
+          operands: [a, b],
         };
       } else {
         // Decimais finitos
@@ -235,6 +331,7 @@ export function generateQuizQuestion(
             `Alinhando as casas decimais: ${aStr} - ${bStr}`,
             `Resultado: ${correctStr}`,
           ],
+          operands: [aInt, bInt],
         };
       }
     }
@@ -257,6 +354,7 @@ export function generateQuizQuestion(
           explanation: [
             `Tabuada: ${a} × ${b} = ${correct}`,
           ],
+          operands: [a, b],
         };
       } else if (countNumber <= 80) {
         // Fator de 2 dígitos por 1 dígito (ex: 14x7, 25x6, 36x4)
@@ -280,6 +378,7 @@ export function generateQuizQuestion(
             `${units} × ${b} = ${units * b}`,
             `${tens * b} + ${units * b} = ${correct}`,
           ],
+          operands: [a, b],
         };
       } else if (countNumber <= 130) {
         // Decimal simples por inteiro (ex: 2,5 x 8 = 20 ou 1,5 x 12 = 18)
@@ -304,6 +403,7 @@ export function generateQuizQuestion(
             `Ou multiplique por ${base}: (${Math.floor(base)} × ${mult}) + (0,5 × ${mult})`,
             `${Math.floor(base) * mult} + ${0.5 * mult} = ${correctStr}`,
           ],
+          operands: [base, mult],
         };
       } else {
         // 2 dígitos x 2 dígitos (ex: 14 x 15, 12 x 18, 25 x 16)
@@ -323,6 +423,7 @@ export function generateQuizQuestion(
             `${a} × ${b} = ${a} × 10 + ${a} × ${b - 10}`,
             `${a * 10} + ${a * (b - 10)} = ${correct}`,
           ],
+          operands: [a, b],
         };
       }
     }
@@ -347,6 +448,7 @@ export function generateQuizQuestion(
             `${b} × ${correct} = ${a}`,
             `Portanto, ${a} ÷ ${b} = ${correct}`,
           ],
+          operands: [a, b],
         };
       } else if (countNumber <= 80) {
         // Divisões exatas maiores (ex: 335 ÷ 5 = 67, 144 ÷ 12 = 12, 192 ÷ 6 = 32)
@@ -367,6 +469,7 @@ export function generateQuizQuestion(
             `${a} = ${b * Math.floor(correct / 10) * 10} + ${b * (correct % 10)}`,
             `Resultado: ${correct}`,
           ],
+          operands: [a, b],
         };
       } else {
         // Divisões com resultado decimal finito (divisores: 2, 4, 5, 10, 20, 25)
@@ -397,6 +500,7 @@ export function generateQuizQuestion(
             `Adicionando casas decimais: ${(a % b) * 10} / ${b}`,
             `Resultado exato: ${correctStr}`,
           ],
+          operands: [a, b],
         };
       }
     }

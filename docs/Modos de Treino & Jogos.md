@@ -10,9 +10,9 @@ Arquivos-fonte:
 
 ---
 
-## 1. ⚡ Modo Treino (MatSpeed)
+## 1. ⚡ Modo Treino Mental, Sobrevivência & Repetição Espaçada
 
-Permite ao usuário praticar operações aritméticas isoladas ou enfrentar uma esteira contínua de questões progressivas.
+Permite ao usuário praticar operações aritméticas dinâmicas em sobrevivência progressiva e fixar erros através do Caderno de Erros com repetição espaçada adaptativa.
 
 ### 🎯 Trilhas Disponíveis
 1. **Soma (`soma`):** De somas básicas com números de 1 dígito a adições de 3 dígitos com transporte.
