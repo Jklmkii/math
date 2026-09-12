@@ -1,6 +1,6 @@
 # 📦 Deploy, Releases & Automação Multiplataforma (CI/CD)
 
-Todo o pipeline de compilação, empacotamento desktop/mobile e distribuição é automatizado via scripts locais e GitHub Actions no repositório oficial [`Jklmkii/math`](https://github.com/Jklmkii/math).
+Todo o pipeline de compilação, empacotamento desktop/mobile e distribuição é automatizado via scripts locais e GitHub Actions no repositório oficial [`Jklmkii/quantora`](https://github.com/Jklmkii/quantora).
 
 ---
 
@@ -88,7 +88,7 @@ Para envios remotos via terminal no Windows sem interrupções por pop-ups do Gi
 * Utilizar o Personal Access Token (PAT) registrado em [[Credenciais & Tokens]].
 * Comando padrão:
   ```powershell
-  git push https://<YOUR_GITHUB_PAT>@github.com/Jklmkii/math.git main
+  git push https://<YOUR_GITHUB_PAT>@github.com/Jklmkii/quantora.git main
   ```
 
 ---

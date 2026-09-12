@@ -109,7 +109,7 @@ Os arquivos gerados estarão na pasta `release/`:
 * `Quantora-Setup-1.2.1.exe` (Instalador tradicional NSIS)
 * `Quantora-1.2.1-portable.exe` (Executável portátil autônomo)
 
-Você também pode baixar os executáveis prontos diretamente na página de [Releases do GitHub](https://github.com/Jklmkii/math/releases).
+Você também pode baixar os executáveis prontos diretamente na página de [Releases do GitHub](https://github.com/Jklmkii/quantora/releases).
 
 ### 7. Mobile Android (.apk via Capacitor)
 ```bash
